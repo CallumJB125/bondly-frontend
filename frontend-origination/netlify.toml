@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://bondly-staging.onrender.com/api/:splat"
+  to = "https://bondly.co.za/api/:splat"
   status = 200
   force = true
 

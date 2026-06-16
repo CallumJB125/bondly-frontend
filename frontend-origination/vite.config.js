@@ -13,7 +13,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'https://bondly.co.za',
+        target: 'https://bondly.co.za',
         changeOrigin: true,
       },
     },
