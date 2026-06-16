@@ -4,12 +4,12 @@ Two React/Vite frontends for the Bondly platform.
 
 ## Sites
 
-| Directory | Platform | Dev URL |
-|---|---|---|
-| `frontend-src/` | Switch — existing homeowners switching bonds | http://localhost:5173 |
-| `frontend-origination/` | First-Time Buyer — new mortgage applications | http://localhost:5174 |
+| Directory | Platform | Local dev (your machine) | Live (Netlify) |
+|---|---|---|---|
+| `frontend-src/` | Switch — existing homeowners switching bonds | http://localhost:5173 | https://bondly-frontend-src.netlify.app |
+| `frontend-origination/` | First-Time Buyer — new mortgage applications | http://localhost:5174 | https://bondly-origination.netlify.app |
 
-Both sites proxy `/api` calls to `https://bondly.co.za` by default, so no backend setup is needed.
+Both sites proxy `/api` calls to `https://bondly.co.za`, so no backend setup is needed. You'll need a test account on bondly.co.za to log in and view authenticated screens.
 
 ## Setup
 
@@ -25,13 +25,15 @@ npm install
 npm run dev        # → http://localhost:5174
 ```
 
-## Pointing at a local backend (optional)
+`localhost:5173` / `5174` are local dev servers running on **your machine only** — they are not deployed anywhere.
 
-If you need to run against a local backend instead of production, set:
+## Deploy workflow
 
-```bash
-VITE_API_URL=http://localhost:3000 npm run dev
 ```
+edit code → push to main → Netlify auto-rebuilds the live .netlify.app sites (~15s)
+```
+
+Every push to `main` automatically redeploys both Netlify sites. Use the live URLs above to share and review changes.
 
 ## Stack
 
