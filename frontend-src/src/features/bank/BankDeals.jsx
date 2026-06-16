@@ -210,8 +210,8 @@ function DealDetail({ cappId }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {deal.docs.map(doc => (
                   <a key={doc.id}
-                    href={`/api/bank/applications/${deal.ref}/documents/${doc.id}?token=${encodeURIComponent(getBankToken() || '')}`}
-                    target="_blank" rel="noopener noreferrer"
+                    href="#"
+                    onClick={e => { e.preventDefault(); bankApi.download(`/api/bank/applications/${deal.ref}/documents/${doc.id}`, doc.filename || docLabel(doc.category)); }}
                     style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 6, background: '#f5f6f8', border: '1px solid #e5e7eb', textDecoration: 'none', color: '#0b1e2d', fontSize: '0.85rem' }}>
                     <span>{docLabel(doc.category)}{doc.filename ? ' · ' + doc.filename : ''}</span>
                     <span style={{ color: '#6b7280', fontSize: '0.74rem' }}>↗ open</span>
@@ -232,12 +232,11 @@ function DealDetail({ cappId }) {
         <div className="col-side">
           <div className="bank-section">
             <h3>Quick actions</h3>
-            <a href={`/api/bank/deals/${cappId}/prequal.pdf?token=${encodeURIComponent(getBankToken() || '')}`}
-              target="_blank" rel="noopener noreferrer"
+            <a href="#" onClick={e => { e.preventDefault(); bankApi.download(`/api/bank/deals/${cappId}/prequal.pdf`, `prequal-${cappId}.pdf`); }}
               style={{ display: 'block', padding: '10px 14px', background: '#c8a84b', color: '#0b1e2d', borderRadius: 7, fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none', textAlign: 'center', marginBottom: 8 }}>
               📄 Download pre-qual letter
             </a>
-            <a href={bankApi.followUpIcsUrl(cappId, 7)}
+            <a href="#" onClick={e => { e.preventDefault(); bankApi.download(bankApi.followUpIcsPath(cappId, 7), `follow-up-${cappId}.ics`); }}
               style={{ display: 'block', padding: '10px 14px', background: '#fff', color: '#0b1e2d', border: '1px solid #e5e7eb', borderRadius: 7, fontWeight: 700, fontSize: '0.86rem', textDecoration: 'none', textAlign: 'center', marginBottom: 8 }}>
               📅 Add 7-day follow-up to calendar
             </a>

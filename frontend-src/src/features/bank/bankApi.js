@@ -129,10 +129,22 @@ export const bankApi = {
       const data = await bankFetch('/api/bank/sse-ticket', { method: 'POST' });
       return new EventSource('/api/bank/events?ticket=' + encodeURIComponent(data.ticket));
     } catch {
-      return new EventSource('/api/bank/events?token=' + encodeURIComponent(tok));
+      return null; // no ?token= fallback — never put the bank JWT in a URL
     }
   },
-  followUpIcsUrl: (cappId, days = 7)       => '/api/bank/deals/' + encodeURIComponent(cappId) + '/follow-up.ics?days=' + days + '&token=' + encodeURIComponent(getBankToken() || ''),
+  followUpIcsPath: (cappId, days = 7)      => '/api/bank/deals/' + encodeURIComponent(cappId) + '/follow-up.ics?days=' + days,
+  // Header-auth blob download — token goes in the Authorization header, never the
+  // URL, so it can't leak into access logs / history / Referer.
+  download: async (path, filename) => {
+    const tok = getBankToken();
+    const r = await fetch(path, { headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+    if (r.status === 401) { clearBankToken(); window.location.href = '/bank/login?expired=1'; return new Promise(() => {}); }
+    if (!r.ok) throw new Error('Download failed (' + r.status + ')');
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = filename || ''; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  },
 
   // Wave 3 (simulator, planner, triage, explainers)
   simulateRule:   (body)                   => bankFetch('/api/bank/auto-bid-rules/simulate', { method: 'POST', body: JSON.stringify(body) }),

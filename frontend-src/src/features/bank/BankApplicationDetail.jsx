@@ -535,7 +535,7 @@ export default function BankApplicationDetail() {
                             {files.map(f => (
                               <a
                                 key={f.id}
-                                href={`/api/bank/applications/${a.ref}/documents/${f.id}?token=${encodeURIComponent(getBankToken() || '')}`}
+                                href="#" onClick={e => { e.preventDefault(); bankApi.download(`/api/bank/applications/${a.ref}/documents/${f.id}`, f.filename || f.originalName || 'document'); }}
                                 target="_blank" rel="noopener noreferrer"
                                 style={{
                                   fontSize: '0.74rem', color: '#0b1e2d', textDecoration: 'underline',
@@ -607,7 +607,7 @@ export default function BankApplicationDetail() {
                       <span className="rate">{bankFmtPct(o.rate)}</span>
                       {o.monthly ? ` · ${bankFmtR(o.monthly)}/mo` : ''}
                       {o.proofFile && (
-                        <a href={`/api/bank/applications/${a.ref}/documents/${o.proofFile.id}?token=${encodeURIComponent(getBankToken() || '')}`}
+                        <a href="#" onClick={e => { e.preventDefault(); bankApi.download(`/api/bank/applications/${a.ref}/documents/${o.proofFile.id}`, o.proofFile.filename || 'proof'); }}
                            target="_blank" rel="noopener noreferrer"
                            style={{ marginLeft: 8, fontSize: '0.7rem', color: '#0b1e2d' }}>
                           ↗ proof
