@@ -578,7 +578,7 @@ export default function SwapsTab({ loans }) {
                       <td>
                         <strong>{bank}</strong>
                         {isCurrent && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: 'var(--mint)', fontWeight: 600 }}>Current</span>}
-                        {isBest && !isCurrent && <span style={{ marginLeft: 6, fontSize: '0.7rem', background: 'var(--lime, #b8e04a)', color: 'var(--forest, #1a3c2e)', fontWeight: 700, padding: '1px 7px', borderRadius: 999 }}>Best deal</span>}
+                        {isBest && !isCurrent && <span style={{ marginLeft: 6, fontSize: '0.7rem', background: 'var(--lime, #b8e04a)', color: 'var(--forest, #1e3a5f)', fontWeight: 700, padding: '1px 7px', borderRadius: 999 }}>Best deal</span>}
                       </td>
                       <td style={{ textAlign: 'right' }}>{fmtPct(rate)}</td>
                       <td style={{ textAlign: 'right', color: savings?.monthlySaving > 0 ? 'var(--mint)' : undefined }}>

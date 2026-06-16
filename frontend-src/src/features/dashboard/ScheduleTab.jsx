@@ -72,7 +72,7 @@ export default function ScheduleTab({ loans, payments }) {
 
       {/* Summary */}
       {extra > 0 && interestSaved > 0 && (
-        <div style={{ background: 'rgba(74,158,107,0.10)', border: '1px solid rgba(74,158,107,0.25)', borderRadius: 'var(--border-radius-sm)', padding: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
+        <div style={{ background: 'rgba(30,58,95,0.10)', border: '1px solid rgba(30,58,95,0.25)', borderRadius: 'var(--border-radius-sm)', padding: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
           <strong style={{ color: 'var(--mint)' }}>
             Paying {fmt(extra)} extra / month saves you {fmt(interestSaved)} in interest
             {monthsSaved > 0 ? ` and pays off ${Math.round(monthsSaved / 12)} years earlier.` : '.'}

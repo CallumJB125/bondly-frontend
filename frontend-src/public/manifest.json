@@ -4,8 +4,8 @@
   "description": "South Africa's smartest home bond management app",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a3a2a",
-  "theme_color": "#1a3c2e",
+  "background_color": "#0e1b2e",
+  "theme_color": "#1e3a5f",
   "icons": [
     {
       "src": "/icon.svg",

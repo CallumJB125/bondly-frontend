@@ -126,7 +126,7 @@
   margin-bottom: var(--space-2);
 }
 .switch-form__note { text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: var(--space-3); }
-.switch-form__ready-nudge { background: #f0faf4; border: 1px solid #b6e8cc; border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; color: #1a5c38; font-weight: 500; margin-bottom: var(--space-3); }
+.switch-form__ready-nudge { background: #f0f4fa; border: 1px solid #b6cce8; border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; color: #1e3a5f; font-weight: 500; margin-bottom: var(--space-3); }
 
 .switch-score { background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: var(--space-4); }
 .switch-score__label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; }
@@ -510,7 +510,7 @@
   padding: 11px 14px;
   font-size: 0.92rem;
   font-weight: 700;
-  background: var(--forest, #1a3c2e);
+  background: var(--forest, #1e3a5f);
   color: var(--cream, #f5f0e8);
   border: 0;
   border-radius: 8px;

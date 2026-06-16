@@ -206,7 +206,7 @@
   padding: 28px;
   /* Subtle layered depth: faint gradient wash + 1px border + soft layered shadow */
   background:
-    linear-gradient(180deg, rgba(26,92,56,0.025) 0%, transparent 120px),
+    linear-gradient(180deg, rgba(30,58,95,0.025) 0%, transparent 120px),
     var(--bg-card);
   border: 1px solid rgba(15, 26, 36, 0.08);
   border-radius: 20px;
@@ -1161,7 +1161,7 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
   padding: 4px 11px;
   border-radius: var(--radius-full, 99px);
   background: var(--brand-light);
-  border: 1px solid rgba(26,92,56,0.18);
+  border: 1px solid rgba(30,58,95,0.18);
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -1172,15 +1172,15 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
   width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--brand);
-  box-shadow: 0 0 0 3px rgba(26,92,56,0.14);
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.14);
 }
 
 /* ── LIVE IN-FORM PREVIEW ────────────────────────────────── */
 .hook-livepreview {
-  border: 1px solid rgba(26,92,56,0.16);
+  border: 1px solid rgba(30,58,95,0.16);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(26,92,56,0.04) 0%, rgba(26,92,56,0.01) 100%);
+    linear-gradient(180deg, rgba(30,58,95,0.04) 0%, rgba(30,58,95,0.01) 100%);
   padding: 18px 20px 16px;
   display: flex;
   flex-direction: column;

@@ -103,9 +103,9 @@ export default function StatementLoader({ slow = false, progressMessage = null }
         <svg viewBox="0 0 220 280" className="stmt-loader__doc-svg" aria-hidden="true">
           <defs>
             <linearGradient id="stmtScan" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%"   stopColor="rgba(74,158,107,0)" />
-              <stop offset="50%"  stopColor="rgba(74,158,107,0.55)" />
-              <stop offset="100%" stopColor="rgba(74,158,107,0)" />
+              <stop offset="0%"   stopColor="rgba(30,58,95,0)" />
+              <stop offset="50%"  stopColor="rgba(30,58,95,0.55)" />
+              <stop offset="100%" stopColor="rgba(30,58,95,0)" />
             </linearGradient>
           </defs>
           {/* Paper */}
@@ -113,7 +113,7 @@ export default function StatementLoader({ slow = false, progressMessage = null }
           {/* Folded corner */}
           <path d="M196 10 L206 20 L196 20 Z" fill="rgba(15,26,36,0.07)" />
           {/* Header band */}
-          <rect x="14" y="10" width="192" height="34" fill="rgba(74,158,107,0.10)" />
+          <rect x="14" y="10" width="192" height="34" fill="rgba(30,58,95,0.10)" />
           <rect x="26" y="22" width="68" height="6"  rx="3" fill="rgba(15,26,36,0.45)" />
           <rect x="26" y="32" width="40" height="4"  rx="2" fill="rgba(15,26,36,0.22)" />
           {/* Statement rows */}

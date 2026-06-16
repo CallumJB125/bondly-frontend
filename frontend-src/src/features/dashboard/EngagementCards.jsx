@@ -190,7 +190,7 @@ export function PreQualCertificateCard() {
           A PDF you can hand to estate agents — shows your Bondly Quality Score, verified income, and qualifying bond. Valid for 30 days.
         </p>
         <a href={me.prequalCertificateUrl()} target="_blank" rel="noopener noreferrer"
-           style={{ display:'inline-block', padding:'8px 16px', background:'var(--forest,#16502d)', color:'#fff', borderRadius:6, fontWeight:700, fontSize:'0.875rem', textDecoration:'none' }}>
+           style={{ display:'inline-block', padding:'8px 16px', background:'var(--forest,#152d4a)', color:'#fff', borderRadius:6, fontWeight:700, fontSize:'0.875rem', textDecoration:'none' }}>
           Download my certificate →
         </a>
       </CardBody>
@@ -279,7 +279,7 @@ export function SubscriptionCancelCard() {
               </div>
               {s.cancelUrl ? (
                 <a href={s.cancelUrl} target="_blank" rel="noopener noreferrer"
-                   style={{ padding:'6px 10px', background:'var(--lime,#c8a84b)', color:'var(--forest,#16502d)', borderRadius:6, fontSize:'0.75rem', fontWeight:700, textDecoration:'none', whiteSpace:'nowrap' }}>
+                   style={{ padding:'6px 10px', background:'var(--lime,#c8a84b)', color:'var(--forest,#152d4a)', borderRadius:6, fontSize:'0.75rem', fontWeight:700, textDecoration:'none', whiteSpace:'nowrap' }}>
                   Cancel →
                 </a>
               ) : (

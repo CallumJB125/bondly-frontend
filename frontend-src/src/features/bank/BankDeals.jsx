@@ -80,7 +80,7 @@ function DealList() {
             className="bank-card" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 200px', display: 'grid', alignItems: 'center', gap: 14, marginBottom: 10, padding: 16, textDecoration: 'none', color: 'inherit', border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff' }}>
             <div>
               <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.95rem' }}>{d.ref}</div>
-              <div className="type-tag" style={{ background: 'rgba(74,158,107,0.15)', color: '#16502d', display: 'inline-block', padding: '2px 8px', borderRadius: 99, fontSize: '0.7rem', fontWeight: 700, marginTop: 2 }}>
+              <div className="type-tag" style={{ background: 'rgba(30,58,95,0.15)', color: '#152d4a', display: 'inline-block', padding: '2px 8px', borderRadius: 99, fontSize: '0.7rem', fontWeight: 700, marginTop: 2 }}>
                 {d.type === 'swap' ? 'Switch' : 'New bond'}
               </div>
             </div>

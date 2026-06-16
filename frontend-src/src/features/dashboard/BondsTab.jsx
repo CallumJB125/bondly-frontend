@@ -197,7 +197,7 @@ export default function BondsTab({ loans, payments, onRefresh }) {
         type="button"
         onClick={() => scanRef.current?.click()}
         disabled={scanning}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'rgba(74,158,107,0.07)', border: '1.5px dashed rgba(74,158,107,0.4)', borderRadius: 'var(--border-radius-sm)', cursor: scanning ? 'wait' : 'pointer', fontSize: '0.875rem', color: 'var(--mint)', fontWeight: 600, width: '100%', justifyContent: 'center' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'rgba(30,58,95,0.07)', border: '1.5px dashed rgba(30,58,95,0.4)', borderRadius: 'var(--border-radius-sm)', cursor: scanning ? 'wait' : 'pointer', fontSize: '0.875rem', color: 'var(--mint)', fontWeight: 600, width: '100%', justifyContent: 'center' }}
       >
         {scanning
           ? <><span style={{ width: 14, height: 14, border: '2px solid var(--mint)', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} /> Reading statement…</>

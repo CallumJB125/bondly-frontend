@@ -47,7 +47,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--forest, #16502d);
+  background: var(--forest, #152d4a);
   color: white;
   display: flex;
   align-items: center;
@@ -72,7 +72,7 @@
   text-decoration: none;
   border-bottom: 1px dotted currentColor;
 }
-.ftb-section a:hover { color: var(--forest, #16502d); }
+.ftb-section a:hover { color: var(--forest, #152d4a); }
 
 .ftb-list {
   margin: 0 0 14px;
@@ -134,7 +134,7 @@
 }
 .ftb-cta--primary {
   background: var(--lime, #b5d65c);
-  color: var(--forest, #16502d);
+  color: var(--forest, #152d4a);
 }
 .ftb-cta--ghost {
   background: transparent;

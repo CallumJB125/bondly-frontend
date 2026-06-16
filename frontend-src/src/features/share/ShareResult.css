@@ -1,6 +1,6 @@
 .share-page {
   min-height: 100vh;
-  background: var(--forest, #1a3c2e);
+  background: var(--forest, #1e3a5f);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,7 +29,7 @@
 .share-card--error p  { color: var(--text-secondary); font-size: 0.9rem; margin: 0; }
 
 .share-card__header {
-  background: linear-gradient(135deg, #1a3c2e 0%, #2d5a3d 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5080 100%);
   padding: 20px 28px;
   display: flex;
   align-items: center;
@@ -39,7 +39,7 @@
 .share-card__tagline  { color: rgba(245,240,232,0.55); font-size: 0.75rem; }
 
 .share-card__hero {
-  background: linear-gradient(135deg, #1a3c2e 0%, #2d5a3d 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5080 100%);
   padding: 24px 28px 32px;
   text-align: center;
 }
@@ -120,5 +120,5 @@
   transition: background 0.15s;
 }
 .share-cta:hover { background: var(--bg-section, #f9fafb); }
-.share-cta--lime  { background: #b8e04a; border-color: #b8e04a; color: #1a3c2e; }
+.share-cta--lime  { background: #b8e04a; border-color: #b8e04a; color: #1e3a5f; }
 .share-cta--lime:hover { background: #c8f05a; }

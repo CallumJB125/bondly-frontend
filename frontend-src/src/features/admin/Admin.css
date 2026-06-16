@@ -14,7 +14,7 @@
   background: var(--forest);
   background-image:
     radial-gradient(circle at 0% 0%, rgba(245,218,90,0.06) 0%, transparent 38%),
-    radial-gradient(circle at 100% 100%, rgba(74,158,107,0.10) 0%, transparent 40%);
+    radial-gradient(circle at 100% 100%, rgba(30,58,95,0.10) 0%, transparent 40%);
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 100;
@@ -323,7 +323,7 @@
   cursor: pointer; transition: background 0.1s;
 }
 .adm-urgent-item:last-child { border-bottom: none; }
-.adm-urgent-item:hover { background: rgba(74,158,107,0.03); }
+.adm-urgent-item:hover { background: rgba(30,58,95,0.03); }
 
 .adm-urgent-dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
@@ -556,7 +556,7 @@
 }
 
 .data-table tbody tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover td { background: rgba(74,158,107,0.04); }
+.data-table tbody tr:hover td { background: rgba(30,58,95,0.04); }
 
 /* Same treatment for the customer-list table — it lives in the left
    sidebar of the Customers tab, which scrolls independently. */
@@ -687,8 +687,8 @@
 }
 .adm-view-chip {
   display: inline-flex; align-items: center;
-  background: rgba(74,158,107,0.10);
-  border: 1px solid rgba(74,158,107,0.25);
+  background: rgba(30,58,95,0.10);
+  border: 1px solid rgba(30,58,95,0.25);
   border-radius: 999px;
   padding: 2px 4px 2px 10px;
   font-size: 0.75rem;
@@ -722,8 +722,8 @@
   width: 52px; height: 52px;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%;
-  background: rgba(74,158,107,0.10);
-  color: var(--forest, #16502d);
+  background: rgba(30,58,95,0.10);
+  color: var(--forest, #152d4a);
   margin-bottom: 14px;
 }
 .adm-empty--small .adm-empty__icon { width: 40px; height: 40px; margin-bottom: 10px; }
@@ -838,7 +838,7 @@
 }
 .adm-mention-picker__item.is-active,
 .adm-mention-picker__item:hover {
-  background: rgba(74,158,107,0.10);
+  background: rgba(30,58,95,0.10);
 }
 .adm-mention-chip {
   display: inline-block;
@@ -922,7 +922,7 @@
   font-size: 0.875rem;
 }
 .adm-cmd-item.is-active {
-  background: rgba(74,158,107,0.10);
+  background: rgba(30,58,95,0.10);
 }
 .adm-cmd-kind {
   font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
@@ -931,7 +931,7 @@
   background: var(--bg-page); color: var(--text-secondary);
   min-width: 70px; text-align: center;
 }
-.adm-cmd-kind--tab         { background: rgba(74,158,107,0.18); color: var(--forest); }
+.adm-cmd-kind--tab         { background: rgba(30,58,95,0.18); color: var(--forest); }
 .adm-cmd-kind--action      { background: rgba(217,119,6,0.18);  color: #92400e; }
 .adm-cmd-kind--customer    { background: rgba(74,127,165,0.18); color: #1e3a5f; }
 .adm-cmd-kind--lead        { background: rgba(99,102,241,0.18); color: #3730a3; }
@@ -1791,9 +1791,9 @@
   transition: all 0.15s;
 }
 .bs-filter-tab--on {
-  background: var(--forest, #2d5a3d);
+  background: var(--forest, #2d5080);
   color: #fff;
-  border-color: var(--forest, #2d5a3d);
+  border-color: var(--forest, #2d5080);
 }
 .bs-new-btn {
   display: inline-flex;

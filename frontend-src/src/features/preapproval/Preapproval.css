@@ -1000,9 +1000,9 @@ html[data-theme="dark"] .prequal-cert__amount { color: var(--lime); }
   .preapproval-header, .pa-progress, .prequal-cert-actions { display: none !important; }
   body { background: #fff !important; }
   .prequal-cert { border: 1px solid #ccc; border-radius: 0; box-shadow: none; page-break-inside: avoid; }
-  .prequal-cert__header { background: #1a3a2a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .prequal-cert__header { background: #0e1b2e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .prequal-cert__logo { color: #b8e04a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .prequal-cert__amount { color: #1a3a2a !important; font-size: 2.5rem !important; }
+  .prequal-cert__amount { color: #1e3a5f !important; font-size: 2.5rem !important; }
 }
 
 /* ── Bond rate health (dashboard) ─────────────────────────────────────────── */

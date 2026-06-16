@@ -5,9 +5,9 @@
 ============================================================ */
 :root {
   /* --- Brand --- */
-  --brand:        #1a5c38;
-  --brand-light:  #e8f3ed;
-  --brand-dark:   #134429;
+  --brand:        #1e3a5f;
+  --brand-light:  #e8eef5;
+  --brand-dark:   #152d4a;
   --gold:         #c49a2e;
   --gold-light:   #fdf6e3;
   /* Accessible gold for TEXT on light/cream/green-tint surfaces — the bright
@@ -114,7 +114,7 @@
   --bg-base:           var(--bg-white);
   --text-on-lime:      #ffffff;
 
-  /* Primary action — brand green */
+  /* Primary action — brand blue */
   --color-primary:        var(--brand);
   --color-primary-hover:  var(--brand-dark);
   --color-primary-light:  var(--brand-light);
@@ -127,7 +127,7 @@
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
 
   /* --- Focus ring --- */
-  --focus-ring: 0 0 0 3px rgba(26,92,56,0.28);
+  --focus-ring: 0 0 0 3px rgba(30,58,95,0.28);
 
   /* --- Transitions --- */
   --transition-fast: 0.15s ease;

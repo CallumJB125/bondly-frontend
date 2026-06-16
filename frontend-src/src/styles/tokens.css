@@ -4,16 +4,16 @@
 ============================================================ */
 :root {
   /* --- Brand --- */
-  --brand:        #1a5c38;
-  --brand-light:  #e8f3ed;
-  --brand-dark:   #134429;
+  --brand:        #1e3a5f;
+  --brand-light:  #e8eef5;
+  --brand-dark:   #152d4a;
   --gold:         #c49a2e;
   --gold-light:   #fdf6e3;
   /* Darker gold reserved for savings/Rand figures ON cream/off-white so they
      clear WCAG AA (4.5:1) — the lighter --gold fails on pale backgrounds. */
   --gold-fig:     #9a7414;
-  /* Deep green for trust/CTA bands */
-  --brand-deep:   #123f27;
+  /* Deep blue for trust/CTA bands */
+  --brand-deep:   #0e1b2e;
   /* Warm off-white for alternating section rhythm */
   --bg-warm:      #faf8f4;
 
@@ -114,6 +114,11 @@
   --paper:             #f8f7f5;
   --bg-base:           var(--bg-white);
 
+  /* Primary action — brand blue */
+  --color-primary:        var(--brand);
+  --color-primary-hover:  var(--brand-dark);
+  --color-primary-light:  var(--brand-light);
+
   /* --- Shadows --- */
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
@@ -122,7 +127,7 @@
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
 
   /* --- Focus ring --- */
-  --focus-ring: 0 0 0 3px rgba(26,92,56,0.28);
+  --focus-ring: 0 0 0 3px rgba(30,58,95,0.28);
 
   /* --- Transitions --- */
   /* Spec: 150–400ms ease-out, never bouncy. One shared easing curve. */

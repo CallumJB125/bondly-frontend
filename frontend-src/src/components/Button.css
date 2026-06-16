@@ -86,7 +86,7 @@
   .btn--ghost:hover      { background: var(--bg-card); border-color: var(--mint); }
   .btn--ghost-dark:hover { background: rgba(255,255,255,0.18); }
   .btn--danger:hover     { background: #7f1d1d; }
-  .btn--outline:hover    { background: rgba(74,158,107,0.08); }
+  .btn--outline:hover    { background: rgba(30,58,95,0.08); }
   .btn:active:not(:disabled) { transform: translateY(0) scale(0.985); }
 }
 

@@ -168,7 +168,7 @@
 }
 
 .notif-item--unread {
-  background: rgba(74,158,107,0.05);
+  background: rgba(30,58,95,0.05);
 }
 
 .notif-item__title { font-weight: 600; font-size: 0.875rem; }
@@ -449,7 +449,7 @@
   color: var(--text-primary);
 }
 
-.data-table tbody tr:hover { background: rgba(74,158,107,0.04); }
+.data-table tbody tr:hover { background: rgba(30,58,95,0.04); }
 .data-table tbody tr:last-child td { border-bottom: none; }
 
 /* ── Apply tab ─────────────────────────────────────────── */

@@ -243,7 +243,7 @@ export default function OffersTab() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                 <div style={{
                   width: 42, height: 42, borderRadius: '50%',
-                  background: 'rgba(74,158,107,0.15)',
+                  background: 'rgba(30,58,95,0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '1.4rem',
                 }}>⏳</div>
@@ -373,7 +373,7 @@ function Banner({ color, children }) {
 
 function Badge({ color, children }) {
   const map = {
-    forest: { bg: 'var(--forest, #1a3c2e)', fg: 'var(--lime, #c8f135)' },
+    forest: { bg: 'var(--forest, #1e3a5f)', fg: 'var(--lime, #c8f135)' },
     green:  { bg: '#16a34a', fg: '#fff' },
     gray:   { bg: '#6b7280', fg: '#fff' },
   }[color];
@@ -562,7 +562,7 @@ function Row({ label, children }) {
 }
 const input = { width: '100%', padding: '7px 10px', border: '1px solid var(--border-color)', borderRadius: 6, fontSize: '0.875rem', background: 'var(--bg-card)' };
 const btnGhost = { background: 'transparent', border: '1px solid var(--border-color)', padding: '7px 14px', borderRadius: 7, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' };
-const btnPrimary = { background: 'var(--forest, #1a3c2e)', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: 7, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' };
+const btnPrimary = { background: 'var(--forest, #1e3a5f)', color: '#fff', border: 'none', padding: '7px 16px', borderRadius: 7, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' };
 
 function viewerActionLabel(a) {
   return ({
@@ -621,7 +621,7 @@ function NpsPrompt({ cappId, stages }) {
           <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Tell us why (optional)"
             style={{ width: '100%', padding: 8, border: '1px solid #e5e7eb', borderRadius: 6, fontSize: '0.86rem', minHeight: 60, marginBottom: 8 }} />
           <button onClick={submit} disabled={busy}
-            style={{ padding: '8px 18px', background: 'var(--forest, #1a3c2e)', color: '#fff', border: 'none', borderRadius: 7, fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
+            style={{ padding: '8px 18px', background: 'var(--forest, #1e3a5f)', color: '#fff', border: 'none', borderRadius: 7, fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
             {busy ? 'Sending…' : 'Submit'}
           </button>
         </>
@@ -689,7 +689,7 @@ function CustomerDealMessages({ cappId, bankName }) {
         </div>
         <form onSubmit={send} style={{ display: 'flex', gap: 6 }}>
           <input value={text} onChange={e => setText(e.target.value)} placeholder="Ask a question, share an update…" style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border-color)', borderRadius: 6, fontSize: '0.86rem' }} />
-          <button type="submit" disabled={busy || !text.trim()} style={{ padding: '8px 14px', background: 'var(--forest, #1a3c2e)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>Send</button>
+          <button type="submit" disabled={busy || !text.trim()} style={{ padding: '8px 14px', background: 'var(--forest, #1e3a5f)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>Send</button>
         </form>
       </div>
     );
@@ -704,7 +704,7 @@ function CustomerDealMessages({ cappId, bankName }) {
           <div key={m.id} style={{ marginBottom: 6, display: 'flex', flexDirection: 'column', alignItems: m.fromRole === 'customer' ? 'flex-end' : 'flex-start' }}>
             <div style={{
               maxWidth: '85%', padding: '7px 11px', borderRadius: 8,
-              background: m.fromRole === 'customer' ? 'var(--forest, #1a3c2e)' : '#fff',
+              background: m.fromRole === 'customer' ? 'var(--forest, #1e3a5f)' : '#fff',
               color: m.fromRole === 'customer' ? '#fff' : 'var(--text-primary)',
               border: m.fromRole === 'customer' ? 'none' : '1px solid var(--border-color)',
               fontSize: '0.82rem',
@@ -717,7 +717,7 @@ function CustomerDealMessages({ cappId, bankName }) {
       </div>
       <form onSubmit={send} style={{ display: 'flex', gap: 6 }}>
         <input value={text} onChange={e => setText(e.target.value)} placeholder="Reply…" style={{ flex: 1, padding: '8px 10px', border: '1px solid var(--border-color)', borderRadius: 6, fontSize: '0.86rem' }} />
-        <button type="submit" disabled={busy || !text.trim()} style={{ padding: '8px 14px', background: 'var(--forest, #1a3c2e)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>Send</button>
+        <button type="submit" disabled={busy || !text.trim()} style={{ padding: '8px 14px', background: 'var(--forest, #1e3a5f)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>Send</button>
       </form>
     </div>
   );

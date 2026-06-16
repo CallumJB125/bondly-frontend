@@ -50,7 +50,7 @@ export default function ConveyancingTracker() {
       <CardBody>
         <div style={{ marginBottom: 16, padding:'10px 12px', background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.20)', borderRadius:8 }}>
           <div style={{ fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'.05em', color:'var(--text-secondary)', fontWeight:700 }}>Currently at</div>
-          <div style={{ fontWeight:800, fontSize:'1.0625rem', color:'#16502d', marginTop:2 }}>{data.currentStageLabel}</div>
+          <div style={{ fontWeight:800, fontSize:'1.0625rem', color:'#152d4a', marginTop:2 }}>{data.currentStageLabel}</div>
           {data.typicalNextStepEta && (
             <div style={{ fontSize:'0.8125rem', color:'var(--text-secondary)', marginTop:4 }}>
               Typical next step in ~{data.typicalNextStepEta}.

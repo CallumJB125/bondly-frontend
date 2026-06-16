@@ -452,7 +452,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                     <div className="apply-bond-estimate__monthly">{fmt(maxMonthly)} / month at prime rate</div>
                   </div>
                   {buyCosts && (
-                    <div style={{ borderTop: '1px solid rgba(74,158,107,0.25)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
+                    <div style={{ borderTop: '1px solid rgba(30,58,95,0.25)', paddingTop: 'var(--space-3)', marginTop: 'var(--space-3)' }}>
                       <div style={{ fontSize: '0.8125rem', fontWeight: 700, marginBottom: 'var(--space-2)' }}>Total buying cost breakdown</div>
                       {[
                         ['Bond amount', fmt(maxBond - dep)],
@@ -465,7 +465,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                           <span>{l}</span><strong style={{ color: 'var(--text-primary)' }}>{v}</strong>
                         </div>
                       ))}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', fontWeight: 700, borderTop: '1px solid rgba(74,158,107,0.25)', marginTop: 8, paddingTop: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', fontWeight: 700, borderTop: '1px solid rgba(30,58,95,0.25)', marginTop: 8, paddingTop: 8 }}>
                         <span>Total cash needed upfront</span>
                         <span style={{ color: shortfall && shortfall > dep ? '#dc2626' : 'var(--mint)' }}>{fmt(totalCashNeeded)}</span>
                       </div>
@@ -498,7 +498,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                   <button type="button" onClick={() => setForm(f => ({ ...f, otpStatus: 'searching' }))}
                     style={{
                       padding: '14px 14px', textAlign: 'left',
-                      background: form.otpStatus === 'searching' ? 'rgba(74,158,107,0.10)' : 'var(--bg-card)',
+                      background: form.otpStatus === 'searching' ? 'rgba(30,58,95,0.10)' : 'var(--bg-card)',
                       border: '2px solid ' + (form.otpStatus === 'searching' ? 'var(--forest)' : 'var(--border-color)'),
                       borderRadius: 'var(--border-radius-sm)',
                       cursor: 'pointer',
@@ -509,7 +509,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                   <button type="button" onClick={() => setForm(f => ({ ...f, otpStatus: 'offer_signed' }))}
                     style={{
                       padding: '14px 14px', textAlign: 'left',
-                      background: form.otpStatus === 'offer_signed' ? 'rgba(74,158,107,0.10)' : 'var(--bg-card)',
+                      background: form.otpStatus === 'offer_signed' ? 'rgba(30,58,95,0.10)' : 'var(--bg-card)',
                       border: '2px solid ' + (form.otpStatus === 'offer_signed' ? 'var(--forest)' : 'var(--border-color)'),
                       borderRadius: 'var(--border-radius-sm)',
                       cursor: 'pointer',
@@ -551,7 +551,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                 </Select>
               </div>
               {maxBond > 0 && (
-                <div style={{ background: 'rgba(74,158,107,0.10)', border: '1px solid rgba(74,158,107,0.25)', borderRadius: 'var(--border-radius-sm)', padding: 'var(--space-4)', fontSize: '0.875rem' }}>
+                <div style={{ background: 'rgba(30,58,95,0.10)', border: '1px solid rgba(30,58,95,0.25)', borderRadius: 'var(--border-radius-sm)', padding: 'var(--space-4)', fontSize: '0.875rem' }}>
                   <div style={{ fontWeight: 700, marginBottom: 8 }}>Updated estimate with property details</div>
                   {buyCosts && (
                     <>

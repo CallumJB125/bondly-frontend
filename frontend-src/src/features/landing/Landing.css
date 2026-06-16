@@ -1,15 +1,15 @@
 /* ============================================================
    Bondly Switch — Landing (editorial redesign)
-   Fraunces serif + Inter, cream / green / gold palette.
+   Fraunces serif + Inter, cream / blue / gold palette.
    All classes are namespaced `ls-` to avoid colliding with the
    app's global tokens and other feature stylesheets.
    ============================================================ */
 
 .ls-page {
-  --ls-ink: #15241b;
-  --ls-green-900: #1e3a2a;
-  --ls-green-700: #2d5540;
-  --ls-green-100: #e4efe7;
+  --ls-ink: #15202b;
+  --ls-green-900: #1e3a5f;
+  --ls-green-700: #2d5080;
+  --ls-green-100: #e8eef5;
   --ls-gold: #a8842f;
   --ls-cream: #faf8f2;
   --ls-line: #e7e3d8;
