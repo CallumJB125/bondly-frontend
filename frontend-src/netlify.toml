@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = "../frontend"
 
+# Cross-app link target so the Switch site links to the live origination site
+# in prod instead of falling back to localhost.
+[build.environment]
+  VITE_ORIGINATION_URL = "https://bondly-origination.netlify.app"
+
 [[redirects]]
   from = "/api/*"
   to = "https://bondly.co.za/api/:splat"

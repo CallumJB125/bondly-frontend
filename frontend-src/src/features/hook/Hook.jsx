@@ -9,6 +9,10 @@ import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
 import { bondHealthScore } from '../../lib/bondScore.js';
 import './Hook.css';
 
+// Cross-app link to the origination (Bondly Home) site. Env-driven so it points
+// at the real origination URL in prod instead of a dead localhost link.
+const ORIGINATION_URL = import.meta.env?.VITE_ORIGINATION_URL || 'http://localhost:5174';
+
 // Per-bank spreads above prime — paired with the BANKS list from constants.js.
 // Order matters: BANK_SPREADS[i] applies to BANKS[i].
 const BANK_SPREADS = [0.0, 0.25, 0.35, 0.5, 0.75, 1.0, 1.5];
@@ -464,7 +468,7 @@ export default function Hook() {
             >
               See the full Bondly site →
             </a>
-            <a href="http://localhost:5174" className="hook-crosssell">
+            <a href={ORIGINATION_URL} className="hook-crosssell">
               Buying your first home instead? <strong>Bondly Home →</strong>
             </a>
           </div>
