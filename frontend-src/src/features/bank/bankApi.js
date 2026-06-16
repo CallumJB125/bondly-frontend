@@ -30,7 +30,9 @@ async function bankFetch(path, opts = {}) {
   if (r.status === 401 && !path.endsWith('/login')) {
     clearBankToken();
     window.location.href = '/bank/login?expired=1';
-    return;
+    // Navigation is async; return a never-resolving promise so downstream
+    // .then(d => d.deals) callers don't run against undefined and crash.
+    return new Promise(() => {});
   }
   const j = await r.json().catch(() => ({ success: false, error: 'Bad response' }));
   if (!j.success) {
