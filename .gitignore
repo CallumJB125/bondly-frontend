@@ -5,3 +5,4 @@ frontend-origination-dist/
 .env.local
 .DS_Store
 *.map
+.omc/
