@@ -8,9 +8,9 @@ import ChatWidget from './components/ChatWidget.jsx';
 import StickyCtaBar from './components/StickyCtaBar.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import InterventionNudge from './components/InterventionNudge.jsx';
-import { initSessionTracker, trackPageView, trackError, identifyUser } from './lib/session.js';
-import { initGlobalErrorCapture } from './lib/errors.js';
-import { initAnalytics, trackPageView as trackAnalyticsPageView, identify as analyticsIdentify } from './lib/analytics.js';
+import { initSessionTracker, trackPageView, trackError, identifyUser } from '@bondly/ui/lib/session.js';
+import { initGlobalErrorCapture } from '@bondly/ui/lib/errors.js';
+import { initAnalytics, trackPageView as trackAnalyticsPageView, identify as analyticsIdentify } from '@bondly/ui/lib/analytics.js';
 
 function isChunkError(err) {
   const msg = err?.message || err?.toString() || '';

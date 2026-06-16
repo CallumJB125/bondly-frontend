@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { InlineFeedback } from '../../components/FeedbackButton.jsx';
+import { InlineFeedback } from '@bondly/ui/components/FeedbackButton.jsx';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { calcMonthly, calcAffordability, calcTransferDuty, calcUpfrontCosts, calcAmortSchedule, calcSwapSavings, calcTotalInterest } from '../../lib/finance.js';
-import { PRIME_RATE, STRESS_RATE, BANKS } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
-import RatesExplained from '../../components/RatesExplained.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { calcMonthly, calcAffordability, calcTransferDuty, calcUpfrontCosts, calcAmortSchedule, calcSwapSavings, calcTotalInterest } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE, STRESS_RATE, BANKS } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
 import { loans as loansApi, payments as paymentsApi, isLoggedIn, parseStatementForPreapproval } from '../../lib/api.js';
 import { useRef } from 'react';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select, CurrencyInput } from '../../components/Input.jsx';
-import PropertySearchCTA from '../../components/PropertySearchCTA.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select, CurrencyInput } from '@bondly/ui/components/Input.jsx';
+import PropertySearchCTA from '@bondly/ui/components/PropertySearchCTA.jsx';
 import './Tools.css';
 
 const TOOLS = [

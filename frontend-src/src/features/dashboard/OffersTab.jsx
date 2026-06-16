@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fmt } from '../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 import { offers, myApplication } from '../../lib/api.js';
 
 /**

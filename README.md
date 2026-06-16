@@ -1,6 +1,6 @@
 # Bondly Frontend
 
-Two React/Vite frontends for the Bondly platform.
+Two React/Vite frontends for the Bondly platform, sharing a common design system.
 
 ## Sites
 
@@ -10,6 +10,17 @@ Two React/Vite frontends for the Bondly platform.
 | `frontend-origination/` | First-Time Buyer — new mortgage applications | http://localhost:5174 | https://bondly-origination.netlify.app |
 
 Both sites proxy `/api` calls to `https://bondly.co.za`, so no backend setup is needed. You'll need a test account on bondly.co.za to log in and view authenticated screens.
+
+## Shared design system
+
+`shared/` (`@bondly/ui`) holds the synced design tokens, base styles, UI components, and utility libraries used by both apps. See [shared/README.md](shared/README.md) for details.
+
+```js
+import Button from '@bondly/ui/components/Button.jsx';
+import { fmt } from '@bondly/ui/lib/format.js';
+```
+
+App-specific code (API client, navigation, feature pages) stays in each frontend directory.
 
 ## Setup
 
@@ -41,3 +52,4 @@ Every push to `main` automatically redeploys both Netlify sites. Use the live UR
 - React Router v6
 - CSS custom properties (no Tailwind, no CSS-in-JS)
 - Feature-based folder structure under `src/features/`
+- Shared UI package at `shared/` imported via `@bondly/ui`

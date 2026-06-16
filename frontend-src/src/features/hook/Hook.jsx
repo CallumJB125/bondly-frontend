@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { trackAction } from '../../lib/session.js';
-import { CurrencyInput } from '../../components/Input.jsx';
-import { PRIME_RATE, BANKS } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
-import RatesExplained from '../../components/RatesExplained.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
+import { PRIME_RATE, BANKS } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
 import { bondHealthScore } from '../../lib/bondScore.js';
 import './Hook.css';
 

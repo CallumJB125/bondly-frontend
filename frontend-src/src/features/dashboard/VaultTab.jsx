@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { CreditCard, Briefcase, Building2, FileText, Home, BarChart2, Paperclip, File, Image, TrendingUp } from 'lucide-react';
 import { documents as docsApi, financialFitness } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { fmtDate, fmt } from '../../lib/format.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { fmtDate, fmt } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 import { ScoreHistoryChart, GRADE_COLORS_EXPORT as GRADE_COLORS, GRADE_LABELS_EXPORT as GRADE_LABELS } from './FinancesTab.jsx';
 
 const CATEGORIES = [

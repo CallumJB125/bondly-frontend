@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { fmt } from '../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 import { useCashflowCalendar } from './hooks/useFinanceQueries.js';
 import './CashflowCalendar.css';
 

@@ -1,8 +1,8 @@
 // Bank portal uses its own token slot so it can't accidentally collide with
 // a customer/admin session in the same browser. The portal is rendered as a
 // completely separate app shell under /bank/*.
-import { fmt } from '../../lib/format.js';
-import { calcMonthly } from '../../lib/finance.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import { calcMonthly } from '@bondly/ui/lib/finance.js';
 
 const TOKEN_KEY = 'bondly_bank_token';
 

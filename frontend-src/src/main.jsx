@@ -4,9 +4,9 @@ import { AlertTriangle } from 'lucide-react';
 import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
-import { ToastProvider } from './components/Toast.jsx';
-import './styles/tokens.css';
-import './styles/base.css';
+import { ToastProvider } from '@bondly/ui/components/Toast.jsx';
+import '@bondly/ui/styles/tokens.css';
+import '@bondly/ui/styles/base.css';
 
 function isChunkError(err) {
   const msg = err?.message || err?.toString() || '';

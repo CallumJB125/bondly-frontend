@@ -9,7 +9,7 @@
 // to recharts later if we want trend lines.
 
 import { useEffect, useState } from 'react';
-import { fmt, fmtPct } from '../../../lib/format.js';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
 
 const ZAR_PER_USD = 18.5; // approximation — sync with score-parsers script
 

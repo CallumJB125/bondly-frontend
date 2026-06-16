@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmt, fmtPct } from '../../lib/format.js';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { CurrencyInput } from '../../components/Input.jsx';
+import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
 import { publicAlerts, parseStatementForPreapproval } from '../../lib/api.js';
-import { PRIME_RATE } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
+import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import './Switch.css';
 
 const PRIME = PRIME_RATE;

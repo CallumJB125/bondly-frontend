@@ -1,15 +1,15 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, BarChart2, ArrowRight } from 'lucide-react';
-import { calcAffordability, calcMonthly } from '../../lib/finance.js';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { trackAction } from '../../lib/session.js';
-import { PRIME_RATE, STRESS_RATE } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
+import { calcAffordability, calcMonthly } from '@bondly/ui/lib/finance.js';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import { PRIME_RATE, STRESS_RATE } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import { pollParseJob } from '../../lib/api.js';
-import { CurrencyInput } from '../../components/Input.jsx';
-import StatementLoader from '../../components/StatementLoader.jsx';
-import RatesExplained from '../../components/RatesExplained.jsx';
+import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
+import StatementLoader from '@bondly/ui/components/StatementLoader.jsx';
+import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
 import Nav from '../../components/Nav.jsx';
 import './MortgageReadiness.css';
 

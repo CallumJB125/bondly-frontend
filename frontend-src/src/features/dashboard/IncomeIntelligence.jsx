@@ -1,5 +1,5 @@
 import { useIncomeAnalysis } from './hooks/useFinanceQueries.js';
-import { fmt, fmtDate } from '../../lib/format.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
 import Sparkline from '../../components/Sparkline.jsx';
 import './IncomeIntelligence.css';
 

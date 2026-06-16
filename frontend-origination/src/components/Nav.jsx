@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { notifications as notifApi } from '../lib/api.js';
-import { fmtDate } from '../lib/format.js';
+import { fmtDate } from '@bondly/ui/lib/format.js';
 import './Nav.css';
 
 const ICON = {

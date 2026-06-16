@@ -2,8 +2,8 @@
 // Pulls in the real token + base stylesheets so the component renders in context.
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/tokens.css';
-import './styles/base.css';
+import '@bondly/ui/styles/tokens.css';
+import '@bondly/ui/styles/base.css';
 import StatementVerdict, { DEMO_RESULT } from './features/dashboard/StatementVerdict.jsx';
 
 // Second scenario: no existing bond → max-bond fallback hero.

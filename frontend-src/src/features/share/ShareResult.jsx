@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Link2 } from 'lucide-react';
 import { share } from '../../lib/api.js';
-import { fmt, fmtPct } from '../../lib/format.js';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
 import './ShareResult.css';
 
 export default function ShareResult() {

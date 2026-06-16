@@ -3,9 +3,9 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { staffInvite } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { setToken } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import Button from '../../components/Button.jsx';
-import Input from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
 import './Auth.css';
 
 export default function AcceptInvite() {

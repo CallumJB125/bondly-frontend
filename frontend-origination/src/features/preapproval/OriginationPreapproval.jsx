@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { fmt } from '../../lib/format.js';
-import { calcMaxBond } from '../../lib/mortgage.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import { calcMaxBond } from '@bondly/ui/lib/mortgage.js';
 import './OriginationPreapproval.css';
 
 const EMPLOYMENT_TYPES = [

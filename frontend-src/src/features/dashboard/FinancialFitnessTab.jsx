@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Upload, TrendingUp, TrendingDown, AlertTriangle, CheckCircle,
          RefreshCw, Target, X, ChevronRight, AlertOctagon, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { financialFitness as ffApi, parseStatementForPreapproval, loans as loansApi } from '../../lib/api.js';
-import { fmt, fmtDate } from '../../lib/format.js';
-import { useToast } from '../../components/Toast.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import { STRESS_RATE, LOAN_TERM, BANK_PROFILES, calcMaxBond, bankLikelihood } from '../../lib/mortgage.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import { STRESS_RATE, LOAN_TERM, BANK_PROFILES, calcMaxBond, bankLikelihood } from '@bondly/ui/lib/mortgage.js';
 import './FinancialFitnessTab.css';
 
 const CATEGORY_META = {

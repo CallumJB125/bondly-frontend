@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, RefreshCw, BarChart2, CreditCard } from 'lucide-react';
 import { loans } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { trackAction } from '../../lib/session.js';
-import { PRIME_RATE, BANKS } from '../../lib/constants.js';
-import Button from '../../components/Button.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import { PRIME_RATE, BANKS } from '@bondly/ui/lib/constants.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 import './Auth.css';
 import './Onboarding.css';
 

@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { payments as pmtApi } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { fmt, fmtDate } from '../../lib/format.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select } from '../../components/Input.jsx';
-import Modal from '../../components/Modal.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
+import Modal from '@bondly/ui/components/Modal.jsx';
 
 export default function PaymentsTab({ loans, payments, onRefresh }) {
   const [form, setForm]   = useState({ loanId: '', amount: '', date: today(), notes: '' });

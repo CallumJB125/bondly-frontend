@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
-import Card, { CardHeader, CardBody } from '../../../components/Card.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 function apiFetchAdmin(path) {
   const token = localStorage.getItem('bondly_token');

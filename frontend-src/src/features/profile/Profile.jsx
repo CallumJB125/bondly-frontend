@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, CreditCard, DollarSign, Lock, Bell, MessageCircle, Gift, Clock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
-import { useToast } from '../../components/Toast.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
 import { profile as profileApi, auth as authApi, alerts as alertsApi, kyc as kycApi, referrals as referralsApi, whatsapp as whatsappApi, documents as docsApi } from '../../lib/api.js';
 import { validateSAID } from '../../lib/saId.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 import './Profile.css';
 
 const MENU_ITEMS = [

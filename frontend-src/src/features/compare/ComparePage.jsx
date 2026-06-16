@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
-import Button from '../../components/Button.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
 import './Compare.css';
 
 const BANK_DATA = {

@@ -1,18 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, TrendingUp, ChevronDown, ChevronUp, Edit2, Check, X, ShoppingCart, UtensilsCrossed, Film, Fuel, Zap, Shield, Repeat, AlertTriangle, Package, BarChart2, Sliders, Home, Camera } from 'lucide-react';
-import { trackAction } from '../../lib/session.js';
-import { fmt, fmtDate } from '../../lib/format.js';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { financialFitness, pollParseJob } from '../../lib/api.js';
-import StatementLoader from '../../components/StatementLoader.jsx';
+import StatementLoader from '@bondly/ui/components/StatementLoader.jsx';
 import {
   GoalPanel, ProgressSection, SnapshotHistory, PayOffFasterPanel, CommitPanel,
 } from '../dashboard/FinancialFitnessTab.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 import { adminApi } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import PropertySearchCTA from '../../components/PropertySearchCTA.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import PropertySearchCTA from '@bondly/ui/components/PropertySearchCTA.jsx';
 import './Optimize.css';
 import '../dashboard/FinancialFitnessTab.css';
 

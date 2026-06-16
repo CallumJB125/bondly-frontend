@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Button from '../../components/Button.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
 import './About.css';
 
 const STATS = [

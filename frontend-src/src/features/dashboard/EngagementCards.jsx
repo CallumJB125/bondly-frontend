@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingDown, ShieldCheck, Sparkles, Award, Users, Scissors } from 'lucide-react';
 import { me } from '../../lib/api.js';
-import { fmt, fmtPct } from '../../lib/format.js';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 /**
  * Quality Score card — surfaces the Bondly Quality Score with breakdown.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { finances } from '../../lib/api.js';
-import { fmt, fmtDate } from '../../lib/format.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
 import { InsightCard } from './FinancesTab.jsx';
 import CashflowPulse from './CashflowPulse.jsx';
 import './HiddenCostsTab.css';

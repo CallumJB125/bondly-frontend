@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { loans as loansApi } from '../../lib/api.js';
 import { useDebtOptimizer, useFinancialHealth } from './hooks/useFinanceQueries.js';
-import { fmt, fmtPct } from '../../lib/format.js';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
 import './DebtCommander.css';
 
 function DTIGauge({ dti }) {

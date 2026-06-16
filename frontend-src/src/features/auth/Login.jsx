@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Mail, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useToast } from '../../components/Toast.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
 import { auth } from '../../lib/api.js';
-import { trackAction } from '../../lib/session.js';
-import Button from '../../components/Button.jsx';
-import Input from '../../components/Input.jsx';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
 import './Auth.css';
 
 function VerifyEmailWall({ email, onVerified }) {

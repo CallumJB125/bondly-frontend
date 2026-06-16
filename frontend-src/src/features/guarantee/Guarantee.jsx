@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useToast } from '../../components/Toast.jsx';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
 
 const TERMS = [
   'The competitor rate offer must be from an FSP-registered bond originator or directly from a South African bank.',

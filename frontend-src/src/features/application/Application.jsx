@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import { applications as appApi, swaps } from '../../lib/api.js';
-import { fmt, fmtDate } from '../../lib/format.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 import './Application.css';
 
 const STATUS_COLORS = {

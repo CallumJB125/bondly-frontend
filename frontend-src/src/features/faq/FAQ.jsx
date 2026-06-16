@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import Button from '../../components/Button.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
 import './FAQ.css';
 
 // ── Data ──────────────────────────────────────────────────────────────────────

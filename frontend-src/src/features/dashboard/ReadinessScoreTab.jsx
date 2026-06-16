@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReadinessScore, useSpendingAnalysis } from './hooks/useFinanceQueries.js';
-import { fmt } from '../../lib/format.js';
-import { calcAffordability } from '../../lib/finance.js';
-import { PRIME_RATE } from '../../lib/constants.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import { calcAffordability } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
 import { myIntelligence } from '../../lib/api.js';
 import './ReadinessScoreTab.css';
 

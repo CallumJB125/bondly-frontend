@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Target, CheckCircle, AlertTriangle, Eye, Paperclip } from 'lucide-react';
 import { swaps, bankOffers, documents as docsApi, alerts as alertsApi, risk as riskApi, share as shareApi, decisions as decisionsApi, myApplication } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { fmt, fmtPct, fmtDate } from '../../lib/format.js';
-import { calcSwapSavings, calcRefinanceDecision } from '../../lib/finance.js';
-import { PRIME_RATE, BANKS, BANK_SPREADS } from '../../lib/constants.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { fmt, fmtPct, fmtDate } from '@bondly/ui/lib/format.js';
+import { calcSwapSavings, calcRefinanceDecision } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE, BANKS, BANK_SPREADS } from '@bondly/ui/lib/constants.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 
 function calcSwitchingCosts(balance) {
   const cancellation = Math.round(balance * 0.005 + 3000);

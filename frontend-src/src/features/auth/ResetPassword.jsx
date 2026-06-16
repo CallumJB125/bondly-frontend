@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { auth } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import Button from '../../components/Button.jsx';
-import Input from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
 import './Auth.css';
 
 export default function ResetPassword() {

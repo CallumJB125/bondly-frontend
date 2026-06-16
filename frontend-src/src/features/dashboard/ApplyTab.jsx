@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Clock, Building2, TrendingDown, ChevronRight } from 'lucide-react';
 import { myApplication, financialFitness } from '../../lib/api.js';
 import ApplicationDocumentsUpload from './ApplicationDocumentsUpload.jsx';
-import { useToast } from '../../components/Toast.jsx';
-import { calcMaxBond, calcMonthly } from '../../lib/finance.js';
-import { usePrimeRate } from '../../lib/usePrimeRate.js';
-import { fmt } from '../../lib/format.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { calcMaxBond, calcMonthly } from '@bondly/ui/lib/finance.js';
+import { usePrimeRate } from '@bondly/ui/lib/usePrimeRate.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 
 function calcTransferDuty(price) {
   let duty = 0;

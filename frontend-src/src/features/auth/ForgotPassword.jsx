@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail } from 'lucide-react';
 import { auth } from '../../lib/api.js';
-import Button from '../../components/Button.jsx';
-import Input from '../../components/Input.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
 import './Auth.css';
 
 export default function ForgotPassword() {

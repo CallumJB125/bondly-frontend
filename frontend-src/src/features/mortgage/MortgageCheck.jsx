@@ -1,9 +1,9 @@
 import { useState, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Upload, TrendingDown, AlertTriangle, CheckCircle, Info, ChevronRight } from 'lucide-react';
-import { fmt } from '../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 import { scanMortgageStatement } from '../../lib/api.js';
-import { PRIME_RATE } from '../../lib/constants.js';
+import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
 import './MortgageCheck.css';
 
 // ── Constants ────────────────────────────────────────────────────────────────

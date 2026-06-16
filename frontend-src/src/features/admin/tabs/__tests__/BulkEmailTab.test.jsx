@@ -7,7 +7,7 @@ vi.mock('../../../../context/AuthContext.jsx', () => ({
   useAuth: () => ({ user: { id: 'admin-1', role: 'admin' }, token: 'test-token' }),
 }));
 
-vi.mock('../../../../components/Toast.jsx', () => ({
+vi.mock('@bondly/ui/components/Toast.jsx', () => ({
   useToast: () => ({ showToast: vi.fn() }),
 }));
 

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import DOMPurify from 'dompurify';
 import { admin } from '../../../lib/api.js';
-import Button from '../../../components/Button.jsx';
-import Input, { Select } from '../../../components/Input.jsx';
-import Card, { CardHeader, CardBody } from '../../../components/Card.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 function Lbl({ children, style }) {
   return <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: 4, ...style }}>{children}</div>;

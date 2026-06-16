@@ -23,13 +23,13 @@ vi.mock('../../../context/AuthContext.jsx', () => ({
   }),
 }));
 
-vi.mock('../../../components/Toast.jsx', () => ({ useToast: () => vi.fn() }));
-vi.mock('../../../lib/session.js', () => ({ trackAction: vi.fn() }));
+vi.mock('@bondly/ui/components/Toast.jsx', () => ({ useToast: () => vi.fn() }));
+vi.mock('@bondly/ui/lib/session.js', () => ({ trackAction: vi.fn() }));
 vi.mock('lucide-react', () => ({ Mail: () => null, CheckCircle: () => null }));
-vi.mock('../../../components/Button.jsx', () => ({
+vi.mock('@bondly/ui/components/Button.jsx', () => ({
   default: ({ children, loading, full, variant, ...p }) => <button {...p}>{children}</button>,
 }));
-vi.mock('../../../components/Input.jsx', () => ({
+vi.mock('@bondly/ui/components/Input.jsx', () => ({
   default: ({ label, id, ...p }) => (
     <div>
       <label htmlFor={id}>{label}</label>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fmt } from '../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 
 function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });

@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Upload, TrendingDown, TrendingUp, AlertTriangle, CheckCircle, RefreshCw, Info, ChevronRight } from 'lucide-react';
 import { scanMortgageStatement } from '../../lib/api.js';
-import { fmt, fmtPct, fmtDate } from '../../lib/format.js';
-import { calcAmortSchedule } from '../../lib/finance.js';
-import { PRIME_RATE, BANKS, BANK_SPREADS } from '../../lib/constants.js';
-import Card, { CardHeader, CardBody, StatCard } from '../../components/Card.jsx';
-import Button from '../../components/Button.jsx';
-import { useToast } from '../../components/Toast.jsx';
+import { fmt, fmtPct, fmtDate } from '@bondly/ui/lib/format.js';
+import { calcAmortSchedule } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE, BANKS, BANK_SPREADS } from '@bondly/ui/lib/constants.js';
+import Card, { CardHeader, CardBody, StatCard } from '@bondly/ui/components/Card.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
 import './MortgageStatementTab.css';
 
 function remainingMonths(balance, annualRate, payment) {

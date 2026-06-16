@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom';
 import { Home, CheckCircle } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { loans as loansApi, deeds as deedsApi, documents as docsApi, swaps as swapsApi } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { PRIME_RATE, BANKS } from '../../lib/constants.js';
-import { calcEquityForecast, calcSwapSavings } from '../../lib/finance.js';
-import { usePrimeRate } from '../../lib/usePrimeRate.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select, CurrencyInput } from '../../components/Input.jsx';
-import Modal from '../../components/Modal.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { PRIME_RATE, BANKS } from '@bondly/ui/lib/constants.js';
+import { calcEquityForecast, calcSwapSavings } from '@bondly/ui/lib/finance.js';
+import { usePrimeRate } from '@bondly/ui/lib/usePrimeRate.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select, CurrencyInput } from '@bondly/ui/components/Input.jsx';
+import Modal from '@bondly/ui/components/Modal.jsx';
 
 const EMPTY = { bank: 'ABSA', amount: '', rate: String(PRIME_RATE), term: '20', purchasePrice: '', startDate: '' };
 

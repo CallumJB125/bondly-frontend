@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import OriginationNav from '../../components/OriginationNav.jsx';
-import { calcMonthly, calcTotalInterest, calcTransferDuty, calcUpfrontCosts, calcAmortSchedule, calcMaxBond, calcAffordability } from '../../lib/finance.js';
-import { PRIME_RATE } from '../../lib/constants.js';
-import { fmt, parseNum } from '../../lib/format.js';
+import { calcMonthly, calcTotalInterest, calcTransferDuty, calcUpfrontCosts, calcAmortSchedule, calcMaxBond, calcAffordability } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { fmt, parseNum } from '@bondly/ui/lib/format.js';
 import './Calculators.css';
 
 // ── Tab config ────────────────────────────────────────────

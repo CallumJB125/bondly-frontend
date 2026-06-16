@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { calcAmortSchedule, calcMonthly } from '../../lib/finance.js';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Button from '../../components/Button.jsx';
-import { Select } from '../../components/Input.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { calcAmortSchedule, calcMonthly } from '@bondly/ui/lib/finance.js';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import { Select } from '@bondly/ui/components/Input.jsx';
 
 const PAGE_SIZE = 24;
 

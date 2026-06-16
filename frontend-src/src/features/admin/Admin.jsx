@@ -24,11 +24,11 @@ import ActivityTimeline from './components/ActivityTimeline.jsx';
 import useAdminEventStream from './components/useAdminEventStream.js';
 import MentionInput, { renderWithMentions } from './components/MentionInput.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
-import { fmt, fmtPct, fmtDate } from '../../lib/format.js';
-import { useToast } from '../../components/Toast.jsx';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody, StatCard } from '../../components/Card.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import { fmt, fmtPct, fmtDate } from '@bondly/ui/lib/format.js';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody, StatCard } from '@bondly/ui/components/Card.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 import './Admin.css';
 
 // ─── SVG Icons ────────────────────────────────────────────

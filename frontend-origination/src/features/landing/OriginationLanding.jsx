@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { calcMaxBond } from '../../lib/mortgage.js';
-import { calcMonthly } from '../../lib/finance.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
-import { fmt, fmtPct, parseNum } from '../../lib/format.js';
-import { trackAction } from '../../lib/analytics.js';
+import { calcMaxBond } from '@bondly/ui/lib/mortgage.js';
+import { calcMonthly } from '@bondly/ui/lib/finance.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import { fmt, fmtPct, parseNum } from '@bondly/ui/lib/format.js';
+import { trackAction } from '@bondly/ui/lib/analytics.js';
 import './OriginationLanding.css';
 
 // ── Constants ────────────────────────────────────────────────

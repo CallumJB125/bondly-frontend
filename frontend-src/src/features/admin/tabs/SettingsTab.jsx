@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { admin, primeRate as primeRateApi } from '../../../lib/api.js';
-import Button from '../../../components/Button.jsx';
-import Input from '../../../components/Input.jsx';
-import Card, { CardHeader, CardBody } from '../../../components/Card.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input from '@bondly/ui/components/Input.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 export default function SettingsTab({ primeInput, setPrimeInput, showToast }) {
   const [pending, setPending]   = useState([]);

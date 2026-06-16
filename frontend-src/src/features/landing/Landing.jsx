@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { calcSwapSavings } from '../../lib/finance.js';
-import { fmt } from '../../lib/format.js';
-import { track, trackAction } from '../../lib/session.js';
-import { PRIME_RATE } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
+import { calcSwapSavings } from '@bondly/ui/lib/finance.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import { track, trackAction } from '@bondly/ui/lib/session.js';
+import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import { publicStats } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import './Landing.css';

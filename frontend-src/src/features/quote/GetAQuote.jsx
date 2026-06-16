@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { leads } from '../../lib/api.js';
-import { useToast } from '../../components/Toast.jsx';
-import { fmt, fmtPct } from '../../lib/format.js';
-import { calcMonthly } from '../../lib/finance.js';
-import { PRIME_RATE, BANKS, BANK_SPREADS } from '../../lib/constants.js';
-import Button from '../../components/Button.jsx';
-import Input, { Select } from '../../components/Input.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { calcMonthly } from '@bondly/ui/lib/finance.js';
+import { PRIME_RATE, BANKS, BANK_SPREADS } from '@bondly/ui/lib/constants.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
 import './GetAQuote.css';
 
 const EMPLOYMENT_TYPES = ['Permanent employee', 'Contract', 'Self-employed', 'Other'];

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../components/AdminTable.jsx';
 import { admin } from '../../../lib/api.js';
-import { fmt, fmtDate } from '../../../lib/format.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
 
 /**
  * Watchlist — one place to see everyone waiting on a condition to be met:

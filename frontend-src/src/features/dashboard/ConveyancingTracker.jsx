@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Building2, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { me, myApplication } from '../../lib/api.js';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 /**
  * Conveyancing tracker — user-facing milestone view.

@@ -16,7 +16,7 @@
 // Ships with DEMO_RESULT so it renders standalone for design preview.
 
 import { useState } from 'react';
-import { fmt, fmtShort } from '../../lib/format.js';
+import { fmt, fmtShort } from '@bondly/ui/lib/format.js';
 import './StatementVerdict.css';
 
 // ── readiness → state pill ─────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
-import PropertySearchCTA from './PropertySearchCTA.jsx';
+import PropertySearchCTA from '@bondly/ui/components/PropertySearchCTA.jsx';
 import './ChatWidget.css';
 
 async function apiFetch(path, opts = {}) {

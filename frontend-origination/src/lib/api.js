@@ -1,4 +1,4 @@
-import { trackApiError } from './errors.js';
+import { trackApiError } from '@bondly/ui/lib/errors.js';
 // ── API client ────────────────────────────────────────────
 
 function getToken() {

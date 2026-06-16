@@ -16,14 +16,14 @@ import CashflowCalendar      from './CashflowCalendar.jsx';
 import ReadinessScoreTab     from './ReadinessScoreTab.jsx';
 import BankViewTab           from './BankViewTab.jsx';
 import { finances as financesApi } from '../../lib/api.js';
-import { bankLikelihood, calcMaxBond } from '../../lib/mortgage.js';
-import { track as aTrack } from '../../lib/analytics.js';
-import { fmt, fmtPct, fmtDate, fmtShort } from '../../lib/format.js';
-import { useToast } from '../../components/Toast.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Button from '../../components/Button.jsx';
-import Input, { Select } from '../../components/Input.jsx';
-import { SkeletonCard } from '../../components/Skeleton.jsx';
+import { bankLikelihood, calcMaxBond } from '@bondly/ui/lib/mortgage.js';
+import { track as aTrack } from '@bondly/ui/lib/analytics.js';
+import { fmt, fmtPct, fmtDate, fmtShort } from '@bondly/ui/lib/format.js';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Button from '@bondly/ui/components/Button.jsx';
+import Input, { Select } from '@bondly/ui/components/Input.jsx';
+import { SkeletonCard } from '@bondly/ui/components/Skeleton.jsx';
 import './FinancesTab.css';
 
 const SUB_TABS = [

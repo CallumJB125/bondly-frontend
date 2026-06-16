@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { admin } from '../../../lib/api.js';
-import { fmt, fmtDate } from '../../../lib/format.js';
-import Button from '../../../components/Button.jsx';
-import Card from '../../../components/Card.jsx';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card from '@bondly/ui/components/Card.jsx';
 
 export default function AlertsTab({ data, showToast }) {
   const { rateAlerts = [], savingsAlerts = [], primeRate = 11.25 } = data;

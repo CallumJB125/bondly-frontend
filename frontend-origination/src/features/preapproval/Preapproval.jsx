@@ -1,22 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
-import { InlineFeedback } from '../../components/FeedbackButton.jsx';
-import { trackFormField, track, trackAction } from '../../lib/session.js';
-import { track as aTrack } from '../../lib/analytics.js';
+import { InlineFeedback } from '@bondly/ui/components/FeedbackButton.jsx';
+import { trackFormField, track, trackAction } from '@bondly/ui/lib/session.js';
+import { track as aTrack } from '@bondly/ui/lib/analytics.js';
 import { Link, useNavigate } from 'react-router-dom';
 import OriginationNav from '../../components/OriginationNav.jsx';
 import { Smartphone, Briefcase, BarChart2, Target, CheckCircle } from 'lucide-react';
 import { applications, leads, parseStatementForPreapproval, qualifyManual, profile as profileApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useToast } from '../../components/Toast.jsx';
-import { PRIME_RATE, STRESS_RATE } from '../../lib/constants.js';
-import { useRateSettings } from '../../lib/usePrimeRate.js';
-import RatesExplained from '../../components/RatesExplained.jsx';
-import { calcMaxBond, calcMonthly } from '../../lib/finance.js';
-import { fmt, parseNum } from '../../lib/format.js';
-import Button from '../../components/Button.jsx';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
-import Input, { Select, CurrencyInput } from '../../components/Input.jsx';
-import PropertySearchCTA from '../../components/PropertySearchCTA.jsx';
+import { useToast } from '@bondly/ui/components/Toast.jsx';
+import { PRIME_RATE, STRESS_RATE } from '@bondly/ui/lib/constants.js';
+import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
+import { calcMaxBond, calcMonthly } from '@bondly/ui/lib/finance.js';
+import { fmt, parseNum } from '@bondly/ui/lib/format.js';
+import Button from '@bondly/ui/components/Button.jsx';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
+import Input, { Select, CurrencyInput } from '@bondly/ui/components/Input.jsx';
+import PropertySearchCTA from '@bondly/ui/components/PropertySearchCTA.jsx';
 import './Preapproval.css';
 
 // ── Sub-components ────────────────────────────────────────────────────────────

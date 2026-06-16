@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../components/AdminTable.jsx';
 import { admin } from '../../../lib/api.js';
-import { fmt } from '../../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 
 /**
  * Unified Applications view — replaces having to flip between Pipeline,

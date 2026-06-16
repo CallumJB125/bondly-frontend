@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { financialFitness } from '../../lib/api.js';
-import { fmt } from '../../lib/format.js';
-import Card, { CardHeader, CardBody } from '../../components/Card.jsx';
+import { fmt } from '@bondly/ui/lib/format.js';
+import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 
 /**
  * Readiness over time — small SVG line chart of qualifying bond per snapshot.

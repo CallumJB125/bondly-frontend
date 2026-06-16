@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { finances, financialFitness } from '../../lib/api.js';
-import { fmt, fmtDate } from '../../lib/format.js';
+import { fmt, fmtDate } from '@bondly/ui/lib/format.js';
 import { useCountUp } from '../../lib/useCountUp.js';
 import Sparkline from '../../components/Sparkline.jsx';
 import {

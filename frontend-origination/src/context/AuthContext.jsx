@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { setToken, clearToken, getDecodedToken, auth } from '../lib/api.js';
-import { getSessionId, identifyUser } from '../lib/session.js';
+import { getSessionId, identifyUser } from '@bondly/ui/lib/session.js';
 
 const AuthContext = createContext(null);
 

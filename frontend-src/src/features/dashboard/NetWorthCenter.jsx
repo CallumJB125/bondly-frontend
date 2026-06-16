@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { finances } from '../../lib/api.js';
 import { useNetWorth, useHealthHistory } from './hooks/useFinanceQueries.js';
-import { fmt } from '../../lib/format.js';
+import { fmt } from '@bondly/ui/lib/format.js';
 import Sparkline from '../../components/Sparkline.jsx';
 import './NetWorthCenter.css';
 
