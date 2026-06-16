@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import OriginationNav from '../../components/OriginationNav.jsx';
 import { calcMonthly, calcTotalInterest, calcTransferDuty, calcUpfrontCosts, calcAmortSchedule, calcMaxBond, calcAffordability } from '@bondly/ui/lib/finance.js';
-import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, STRESS_RATE } from '@bondly/ui/lib/constants.js';
 import { fmt, parseNum } from '@bondly/ui/lib/format.js';
 import './Calculators.css';
 
@@ -10,6 +10,7 @@ import './Calculators.css';
 const TABS = [
   { slug: 'repayment',      label: 'Repayment' },
   { slug: 'affordability',  label: 'Affordability' },
+  { slug: 'borrowing-power', label: 'What can I borrow?' },
   { slug: 'rent-vs-buy',    label: 'Rent vs Buy' },
   { slug: 'transfer-duty',  label: 'Transfer duty' },
   { slug: 'upfront-costs',  label: 'Upfront costs' },
@@ -693,9 +694,110 @@ function RentVsBuyCalc() {
 // ═══════════════════════════════════════════════════════════
 // MAIN CALCULATORS PAGE
 // ═══════════════════════════════════════════════════════════
+// ── Borrowing power (reverse affordability) ───────────────
+// Works backwards from a repayment the user is comfortable with to the bond +
+// house price it supports. Shows both the figure at the entered/prime rate and
+// the conservative bank-stress figure (what they're realistically approved for).
+function BorrowingPowerCalc() {
+  const [monthly, setMonthly] = useState('');
+  const [deposit, setDeposit] = useState('');
+  const [rate,    setRate]    = useState(String(PRIME_RATE));
+  const [term,    setTerm]    = useState('20');
+  const [result,  setResult]  = useState(null);
+
+  const calculate = useCallback(() => {
+    const m   = parseNum(monthly);
+    const dep = parseNum(deposit, 0);
+    const r   = parseNum(rate, PRIME_RATE);
+    const t   = parseNum(term, 20);
+    if (!m || m <= 0) return;
+    const bondAtRate   = calcMaxBond(m, r, t);
+    const bondAtStress = calcMaxBond(m, STRESS_RATE, t);
+    setResult({
+      bondAtRate,
+      bondAtStress,
+      housePrice:       bondAtRate + dep,
+      housePriceStress: bondAtStress + dep,
+      deposit: dep,
+    });
+  }, [monthly, deposit, rate, term]);
+
+  return (
+    <div className="calc-body">
+      <div className="calc-fields">
+        <div className="calc-field">
+          <label className="calc-label" htmlFor="bp-monthly">Monthly repayment you’re comfortable with</label>
+          <div className="calc-input-wrap">
+            <span className="calc-prefix">R</span>
+            <input id="bp-monthly" className="calc-input calc-input--prefix" type="number" min="0" placeholder="e.g. 12 000" value={monthly} onChange={e => setMonthly(e.target.value)} />
+          </div>
+        </div>
+        <div className="calc-field">
+          <label className="calc-label" htmlFor="bp-deposit">
+            Deposit available
+            <span className="calc-label__note">Optional</span>
+          </label>
+          <div className="calc-input-wrap">
+            <span className="calc-prefix">R</span>
+            <input id="bp-deposit" className="calc-input calc-input--prefix" type="number" min="0" placeholder="e.g. 150 000" value={deposit} onChange={e => setDeposit(e.target.value)} />
+          </div>
+        </div>
+        <div className="calc-field">
+          <label className="calc-label" htmlFor="bp-rate">
+            Interest rate
+            <span className="calc-label__note">Default: prime {PRIME_RATE}%</span>
+          </label>
+          <div className="calc-input-wrap">
+            <input id="bp-rate" className="calc-input calc-input--suffix" type="number" step="0.25" min="1" max="30" value={rate} onChange={e => setRate(e.target.value)} />
+            <span className="calc-suffix">%</span>
+          </div>
+        </div>
+        <div className="calc-field">
+          <label className="calc-label" htmlFor="bp-term">
+            Loan term
+            <span className="calc-label__note">Default: 20 years</span>
+          </label>
+          <div className="calc-input-wrap">
+            <input id="bp-term" className="calc-input calc-input--suffix" type="number" min="5" max="30" value={term} onChange={e => setTerm(e.target.value)} />
+            <span className="calc-suffix">yrs</span>
+          </div>
+        </div>
+        <button className="calc-btn" onClick={calculate}>Calculate what I can borrow</button>
+      </div>
+
+      {result ? (
+        <div className="calc-results">
+          <div className="calc-results__primary">
+            <span className="calc-results__label">Bond you could afford</span>
+            <span className="calc-results__value">{fmt(result.bondAtRate)}</span>
+          </div>
+          <div className="calc-results__row">
+            <div className="calc-results__stat">
+              <span className="calc-results__stat-label">Target house price{result.deposit > 0 ? ' (incl. deposit)' : ''}</span>
+              <span className="calc-results__stat-val">{fmt(result.housePrice)}</span>
+            </div>
+            <div className="calc-results__stat">
+              <span className="calc-results__stat-label">Bank-stress estimate (at {STRESS_RATE}%)</span>
+              <span className="calc-results__stat-val calc-results__stat-val--accent">{fmt(result.bondAtStress)}</span>
+            </div>
+          </div>
+          <Caveat extra={`Banks assess affordability at a stress rate of about ${STRESS_RATE}%, so the conservative figure is closer to what you'll actually be approved for. A deposit increases the house price you can target.`} />
+          <CalcCTA />
+        </div>
+      ) : (
+        <div className="calc-placeholder">
+          <IconCalc />
+          <p>Enter a monthly repayment above to see the bond and house price it supports.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const CALC_COMPONENTS = {
-  'repayment':     RepaymentCalc,
-  'affordability': AffordabilityCalc,
+  'repayment':       RepaymentCalc,
+  'affordability':   AffordabilityCalc,
+  'borrowing-power': BorrowingPowerCalc,
   'rent-vs-buy':   RentVsBuyCalc,
   'transfer-duty': TransferDutyCalc,
   'upfront-costs': UpfrontCostsCalc,
@@ -704,6 +806,7 @@ const CALC_COMPONENTS = {
 const CALC_DESCRIPTIONS = {
   'repayment':     'See your monthly bond repayment, total cost, and how your payments shift from interest to principal over time.',
   'affordability': 'Find out the maximum bond you qualify for based on your income, existing debt, and deposit.',
+  'borrowing-power': 'Work backwards from a monthly repayment you’re comfortable with to the bond amount and house price it supports — the reverse of the affordability calculator.',
   'rent-vs-buy':   'Compare the true long-term cost of renting vs buying — including property growth, upfront costs, and monthly repayments.',
   'transfer-duty': 'Calculate the SARS transfer duty payable on your property purchase (2025/26 brackets).',
   'upfront-costs': 'See every rand of cash you need on transfer day — deposit, transfer duty, bond registration, and attorney fees.',
