@@ -1214,7 +1214,12 @@ export default function Preapproval() {
             </div>
             {profile.netDisposable !== null && (
               <div className="pa-metric">
-                <div className="pa-metric__label">Net disposable</div>
+                {/* Without a statement we have no living-expense data, so netDisposable
+                    is income − debt only (i.e. before living costs). Label it honestly
+                    so gross income is never presented as true spare cash. */}
+                <div className="pa-metric__label">
+                  {Object.keys(expenses).length > 0 ? 'Net disposable' : 'Net disposable (before living costs)'}
+                </div>
                 <div className="pa-metric__val">{fmt(profile.netDisposable)}<span>/mo</span></div>
               </div>
             )}

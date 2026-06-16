@@ -850,9 +850,15 @@ function SwitchConfirm({ balance, currentRate }) {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Fire the API call in the background — don't block the success screen on it
+  // Fire the API call in the background — don't block the success screen on it.
+  // /api/switch/proceed is auth-only: it creates a switchDeal record for the
+  // logged-in dashboard tracker. An anonymous switcher's lead + admin Telegram
+  // alert are already captured via the public /api/leads call in the contact
+  // step, so firing this while signed out just produces a doomed 401. Only call
+  // it when actually authenticated.
   useEffect(() => {
     const token = localStorage.getItem('bondly_token');
+    if (!token) return;
     fetch('/api/switch/proceed', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },

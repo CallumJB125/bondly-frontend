@@ -23,8 +23,16 @@ export default function MortgageReadiness() {
 
   const navigate = useNavigate();
   const [mode, setMode] = useState('manual'); // 'manual' | 'statement'
-  const [income, setIncome] = useState('');
-  const [price, setPrice]   = useState('');
+  // Prefill from the homepage hero calculator handoff (/mortgage-readiness?income=…&price=…)
+  // so the visitor doesn't have to re-type what they already entered.
+  const [income, setIncome] = useState(() => {
+    const v = new URLSearchParams(window.location.search).get('income');
+    return v && !isNaN(parseFloat(v)) ? String(parseFloat(v)) : '';
+  });
+  const [price, setPrice]   = useState(() => {
+    const v = new URLSearchParams(window.location.search).get('price');
+    return v && !isNaN(parseFloat(v)) ? String(parseFloat(v)) : '';
+  });
 
   // Statement path state
   const fileRef = useRef(null);
