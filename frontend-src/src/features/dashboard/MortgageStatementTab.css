@@ -1,0 +1,461 @@
+/* MortgageStatementTab */
+
+.ms-tab {
+  padding: var(--space-5) 0;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.ms-header {
+  margin-bottom: var(--space-5);
+}
+
+.ms-header__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-2);
+}
+
+.ms-header__sub {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 560px;
+}
+
+/* ── Upload zone ─────────────────────────────────────────── */
+.ms-upload {
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ms-upload--over {
+  border-color: var(--lime);
+  background: color-mix(in srgb, var(--lime) 5%, transparent);
+}
+
+@media (hover: hover) {
+  .ms-upload:hover {
+    border-color: var(--lime);
+    background: color-mix(in srgb, var(--lime) 5%, transparent);
+  }
+}
+
+.ms-upload--scanning {
+  cursor: default;
+  border-style: solid;
+  border-color: var(--lime);
+  background: color-mix(in srgb, var(--lime) 5%, transparent);
+}
+
+.ms-upload__icon {
+  color: var(--lime);
+  margin-bottom: var(--space-1);
+}
+
+.ms-upload strong {
+  font-size: 1.0625rem;
+  color: var(--text-primary);
+}
+
+.ms-upload span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ms-upload__btn {
+  margin-top: var(--space-2);
+  background: var(--lime);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--border-radius-sm);
+}
+
+.ms-upload__privacy {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+  opacity: 0.7;
+}
+
+.ms-upload__error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  text-align: center;
+  margin-top: var(--space-2);
+}
+
+.ms-upload__selected {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.ms-spin {
+  animation: ms-spin 1.2s linear infinite;
+  color: var(--lime);
+}
+
+@keyframes ms-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (pointer: coarse) {
+  .ms-upload {
+    border-style: solid;
+    border-color: var(--lime);
+    padding: var(--space-6) var(--space-5);
+  }
+}
+
+/* ── Intro checklist ─────────────────────────────────────── */
+.ms-intro-points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.ms-intro-point {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ms-intro-point svg {
+  color: var(--lime);
+  flex-shrink: 0;
+}
+
+/* ── Error ───────────────────────────────────────────────── */
+.ms-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  border: 1px solid color-mix(in srgb, #ef4444 30%, transparent);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.875rem;
+  color: #ef4444;
+}
+
+/* ── Results header ──────────────────────────────────────── */
+.ms-results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.ms-results-header__date {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.ms-results-header__note {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+  font-style: italic;
+}
+
+/* ── Arrears banner ──────────────────────────────────────── */
+.ms-arrears-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  border: 1px solid color-mix(in srgb, #ef4444 35%, transparent);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9375rem;
+  color: #ef4444;
+  margin-bottom: var(--space-5);
+}
+
+/* ── Stats grid ──────────────────────────────────────────── */
+.ms-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .ms-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Meta row ────────────────────────────────────────────── */
+.ms-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.ms-meta-item {
+  min-width: 120px;
+}
+
+.ms-meta-item--address {
+  flex: 1;
+}
+
+.ms-meta-item__label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.ms-meta-item__val {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ── Payment breakdown ───────────────────────────────────── */
+.ms-breakdown__bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ms-breakdown__bar {
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  background: var(--bg-page);
+}
+
+.ms-breakdown__principal {
+  background: var(--lime);
+  transition: width 0.6s;
+}
+
+.ms-breakdown__interest {
+  background: color-mix(in srgb, #ef4444 70%, transparent);
+  transition: width 0.6s;
+}
+
+.ms-breakdown__legend {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.ms-breakdown__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ms-breakdown__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ms-breakdown__legend-item--principal .ms-breakdown__dot { background: var(--lime); }
+.ms-breakdown__legend-item--interest  .ms-breakdown__dot { background: color-mix(in srgb, #ef4444 70%, transparent); }
+
+.ms-breakdown__note {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: var(--space-3) 0 0;
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-3);
+}
+
+/* ── Impact simulator ────────────────────────────────────── */
+.ms-sim__desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-4);
+}
+
+.ms-sim__input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ms-sim__input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  background: var(--bg-page);
+}
+
+.ms-sim__prefix,
+.ms-sim__suffix {
+  padding: 0 var(--space-3);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: none;
+  white-space: nowrap;
+}
+
+.ms-sim__prefix { border-right: 1px solid var(--border-color); }
+.ms-sim__suffix { border-left: 1px solid var(--border-color); }
+
+.ms-sim__input {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: var(--font-sans);
+  outline: none;
+}
+
+.ms-sim__clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  padding: var(--space-1);
+}
+
+.ms-sim__results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 480px) {
+  .ms-sim__results {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ms-sim__result {
+  padding: var(--space-3);
+  background: var(--bg-page);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.ms-sim__result--good {
+  border-color: color-mix(in srgb, var(--lime) 40%, transparent);
+  background: color-mix(in srgb, var(--lime) 6%, transparent);
+}
+
+.ms-sim__result-val {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.ms-sim__result--good .ms-sim__result-val {
+  color: var(--color-grade-a, #22c55e);
+}
+
+.ms-sim__result-lbl {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ms-sim__hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* ── Refinancing card ────────────────────────────────────── */
+.ms-refi-card {
+  margin-top: var(--space-5);
+}
+
+.ms-refi-alert {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, #f97316 10%, transparent);
+  border: 1px solid color-mix(in srgb, #f97316 30%, transparent);
+  border-radius: var(--border-radius-sm);
+  margin-bottom: var(--space-4);
+}
+
+.ms-refi-alert__icon { color: #f97316; margin-top: 2px; flex-shrink: 0; }
+
+.ms-refi-alert__headline {
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.ms-refi-alert__sub {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.ms-refi-savings {
+  display: flex;
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
+}
+
+.ms-refi-stat__val {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--color-grade-a, #22c55e);
+}
+
+.ms-refi-stat__lbl {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.ms-refi-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}

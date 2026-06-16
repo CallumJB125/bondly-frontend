@@ -1,0 +1,128 @@
+/* Skeleton */
+.cfp-skeleton {
+  height: 120px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.cfp-skeleton--compact { height: 48px; }
+
+/* Compact bar */
+.cfp-compact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.cfp-compact__bar-wrap {
+  height: 8px;
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cfp-compact__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease, background 0.4s ease;
+}
+.cfp-compact__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Expanded */
+.cfp-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+}
+
+.cfp-expanded__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.cfp-expanded__bar-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cfp-expanded__bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cfp-expanded__bar-track {
+  height: 10px;
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cfp-expanded__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease, background 0.4s ease;
+}
+
+.cfp-expanded__runway-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.cfp-expanded__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cfp-expanded__score-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Risk triggers */
+.cfp-expanded__triggers-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+}
+
+.cfp-trigger {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  padding: 3px 0;
+}
+
+.cfp-trigger__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+.cfp-expanded__chart {
+  margin-top: var(--space-2);
+}

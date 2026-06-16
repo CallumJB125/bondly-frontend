@@ -1,0 +1,92 @@
+.install-banner {
+  position: fixed;
+  bottom: calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 8px);
+  left: 12px;
+  right: 12px;
+  z-index: 8500;
+  background: var(--bg-nav);
+  border: 1px solid rgba(200,168,75,0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+  animation: banner-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes banner-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* On desktop, only show if the install prompt fires (unlikely but possible) */
+@media (min-width: 768px) {
+  .install-banner {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 360px;
+  }
+}
+
+.install-banner__icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: rgba(200,168,75,0.12);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.install-banner__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.install-banner__body strong {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--cream);
+  display: block;
+}
+
+.install-banner__body span {
+  font-size: 0.8rem;
+  color: rgba(245,240,232,0.65);
+  line-height: 1.4;
+}
+
+.install-banner__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.install-banner__btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  font-family: var(--font-sans);
+  line-height: 1;
+}
+
+.install-banner__btn--primary {
+  background: var(--lime);
+  color: var(--forest);
+}
+
+.install-banner__btn--ghost {
+  background: rgba(255,255,255,0.08);
+  color: rgba(245,240,232,0.65);
+}

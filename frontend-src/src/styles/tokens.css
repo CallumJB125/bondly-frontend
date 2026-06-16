@@ -1,0 +1,143 @@
+/* ============================================================
+   BONDLY — CSS DESIGN TOKENS
+   Light minimal premium fintech
+============================================================ */
+:root {
+  /* --- Brand --- */
+  --brand:        #1a5c38;
+  --brand-light:  #e8f3ed;
+  --brand-dark:   #134429;
+  --gold:         #c49a2e;
+  --gold-light:   #fdf6e3;
+  /* Darker gold reserved for savings/Rand figures ON cream/off-white so they
+     clear WCAG AA (4.5:1) — the lighter --gold fails on pale backgrounds. */
+  --gold-fig:     #9a7414;
+  /* Deep green for trust/CTA bands */
+  --brand-deep:   #123f27;
+  /* Warm off-white for alternating section rhythm */
+  --bg-warm:      #faf8f4;
+
+  /* --- Backgrounds --- */
+  --bg-white:     #ffffff;
+  --bg-surface:   #f8f7f5;
+  --bg-subtle:    #f3f2ef;
+  --bg-page:      #ffffff;
+  --bg-card:      #ffffff;
+  --bg-input:     #ffffff;
+  --bg-nav:       #ffffff;
+  --bg-footer:    #111111;
+
+  /* --- Text --- */
+  --text-primary:   #111111;
+  --text-secondary: #6b7280;
+  --text-muted:     #9ca3af;
+  --text-on-brand:  #ffffff;
+  --text-on-dark:   #f9fafb;
+
+  /* --- Borders --- */
+  --border:         #e5e7eb;
+  --border-strong:  #d1d5db;
+
+  /* --- Semantic status --- */
+  --color-success:  #16a34a;
+  --color-error:    #dc2626;
+  --color-warning:  #d97706;
+  --color-info:     #2563eb;
+
+  /* --- Risk/grade colors --- */
+  --color-grade-a: #22c55e;
+  --color-grade-b: #84cc16;
+  --color-grade-c: #eab308;
+  --color-grade-d: #f97316;
+  --color-grade-e: #ef4444;
+
+  /* --- Typography --- */
+  --font-serif: 'DM Serif Display', Georgia, serif;
+  --font-sans:  'Inter', system-ui, sans-serif;
+
+  /* --- Text size scale --- */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+  --text-5xl:  clamp(2rem, 5vw, 3rem);
+
+  /* --- Spacing scale --- */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-7:  1.75rem;
+  --space-8:  2rem;
+  --space-9:  2.25rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+  --space-18: 4.5rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* --- Layout --- */
+  --nav-height-desktop: 64px;
+  --nav-height-mobile:  56px;
+  --container-max:      1120px;
+
+  /* --- Radius --- */
+  --radius-sm:   6px;
+  --radius:      10px;
+  --radius-lg:   16px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* --- Backward-compat aliases --- */
+  --border-color:      var(--border);
+  --border-radius:     var(--radius);
+  --border-radius-sm:  var(--radius-sm);
+  --border-radius-lg:  var(--radius-lg);
+  --border-radius-xl:  var(--radius-xl);
+  --text-on-lime:      var(--text-on-brand);
+  --forest:            #111111;
+  --cream:             #f9fafb;
+  --lime:              var(--brand);
+  --mint:              var(--brand);
+  --muted:             var(--text-secondary);
+  --orange:            #d97706;
+  --sage:              #374151;
+  --ink:               #111111;
+  --paper:             #f8f7f5;
+  --bg-base:           var(--bg-white);
+
+  /* --- Shadows --- */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+
+  /* --- Focus ring --- */
+  --focus-ring: 0 0 0 3px rgba(26,92,56,0.28);
+
+  /* --- Transitions --- */
+  /* Spec: 150–400ms ease-out, never bouncy. One shared easing curve. */
+  --ease-out:        cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 0.15s var(--ease-out);
+  --transition-base: 0.22s var(--ease-out);
+  --transition-slow: 0.38s var(--ease-out);
+}
+
+/* Global motion contract — respect reduced-motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

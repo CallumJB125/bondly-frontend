@@ -1,0 +1,465 @@
+/* ── Desktop nav ──────────────────────────────────────── */
+.nav-desktop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  height: var(--nav-height-desktop);
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-desktop--landing {
+  background: #ffffff;
+  transition: background var(--transition-base), box-shadow var(--transition-base);
+}
+
+.nav-desktop--scrolled {
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-desktop__inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.nav-logo {
+  font-family: var(--font-serif);
+  font-size: 1.375rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+.nav-desktop__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex: 1;
+}
+
+.nav-desktop__links a {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.nav-desktop__links a.active {
+  color: var(--text-primary);
+}
+
+.nav-swap-link {
+  /* no special highlight — only relevant for users with an existing bond */
+}
+
+.nav-desktop__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.nav-theme-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.nav-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-signout-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  flex-shrink: 0;
+  padding: 4px;
+  margin: -2px;
+}
+.nav-signout-btn:hover { opacity: 1; background: var(--brand-light); color: var(--brand); }
+
+.nav-phone-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: color var(--transition-fast);
+  white-space: nowrap;
+}
+.nav-phone-link:hover { color: var(--brand); }
+
+/* btn styles for nav */
+.nav-desktop__actions .btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.nav-desktop__actions .btn--ghost:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  text-decoration-color: var(--border);
+}
+.nav-desktop__actions .btn--ghost:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 4px;
+  border-radius: 100px;
+  box-shadow: none;
+}
+
+/* Get started — brand green pill */
+.nav-desktop__actions .btn--lime {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.nav-desktop__actions .btn--lime:focus-visible {
+  outline: 2px solid var(--brand-dark);
+  outline-offset: 3px;
+}
+
+/* ── Notification bell ─────────────────────────────────── */
+.nav-notif-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.nav-notif-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  border: 2px solid var(--bg-nav);
+}
+
+/* ── Nav notification dropdown (desktop) ─────────────── */
+.nav-notif-dropdown {
+  position: absolute;
+  top: calc(var(--nav-height-desktop) - 4px);
+  right: 0;
+  width: 340px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  overflow: hidden;
+  animation: notif-drop-in 0.15s ease;
+}
+
+@keyframes notif-drop-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav-notif-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.nav-notif-dropdown__header button {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background var(--transition-fast);
+}
+
+/* ── Mobile bottom bar ─────────────────────────────────── */
+.nav-mobile {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  height: var(--nav-height-mobile);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-mobile__item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  padding: 8px 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nav-mobile__item.active {
+  color: var(--brand);
+}
+
+/* Switch button in mobile nav */
+button.nav-mobile__item {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 8px 2px;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+button.nav-mobile__item.active {
+  color: var(--brand);
+}
+
+/* ── Mobile top bar ────────────────────────────────────────────────────────── */
+.nav-mobile-topbar {
+  display: none; /* hidden on desktop */
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  height: 52px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.nav-mobile-topbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+.nav-mobile-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.nav-mobile-topbar__qualify {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: var(--brand);
+  color: #fff;
+  white-space: nowrap;
+}
+.nav-mobile-topbar__bell {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius);
+}
+.nav-mobile-topbar__badge {
+  position: absolute;
+  top: 2px; right: 2px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.5625rem;
+  font-weight: 800;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+/* Hide mobile on desktop */
+@media (min-width: 768px) {
+  .nav-mobile { display: none; }
+  .nav-desktop { display: flex; }
+  .nav-mobile-topbar { display: none !important; }
+}
+
+@media (max-width: 767px) {
+  .nav-desktop { display: none; }
+  .nav-mobile  { display: flex; }
+  .nav-mobile-topbar { display: flex; }
+}
+
+/* Landing nav uses light theme — white background with dark text. */
+
+@media (hover: hover) {
+  .nav-desktop__links a:hover             { color: var(--text-primary); }
+  .nav-swap-link:hover                    { color: var(--text-secondary); }
+  .nav-theme-btn:hover                    { background: var(--brand-light); color: var(--brand); }
+  .nav-desktop__actions .btn--ghost:hover { background: var(--bg-surface); }
+  .nav-notif-btn:hover                    { background: var(--brand-light); color: var(--brand); }
+  .nav-notif-dropdown__header button:hover { background: var(--bg-page); }
+  .nav-mobile__item:hover                 { color: var(--brand); }
+  button.nav-mobile__item:hover           { color: var(--brand); }
+}
+
+/* Guest mobile topbar — shown to logged-out visitors on mobile */
+.nav-mobile-topbar--guest .nav-mobile-topbar__qualify {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  padding: 7px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.nav-mobile-topbar__switch {
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  padding: 7px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Desktop logged-out path CTAs */
+.nav-path-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.nav-path-cta:hover { opacity: 0.85; }
+.nav-path-cta--buy {
+  background: var(--brand);
+  color: #fff;
+}
+.nav-path-cta--switch {
+  background: var(--text-primary);
+  color: #fff;
+}
+
+/* Secondary nav links — smaller weight, same row */
+.nav-secondary-links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+.nav-secondary-links a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.nav-secondary-links a:hover { color: var(--text-primary); }

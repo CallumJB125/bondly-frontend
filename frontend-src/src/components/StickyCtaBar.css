@@ -1,0 +1,73 @@
+.sticky-cta-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 8000;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.14);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.sticky-cta-bar--visible {
+  transform: translateY(0);
+  pointer-events: all;
+}
+.sticky-cta-bar__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.sticky-cta-bar__proof {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.sticky-cta-bar__proof strong { color: var(--text-primary); font-weight: 700; }
+.sticky-cta-bar__actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.sticky-cta-bar__btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+.sticky-cta-bar__btn--primary {
+  background: var(--lime);
+  color: var(--forest);
+  border: none;
+}
+.sticky-cta-bar__btn--primary:hover { opacity: 0.88; }
+.sticky-cta-bar__btn--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.sticky-cta-bar__btn--ghost:hover { border-color: var(--mint); color: var(--mint); }
+
+@media (max-width: 768px) {
+  .sticky-cta-bar__proof { display: none; }
+  .sticky-cta-bar__inner { justify-content: center; gap: 10px; }
+  /* Sit above the mobile bottom nav so they never overlap */
+  .sticky-cta-bar {
+    bottom: calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 480px) {
+  .sticky-cta-bar__actions { flex-direction: column; width: 100%; }
+  .sticky-cta-bar__btn { width: 100%; justify-content: center; text-align: center; }
+  .sticky-cta-bar__inner { padding: 12px 16px; }
+}

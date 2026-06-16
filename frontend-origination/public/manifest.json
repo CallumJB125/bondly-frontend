@@ -1,0 +1,12 @@
+{
+  "name": "Bondly Home",
+  "short_name": "Bondly Home",
+  "description": "Get your first home loan in South Africa",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6f0",
+  "theme_color": "#1a2e1a",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

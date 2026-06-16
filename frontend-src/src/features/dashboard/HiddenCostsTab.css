@@ -1,0 +1,315 @@
+.hc-tab {
+  padding: var(--space-5) 0 var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.hc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.hc-section__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hc-section__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+.hc-section__sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.hc-skeleton {
+  height: 80px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-2);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.hc-empty {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  padding: var(--space-4) 0;
+}
+
+/* ── Subscription timeline ────────────────────────────────── */
+.hc-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.hc-timeline__tally {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+.hc-timeline__tally-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--color-border);
+}
+.hc-timeline__tally-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.hc-timeline__tally-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Calendar grid: 7 cols */
+.hc-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.hc-calendar__slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border-radius: var(--radius-md);
+  min-height: 44px;
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+}
+.hc-calendar__slot--has {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-1));
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+}
+.hc-calendar__day {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  line-height: 1;
+}
+.hc-calendar__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  flex-shrink: 0;
+}
+.hc-calendar__dot--dormant {
+  background: #eab308;
+}
+
+/* Subscription list */
+.hc-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.hc-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.hc-sub-row--dormant {
+  background: color-mix(in srgb, #eab308 8%, var(--color-surface-1));
+  border-color: color-mix(in srgb, #eab308 30%, var(--color-border));
+}
+.hc-sub-row__left { flex: 1; min-width: 0; }
+.hc-sub-row__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hc-sub-row__meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+.hc-sub-row__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.hc-sub-row__amount {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.hc-sub-row__cancel {
+  background: none;
+  border: 1px solid #eab308;
+  border-radius: var(--radius-sm);
+  color: #854d0e;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+[data-theme="dark"] .hc-sub-row__cancel { color: #fef08a; }
+
+/* ── Fee tracker ─────────────────────────────────────────────── */
+.hc-fees {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.hc-fees__hero {
+  text-align: center;
+  padding: var(--space-5);
+  background: color-mix(in srgb, #ef4444 6%, var(--color-surface-1));
+  border: 1px solid color-mix(in srgb, #ef4444 20%, var(--color-border));
+  border-radius: var(--radius-xl);
+}
+.hc-fees__hero-val {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ef4444;
+}
+.hc-fees__hero-label {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  margin-top: 4px;
+}
+.hc-fees__hero-sub {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Comparison bars */
+.hc-fees__comparison {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.hc-fees__comparison-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 60px;
+  align-items: center;
+  gap: var(--space-3);
+}
+.hc-fees__comparison-label {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+.hc-fees__comparison-track {
+  height: 8px;
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.hc-fees__comparison-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+.hc-fees__comparison-fill--yours    { background: #ef4444; }
+.hc-fees__comparison-fill--capitec  { background: #22c55e; }
+.hc-fees__comparison-val {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
+}
+
+/* Switch CTA */
+.hc-fees__cta {
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-1));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  text-align: center;
+}
+.hc-fees__cta:hover { opacity: 0.85; }
+
+/* Fee item list */
+.hc-fees__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.hc-fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.hc-fee-row__desc {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hc-fee-row__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 1px;
+}
+.hc-fee-row__monthly {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.hc-fee-row__annual {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Opportunities */
+.hc-opportunities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .hc-calendar {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .hc-calendar__slot {
+    padding: 4px 1px;
+    min-height: 38px;
+  }
+  .hc-calendar__day { font-size: 0.625rem; }
+  .hc-fees__comparison-row {
+    grid-template-columns: 55px 1fr 52px;
+    gap: var(--space-2);
+  }
+}

@@ -1,0 +1,486 @@
+/* Bank portal — distinct visual identity from the customer site so an
+   underwriter knows immediately they're in the partner workspace. Dark
+   slate sidebar + light content area, dense data-first layout. */
+
+.bank-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: #0f1a24;
+}
+.bank-sidebar {
+  background: #0b1e2d;
+  color: #cfd8e3;
+  padding: 24px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex; flex-direction: column;
+}
+.bank-sidebar h1 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin: 0 24px 4px;
+  color: #fff;
+  display: flex; align-items: center; gap: 8px;
+}
+.bank-sidebar h1 .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #c8a84b;
+  box-shadow: 0 0 0 3px rgba(200,168,75,0.18);
+}
+.bank-sidebar .sub {
+  font-size: 0.72rem; color: #7a8a9a; letter-spacing: 0.08em;
+  text-transform: uppercase; margin: 0 24px 24px;
+}
+.bank-sidebar nav { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; }
+.bank-sidebar nav a {
+  padding: 9px 14px;
+  border-radius: 8px;
+  color: #cfd8e3;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+  transition: background 0.15s;
+}
+.bank-sidebar nav a:hover  { background: rgba(255,255,255,0.04); color: #fff; }
+.bank-sidebar nav a.active { background: rgba(200,168,75,0.14); color: #fff; }
+.bank-sidebar nav a .ico   { width: 18px; opacity: 0.7; }
+.bank-sidebar .me {
+  margin-top: auto;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.75rem;
+  color: #7a8a9a;
+}
+.bank-sidebar .me strong { display: block; color: #fff; font-size: 0.85rem; margin-bottom: 2px; }
+.bank-sidebar .logout {
+  margin-top: 8px;
+  background: transparent;
+  color: #cfd8e3;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.bank-sidebar .logout:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+.bank-content { padding: 28px 32px 60px; max-width: 1280px; width: 100%; }
+.bank-content h2 { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+.bank-content .lede { font-size: 0.9rem; color: #5a6573; margin: 0 0 24px; }
+
+/* KPIs */
+.bank-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.bank-kpi {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+}
+.bank-kpi .label { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.bank-kpi .value { font-size: 1.6rem; font-weight: 800; margin-top: 4px; }
+.bank-kpi .sub   { font-size: 0.78rem; color: #6b7280; margin-top: 2px; }
+.bank-kpi.good .value { color: #15803d; }
+.bank-kpi.bad  .value { color: #b91c1c; }
+
+/* Applications list */
+.bank-toolbar {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 12px; margin-bottom: 14px;
+}
+.bank-toolbar select, .bank-toolbar input {
+  background: #f5f6f8;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+  color: #0f1a24;
+}
+.bank-toolbar label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+}
+.bank-toolbar .grow { margin-left: auto; font-size: 0.8rem; color: #6b7280; align-self: center; }
+
+.bank-card {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 16px; margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 130px 1fr 1fr 1fr 110px 160px;
+  align-items: center; gap: 16px;
+  text-decoration: none; color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.bank-card:hover { border-color: #c8a84b; box-shadow: 0 2px 12px rgba(11,30,45,0.06); }
+.bank-card .ref  { font-family: 'JetBrains Mono', 'Menlo', monospace; font-weight: 700; font-size: 0.95rem; }
+.bank-card .type-tag {
+  display: inline-block; font-size: 0.7rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px; margin-top: 4px;
+}
+.bank-card .type-tag.swap        { background: rgba(74,127,165,0.15); color: #1e3a5f; }
+.bank-card .type-tag.origination { background: rgba(74,158,107,0.15); color: #16502d; }
+.bank-card .lbl    { font-size: 0.68rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.bank-card .val    { font-weight: 700; }
+.bank-card .quality-score {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #f0fdf4; color: #15803d; font-weight: 800; font-size: 1.1rem;
+  border: 2px solid #bbf7d0;
+}
+.bank-card .quality-score.mid  { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.bank-card .quality-score.low  { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.bank-card .deadline { font-size: 0.78rem; color: #b45309; font-weight: 700; }
+.bank-card .deadline.closed { color: #6b7280; }
+.bank-card .deadline .small  { color: #6b7280; font-weight: 500; font-size: 0.7rem; display: block; }
+
+/* Detail view */
+.bank-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  align-items: start;
+}
+.bank-detail-grid .col-main { display: flex; flex-direction: column; gap: 14px; }
+.bank-detail-grid .col-side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 20px; }
+
+.bank-section {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: 18px 20px;
+}
+.bank-section h3 { font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 12px; font-weight: 700; }
+.bank-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f3f4f6; font-size: 0.875rem; }
+.bank-row:last-child { border-bottom: none; }
+.bank-row .k { color: #6b7280; }
+.bank-row .v { color: #0f1a24; font-weight: 600; }
+
+.bank-popia-banner {
+  display: flex; gap: 10px; align-items: center;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #78350f;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  margin-bottom: 14px;
+}
+
+.bank-popia-banner .pulse {
+  width: 8px; height: 8px; border-radius: 50%; background: #b45309;
+  box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.6);
+  animation: bankPulse 1.8s infinite;
+}
+@keyframes bankPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.6); }
+  70%  { box-shadow: 0 0 0 8px rgba(180, 83, 9, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(180, 83, 9, 0); }
+}
+
+/* Bid box */
+.bid-box .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+.bid-box .input-row label { flex: 1; font-size: 0.78rem; color: #6b7280; font-weight: 700; }
+.bid-box .input-row input {
+  flex: 1; max-width: 130px; padding: 8px 10px; font-size: 1rem;
+  border: 1px solid #e5e7eb; border-radius: 6px;
+  text-align: right; font-weight: 700;
+}
+.bid-box .calc-monthly {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0 14px;
+  text-align: center;
+}
+.bid-box .calc-monthly .label { font-size: 0.7rem; color: #15803d; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.bid-box .calc-monthly .v { font-size: 1.6rem; font-weight: 800; color: #14532d; margin-top: 2px; }
+.bid-box textarea {
+  width: 100%; padding: 8px 10px; font-size: 0.875rem;
+  border: 1px solid #e5e7eb; border-radius: 6px; resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+.bid-box .submit-btn {
+  width: 100%; padding: 11px;
+  background: #c8a84b; color: #0b1e2d;
+  border: none; border-radius: 8px; font-weight: 800; font-size: 0.95rem;
+  cursor: pointer; margin-top: 6px;
+}
+.bid-box .submit-btn:hover { background: #d4b85c; }
+.bid-box .submit-btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+
+.competing-bid-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 6px; margin-bottom: 4px;
+  background: #f5f6f8; border: 1px solid transparent;
+  font-size: 0.85rem;
+}
+.competing-bid-row.mine { background: #f0fdf4; border-color: #bbf7d0; }
+.competing-bid-row .bank-label { font-weight: 700; }
+.competing-bid-row .rate { font-family: 'JetBrains Mono','Menlo',monospace; font-weight: 700; }
+
+/* Login page */
+.bank-login-wrap {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b1e2d 0%, #1a3c4f 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.bank-login-card {
+  background: #fff;
+  width: 100%; max-width: 420px;
+  border-radius: 14px;
+  padding: 36px 32px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+}
+.bank-login-card .brand {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+  font-weight: 800; color: #0b1e2d; font-size: 1.05rem;
+}
+.bank-login-card .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: #c8a84b; }
+.bank-login-card h2 { font-size: 1.5rem; font-weight: 800; margin: 4px 0 4px; }
+.bank-login-card p.lede { color: #6b7280; font-size: 0.85rem; margin-bottom: 24px; }
+.bank-login-card label { display: block; font-size: 0.78rem; color: #374151; font-weight: 700; margin: 12px 0 4px; }
+.bank-login-card input {
+  width: 100%; padding: 10px 12px; font-size: 0.9375rem;
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  background: #fff;
+}
+.bank-login-card button {
+  width: 100%; padding: 11px;
+  background: #0b1e2d; color: #fff;
+  border: none; border-radius: 8px;
+  font-weight: 700; font-size: 0.95rem;
+  cursor: pointer;
+  margin-top: 18px;
+}
+.bank-login-card button:hover { background: #14334a; }
+.bank-login-card .demo-creds {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 18px;
+  font-size: 0.74rem;
+  color: #713f12;
+}
+.bank-login-card .demo-creds strong { display: block; margin-bottom: 4px; color: #422006; }
+.bank-login-card .demo-creds code {
+  background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 3px;
+  font-size: 0.7rem;
+}
+.bank-login-card .err {
+  background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+  padding: 8px 12px; border-radius: 6px; margin-top: 14px; font-size: 0.82rem;
+}
+
+/* Bid status badges */
+.bid-status {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.bid-status.active    { background: #e0f2fe; color: #075985; }
+.bid-status.accepted  { background: #dcfce7; color: #166534; }
+.bid-status.lost      { background: #f3f4f6; color: #6b7280; }
+.bid-status.withdrawn { background: #fef3c7; color: #92400e; }
+.bid-status.rejected  { background: #fee2e2; color: #991b1b; }
+
+/* Income chart — tiny bars */
+.income-chart {
+  display: flex; align-items: flex-end; gap: 6px; height: 60px; margin: 6px 0 12px;
+}
+.income-chart .bar {
+  flex: 1;
+  background: linear-gradient(180deg, #c8a84b 0%, #a08237 100%);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
+}
+
+/* Spending bars */
+.spending-bars { display: flex; flex-direction: column; gap: 6px; }
+.spending-bars .row {
+  display: grid; grid-template-columns: 130px 1fr 80px;
+  align-items: center; gap: 10px;
+  font-size: 0.82rem;
+}
+.spending-bars .row .name { color: #0f1a24; text-transform: capitalize; }
+.spending-bars .row .bar  {
+  background: #16502d; height: 10px; border-radius: 3px;
+}
+.spending-bars .row .v    { text-align: right; font-weight: 700; color: #374151; font-size: 0.78rem; }
+
+/* Doc checklist */
+.doc-checklist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.doc-checklist .item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 10px; border-radius: 6px;
+  background: #f5f6f8; font-size: 0.82rem;
+  min-width: 0;
+}
+.doc-checklist .item .tick {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+}
+.doc-checklist .item.present .tick { background: #16a34a; color: #fff; }
+.doc-checklist .item.missing .tick { background: #fee2e2; color: #991b1b; }
+.doc-checklist .item.missing .name { color: #6b7280; }
+
+/* Bids page table */
+.bids-table {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  overflow: hidden;
+}
+.bids-table .row {
+  display: grid; grid-template-columns: 140px 1fr 120px 120px 100px 110px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  align-items: center;
+  font-size: 0.875rem;
+}
+.bids-table .row.header {
+  background: #f9fafb;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 700; color: #6b7280;
+}
+.bids-table .row:last-child { border-bottom: none; }
+.bids-table .row .ref { font-family: 'JetBrains Mono','Menlo',monospace; font-weight: 700; }
+.bids-table .row .rate { font-family: 'JetBrains Mono','Menlo',monospace; }
+
+/* ===== Underwriting workbench additions ===== */
+
+/* Quality chip next to the page title */
+.score-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 800; letter-spacing: 0.02em;
+}
+.score-chip.q-hi  { background: #dcfce7; color: #166534; }
+.score-chip.q-mid { background: #fef3c7; color: #92400e; }
+.score-chip.q-lo  { background: #fee2e2; color: #991b1b; }
+
+/* Verdict bar — three auto-generated bullets */
+.verdict-bar {
+  background: linear-gradient(135deg, #0b1e2d 0%, #1a3c4f 100%);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 8px 0 14px;
+  color: #f5f6f8;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.verdict-bullet {
+  display: flex; gap: 12px; align-items: flex-start;
+  font-size: 0.92rem; line-height: 1.5;
+}
+.verdict-bullet .num {
+  flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #c8a84b; color: #0b1e2d;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 800;
+}
+.verdict-bullet strong { color: #c8a84b; }
+
+/* Switch payback callout — three-column big-stat layout */
+.payback-callout { background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%); border-color: #bbf7d0; }
+.payback-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;
+}
+.payback-row > div { padding: 6px 0; }
+.payback-label { font-size: 0.7rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 4px; }
+.payback-big   { font-size: 1.45rem; font-weight: 800; color: #0f1a24; }
+.payback-sub   { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+
+/* Rate sensitivity table */
+.sensitivity-table {
+  display: flex; flex-direction: column;
+  border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+}
+.sensitivity-table .row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1.5fr;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.86rem;
+  align-items: center;
+}
+.sensitivity-table .row:last-child { border-bottom: none; }
+.sensitivity-table .row.header {
+  background: #f9fafb; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 700; color: #6b7280;
+}
+.sensitivity-table .row.good  { background: #fff; }
+.sensitivity-table .row.over  { background: #fffbeb; }
+.sensitivity-table .r-rate    { font-family: 'JetBrains Mono','Menlo',monospace; font-weight: 700; }
+.sensitivity-table .prime-tag { background: #c8a84b; color: #0b1e2d; padding: 1px 6px; border-radius: 99px; font-size: 0.6rem; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+
+/* Banking signals */
+.signal-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 12px; border-radius: 8px;
+  background: #fff; border: 1px solid #e5e7eb;
+}
+.signal-row .sev-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  margin-top: 4px;
+}
+.signal-row.sev-high   .sev-dot { background: #dc2626; box-shadow: 0 0 0 4px rgba(220,38,38,0.10); }
+.signal-row.sev-medium .sev-dot { background: #d97706; box-shadow: 0 0 0 4px rgba(217,119,6,0.10); }
+.signal-row.sev-low    .sev-dot { background: #2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,0.10); }
+
+/* Banking behaviour cards */
+.behaviour-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.b-card {
+  background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+  padding: 12px;
+}
+.b-label { font-size: 0.68rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.b-value { font-size: 1.2rem; font-weight: 800; margin-top: 4px; color: #0f1a24; }
+.b-sub   { font-size: 0.72rem; color: #6b7280; margin-top: 2px; }
+
+/* Bid templates */
+.bid-templates {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+  margin-bottom: 14px;
+}
+.bid-templates button {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+  padding: 8px 10px; font-size: 0.72rem; font-weight: 700; color: #0f1a24;
+  text-align: center; cursor: pointer;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+.bid-templates button:hover { border-color: #c8a84b; background: #fefce8; }
+.bid-templates .tpl-rate {
+  display: inline-block; margin-top: 2px;
+  font-family: 'JetBrains Mono','Menlo',monospace;
+  font-size: 0.92rem; color: #0b1e2d; letter-spacing: 0;
+}
+
+/* Live sensitivity readout inside the bid box */
+.live-sensitivity {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 6px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .bank-shell { grid-template-columns: 1fr; }
+  .bank-sidebar { position: static; height: auto; flex-direction: row; align-items: center; padding: 12px; }
+  .bank-sidebar nav { flex-direction: row; padding: 0; flex-wrap: wrap; }
+  .bank-sidebar .sub, .bank-sidebar .me { display: none; }
+  .bank-sidebar h1 { margin: 0 12px 0 0; }
+  .bank-card { grid-template-columns: 1fr; gap: 6px; }
+  .bank-detail-grid { grid-template-columns: 1fr; }
+  .bank-detail-grid .col-side { position: static; }
+}

@@ -1,0 +1,180 @@
+.stmt-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 20px 20px;
+  font-family: var(--font-sans, system-ui, -apple-system, Segoe UI, Roboto, sans-serif);
+}
+
+/* ── Stage rail ───────────────────────────────────────────── */
+.stmt-loader__stages {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.stmt-loader__stage-wrap { display: flex; align-items: center; gap: 7px; }
+.stmt-loader__stage-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6875rem; font-weight: 700;
+  background: var(--bg-page, #f8f6f1);
+  border: 1.5px solid var(--border-color, rgba(15,26,36,0.18));
+  color: var(--text-secondary);
+  transition: all 0.4s ease;
+  flex-shrink: 0;
+}
+.stmt-loader__stage-dot.active {
+  border-color: var(--forest, #16502d);
+  color: var(--forest, #16502d);
+  animation: stage-ring 1.8s ease-in-out infinite;
+}
+@keyframes stage-ring {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(74,158,107,0.18); }
+  50%      { box-shadow: 0 0 0 6px rgba(74,158,107,0.05); }
+}
+.stmt-loader__stage-dot.done {
+  background: var(--forest, #16502d);
+  border-color: var(--forest, #16502d);
+  color: #fff;
+}
+.stmt-loader__stage-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: color 0.4s ease;
+}
+.stmt-loader__stage-label--active {
+  color: var(--forest, #16502d);
+  font-weight: 700;
+}
+.stmt-loader__stage-line {
+  width: 28px; height: 2px;
+  background: var(--border-color, rgba(15,26,36,0.14));
+  margin: 0 6px;
+  transition: background 0.6s ease;
+  flex-shrink: 0;
+}
+.stmt-loader__stage-line.done { background: var(--forest, #16502d); }
+
+/* ── Document centerpiece + scanning line ─────────────────── */
+.stmt-loader__doc {
+  width: 168px;
+  margin-top: 4px;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.10));
+  position: relative;
+}
+.stmt-loader__doc-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+/* The scan-line rect inside the SVG. translateY clamped to the paper height
+   minus its own height so it stays inside the document edges. */
+.stmt-loader__doc-scan {
+  animation: doc-scan 2.4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes doc-scan {
+  0%   { transform: translateY(10px);  opacity: 0.0; }
+  10%  { opacity: 1.0; }
+  50%  { transform: translateY(232px); opacity: 1.0; }
+  90%  { opacity: 1.0; }
+  100% { transform: translateY(10px);  opacity: 0.0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stmt-loader__doc-scan { animation: none; opacity: 0.6; transform: translateY(120px); }
+  .stmt-loader__stage-dot.active { animation: none; }
+}
+
+/* ── Findings strip — calm "audit log" feel ────────────────── */
+.stmt-loader__findings {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 10px 14px;
+  width: 100%;
+  max-width: 320px;
+  background: rgba(15, 26, 36, 0.03);
+  border: 1px solid rgba(15, 26, 36, 0.06);
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+}
+.stmt-loader__finding {
+  display: flex; align-items: center; gap: 8px;
+  padding: 3px 0;
+  animation: finding-in 0.28s ease-out both;
+}
+@keyframes finding-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.stmt-loader__finding-tick {
+  width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(74,158,107,0.15);
+  color: var(--forest, #16502d);
+  flex-shrink: 0;
+}
+.stmt-loader__finding-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.stmt-loader__finding-dots {
+  flex: 1;
+  border-bottom: 1px dotted rgba(15,26,36,0.20);
+  margin: 0 2px;
+  height: 1em;
+}
+.stmt-loader__finding-value {
+  color: var(--text-secondary);
+}
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.stmt-loader__bar {
+  width: 100%;
+  max-width: 320px;
+  height: 4px;
+  background: rgba(15,26,36,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.stmt-loader__bar-fill {
+  height: 100%;
+  background: var(--forest, #16502d);
+  border-radius: inherit;
+  transition: width 1.4s ease-out;
+}
+.stmt-loader__pct {
+  display: flex; align-items: baseline; gap: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  margin-top: -2px;
+  letter-spacing: 0.02em;
+}
+.stmt-loader__elapsed { opacity: 0.7; }
+
+/* ── Cycling caption — the only place the humour lives ─────── */
+.stmt-loader__msg {
+  min-height: 22px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+.stmt-loader__msg--in  { opacity: 1; transform: translateY(0); }
+.stmt-loader__msg--out { opacity: 0; transform: translateY(4px); }
+
+/* ── Slow warning ─────────────────────────────────────────── */
+.stmt-loader__slow {
+  font-size: 0.75rem;
+  color: #92400e;
+  text-align: center;
+  margin: 0;
+  line-height: 1.45;
+}

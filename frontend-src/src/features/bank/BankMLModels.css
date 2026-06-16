@@ -1,0 +1,238 @@
+.ml-hero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ml-hero-card {
+  background: #1a2f42;
+  border: 1px solid #2a4560;
+  border-radius: 10px;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.ml-hero-card .hero-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #c8a84b;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.ml-hero-card .hero-label {
+  font-size: 0.72rem;
+  color: #7a9ab8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.ml-hero-card .hero-sub {
+  font-size: 0.7rem;
+  color: #4a6a88;
+  margin-top: 4px;
+}
+
+.ml-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.ml-status-pill.online {
+  background: rgba(22, 163, 74, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+}
+
+.ml-status-pill.offline {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.ml-status-pill .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ml-section {
+  background: #1a2f42;
+  border: 1px solid #2a4560;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.ml-section h3 {
+  color: #c8a84b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px 0;
+}
+
+.ml-section .section-sub {
+  font-size: 0.72rem;
+  color: #4a6a88;
+  margin-bottom: 16px;
+}
+
+.ml-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.ml-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #4a6a88;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 8px 10px 0;
+  border-bottom: 1px solid #2a4560;
+}
+
+.ml-table th:last-child,
+.ml-table td:last-child {
+  text-align: right;
+  padding-right: 0;
+}
+
+.ml-table td {
+  padding: 9px 8px 9px 0;
+  border-bottom: 1px solid #162335;
+  color: #c8d8e8;
+}
+
+.ml-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ml-table td.mono {
+  font-variant-numeric: tabular-nums;
+  font-family: 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.cal-green  { color: #4ade80; }
+.cal-amber  { color: #fbbf24; }
+.cal-red    { color: #f87171; }
+
+.ml-coverage {
+  margin-top: 12px;
+}
+
+.ml-coverage .cov-label {
+  font-size: 0.7rem;
+  color: #4a6a88;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ml-coverage .cov-bar-wrap {
+  background: #0b1e2d;
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ml-coverage .cov-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1a4a6a, #c8a84b);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.ml-coverage-grid {
+  display: grid;
+  grid-template-columns: 40px 1fr 60px;
+  gap: 6px 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.ml-coverage-grid .year-label {
+  font-size: 0.72rem;
+  color: #4a6a88;
+  font-weight: 700;
+  text-align: right;
+}
+
+.ml-coverage-grid .year-count {
+  font-size: 0.7rem;
+  color: #7a9ab8;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ml-synthetic-card {
+  background: linear-gradient(135deg, #1a2f42 0%, #162535 100%);
+  border: 1px solid #c8a84b44;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.ml-synthetic-card h3 {
+  color: #c8a84b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px 0;
+}
+
+.ml-synthetic-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ml-synthetic-stats .stat-val {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #c8a84b;
+}
+
+.ml-synthetic-stats .stat-lbl {
+  font-size: 0.68rem;
+  color: #4a6a88;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.ml-ncr-note {
+  font-size: 0.72rem;
+  color: #4a6a88;
+  background: #0b1e2d;
+  border-radius: 6px;
+  padding: 8px 12px;
+  border-left: 3px solid #c8a84b44;
+}
+
+@media (max-width: 700px) {
+  .ml-hero {
+    grid-template-columns: 1fr;
+  }
+  .ml-synthetic-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}

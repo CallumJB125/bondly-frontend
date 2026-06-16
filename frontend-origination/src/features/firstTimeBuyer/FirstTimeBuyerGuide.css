@@ -1,0 +1,223 @@
+/* ── Origination site header (same pattern as MortgageReadiness) ── */
+.orig-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border-color);
+}
+.orig-header__logo {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--forest, #16502d);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.orig-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.875rem;
+}
+.orig-header__nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+.orig-header__nav a:hover { color: var(--text-primary); }
+.orig-header__cta {
+  background: var(--forest, #16502d);
+  color: #fff !important;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.orig-header__cta:hover { opacity: 0.9; }
+@media (max-width: 480px) {
+  .orig-header__nav a:not(.orig-header__cta) { display: none; }
+}
+
+/* ── Jump nav / ToC ── */
+.ftb-toc {
+  margin-top: 24px;
+}
+.ftb-toc--prominent {
+  background: var(--bg-card, #f9fafb);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-top: 28px;
+}
+.ftb-toc__label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
+.ftb-toc__list {
+  margin: 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ftb-toc__list li { font-size: 0.9rem; }
+.ftb-toc__list a {
+  color: var(--forest, #16502d);
+  text-decoration: none;
+  font-weight: 500;
+}
+.ftb-toc__list a:hover { text-decoration: underline; }
+
+.ftb-page {
+  background: var(--bg-page);
+  min-height: 100vh;
+  padding: 40px 16px 80px;
+}
+
+.ftb-article {
+  max-width: 720px;
+  margin: 0 auto;
+  color: var(--text-primary);
+  line-height: 1.65;
+  font-size: 1rem;
+}
+
+.ftb-header {
+  margin-bottom: 40px;
+}
+.ftb-eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.ftb-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 18px;
+  letter-spacing: -0.01em;
+}
+.ftb-lede {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.ftb-section {
+  margin-bottom: 36px;
+  position: relative;
+}
+.ftb-section__num {
+  position: absolute;
+  left: -52px;
+  top: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--forest, #16502d);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+}
+.ftb-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+.ftb-section p {
+  margin: 0 0 12px;
+}
+.ftb-section a {
+  color: var(--primary, #2563eb);
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+.ftb-section a:hover { color: var(--forest, #16502d); }
+
+.ftb-list {
+  margin: 0 0 14px;
+  padding-left: 20px;
+}
+.ftb-list li { margin-bottom: 8px; }
+
+.ftb-callout {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  align-items: flex-start;
+  margin: 14px 0;
+  font-size: 0.9375rem;
+}
+.ftb-callout--ok   { background: rgba(22,163,74,.06);  border: 1px solid rgba(22,163,74,.25); color: #134e2a; }
+.ftb-callout--warn { background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.30); color: #78350f; }
+.ftb-callout strong { font-weight: 700; }
+
+.ftb-defs {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ftb-defs > div {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+.ftb-defs dt { font-weight: 800; font-size: 0.9375rem; margin-bottom: 4px; }
+.ftb-defs dd { margin: 0; font-size: 0.9375rem; color: var(--text-secondary); }
+
+.ftb-process {
+  margin: 0;
+  padding-left: 24px;
+  counter-reset: ftbproc;
+  list-style: decimal;
+}
+.ftb-process li { margin-bottom: 14px; padding-left: 4px; }
+.ftb-process strong { font-weight: 700; color: var(--text-primary); }
+.ftb-process em { font-style: italic; }
+
+.ftb-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 40px;
+}
+.ftb-cta {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+.ftb-cta--primary {
+  background: var(--lime, #b5d65c);
+  color: var(--forest, #16502d);
+}
+.ftb-cta--ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color, #e5e7eb);
+}
+.ftb-cta:hover { transform: translateY(-1px); }
+
+@media (max-width: 720px) {
+  .ftb-section__num { display: none; }
+  .ftb-article { padding-left: 0; }
+}
