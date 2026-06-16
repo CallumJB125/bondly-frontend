@@ -16,26 +16,26 @@
 
 .field__input {
   width: 100%;
-  padding: 13px 16px;
+  padding: 12px 16px;
   font-family: var(--font-sans);
   font-size: 1rem;
   min-height: 48px;
   color: var(--text-primary);
   background: var(--bg-input);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--carbon);
+  border-radius: 4px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   appearance: none;
   -webkit-appearance: none;
 }
 
-.field__input::placeholder { color: rgba(90,107,124,0.55); }
+.field__input::placeholder { color: var(--concrete, #939393); }
 
-.field__input:hover { border-color: rgba(74,127,165,0.55); }
+.field__input:hover { border-color: var(--brand); }
 
 .field__input:focus {
   outline: none;
-  border-color: var(--mint);
+  border-color: var(--brand);
   box-shadow: var(--focus-ring);
 }
 

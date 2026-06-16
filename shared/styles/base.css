@@ -58,12 +58,18 @@ ul, ol {
   list-style: none;
 }
 
-/* ── Typography helpers ── */
+/* ── Typography helpers ──
+   Headlines use the compressed display face with tight leading and
+   negative tracking so type reads as a graphic block (Varo). */
 h1, h2, h3, h4, h5, h6 {
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
 }
+h1 { line-height: 0.92; }
 
-.serif { font-family: var(--font-serif); }
+.serif { font-family: var(--font-display); letter-spacing: -0.01em; }
 .muted { color: var(--text-secondary); }
 
 /* ── Financial number formatting ── */
@@ -196,7 +202,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: var(--space-2);
   padding: 4px 12px;
-  border-radius: 100px;
+  border-radius: 4px;
+  border: 1px solid var(--carbon);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;

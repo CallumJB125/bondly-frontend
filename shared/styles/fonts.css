@@ -1,0 +1,66 @@
+/* ============================================================
+   BONDLY — Neue Haas Grotesk (self-hosted)
+   Display family → headlines (replaces Oswald)
+   Text family    → body / UI (replaces Inter)
+   Files live in shared/fonts/ and are bundled by each app's Vite.
+============================================================ */
+
+/* ── Neue Haas Grotesk Display (headlines) ── */
+@font-face {
+  font-family: 'Neue Haas Grotesk Display';
+  src: url('../fonts/NeueHaasDisplay-Roman.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Display';
+  src: url('../fonts/NeueHaasDisplay-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Display';
+  src: url('../fonts/NeueHaasDisplay-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Display';
+  src: url('../fonts/NeueHaasDisplay-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Neue Haas Grotesk Text (body / UI) ── */
+@font-face {
+  font-family: 'Neue Haas Grotesk Text';
+  src: url('../fonts/NeueHaasText-Roman.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Text';
+  src: url('../fonts/NeueHaasText-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Text';
+  src: url('../fonts/NeueHaasText-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Neue Haas Grotesk Text';
+  src: url('../fonts/NeueHaasText-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

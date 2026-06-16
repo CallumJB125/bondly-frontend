@@ -16,6 +16,43 @@ const ORIGINATION_URL = typeof window !== 'undefined'
   : 'http://localhost:5174';
 
 // ─────────────────────────────────────────────────────────────
+// useCountUp — animate a number toward `target` whenever it changes.
+// Ticks via requestAnimationFrame with an ease-out curve; counts up or
+// down, and smoothly re-targets mid-flight. No animation on first mount.
+// ─────────────────────────────────────────────────────────────
+function useCountUp(target, duration = 650) {
+  const [display, setDisplay] = useState(target);
+  const currentRef = useRef(target);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const from = currentRef.current;
+    const to = target;
+    const reduce = typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (from === to || reduce) {
+      currentRef.current = to;
+      setDisplay(to);
+      return;
+    }
+    let startTs = null;
+    const ease = (t) => 1 - Math.pow(1 - t, 3); // easeOutCubic
+    const tick = (ts) => {
+      if (startTs === null) startTs = ts;
+      const p = Math.min(1, (ts - startTs) / duration);
+      const val = Math.round(from + (to - from) * ease(p));
+      currentRef.current = val;
+      setDisplay(val);
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return display;
+}
+
+// ─────────────────────────────────────────────────────────────
 // ANNOUNCE BAR — shows the LIVE prime rate
 // ─────────────────────────────────────────────────────────────
 function Announce() {
@@ -109,6 +146,11 @@ function Hero() {
   const inputsValid = bal > 0 && rt > 0 && rt <= 40 && trm >= 1 && trm <= 40;
   const rateWarning = rt > 25 && rt <= 40;
 
+  // Slider fill (% of track) — drives the navy "progress" gradient.
+  const RATE_MIN = 5, RATE_MAX = 25, TERM_MIN = 1, TERM_MAX = 30;
+  const ratePct = Math.min(100, Math.max(0, ((rt - RATE_MIN) / (RATE_MAX - RATE_MIN)) * 100));
+  const termPct = Math.min(100, Math.max(0, ((trm - TERM_MIN) / (TERM_MAX - TERM_MIN)) * 100));
+
   const safeBal  = bal  > 0 ? bal  : 1_200_000;
   const safeRate = rt   > livePrime ? rt   : livePrime + 1.25;
   const safeTerm = trm  > 0 ? trm  : 18;
@@ -116,6 +158,10 @@ function Hero() {
   const result = calcSwapSavings(safeBal, safeRate, livePrime, safeTerm * 12);
   const monthlySaving = inputsValid ? Math.max(0, Math.round(result.monthlySaving)) : 0;
   const totalSaving   = inputsValid ? Math.max(0, Math.round(result.totalSaving)) : 0;
+
+  // Tick the displayed figures up/down whenever the inputs change.
+  const animMonthly = useCountUp(monthlySaving);
+  const animTotal   = useCountUp(totalSaving);
 
   useEffect(() => {
     if (monthlySaving > 0 && !calcCompletedRef.current) {
@@ -146,17 +192,16 @@ function Hero() {
     <header className="ls-hero">
       <div className="ls-wrap ls-hero__grid">
         <div className="ls-hero__copy">
-          <div className="ls-eyebrow">Bond switching · South Africa</div>
+          <div className="ls-eyebrow">SA's #1 bond switching service</div>
           <h1 className="ls-serif ls-hero__title">
-            Stop overpaying on your <em>bond.</em>
+            Stop <em>overpaying</em> on your home loan.
           </h1>
           <p className="ls-hero__sub">
-            Most homeowners sit on their bank's standard rate for years. Bondly makes all 7 major
-            banks compete for your bond and negotiates the best rate on your behalf — free.
+            We negotiate with all seven major South African banks to find your best rate — and switch your bond for free.
           </p>
           <div className="ls-hero__ctas">
             <button className="ls-btn ls-btn--primary ls-btn--lg" onClick={() => goToSwitch('hero')}>
-              See what I'd save →
+              Get an offer →
             </button>
             <a
               className="ls-btn ls-btn--ghost"
@@ -170,17 +215,42 @@ function Hero() {
           </div>
           <p className="ls-reassure">Free · No credit check to start · Takes 60 seconds</p>
           <div className="ls-trust-row">
-            <div><b>Registered</b>bond originator</div>
-            <div><b>POPIA</b>compliant</div>
-            <div><b>★ 4.8</b>on Hellopeter</div>
-            <div><b>R 8.4m+</b>saved to date</div>
+            <div>
+              <svg className="ls-trust-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" clipRule="evenodd" d="M10.7 2.5H5A2.5 2.5 0 0 0 2.5 5v5.7a1.5 1.5 0 0 0 .44 1.06l6.3 6.3a1.5 1.5 0 0 0 2.12 0l5.7-5.7a1.5 1.5 0 0 0 0-2.12l-6.3-6.3A1.5 1.5 0 0 0 10.7 2.5ZM6.5 7.75A1.25 1.25 0 1 1 6.5 5.25a1.25 1.25 0 0 1 0 2.5Z"/>
+              </svg>
+              <b>100% Free</b>
+            </div>
+            <div>
+              <svg className="ls-trust-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10 1.9l2.32 4.7 5.18.75-3.75 3.66.89 5.16L10 13.74l-4.64 2.43.89-5.16L2.5 7.35l5.18-.75L10 1.9Z"/>
+              </svg>
+              <b>4.8 stars</b>
+            </div>
+            <div>
+              <svg className="ls-trust-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" clipRule="evenodd" d="M3.5 5.5A1.5 1.5 0 0 1 5 4h8.5a1 1 0 0 1 0 2H6a.75.75 0 0 0 0 1.5h10A1.5 1.5 0 0 1 17.5 9v5A1.5 1.5 0 0 1 16 15.5H5A1.5 1.5 0 0 1 3.5 14V5.5Zm10.75 4.75a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/>
+              </svg>
+              <b>R8.4m saved this month</b>
+            </div>
           </div>
         </div>
 
         {/* LIVE calculator card */}
         <aside className="ls-calc" id="savings-check">
           <div className="ls-calc__head">
-            <span>SAVINGS CHECK</span><em>takes 30 seconds</em>
+            <div className="ls-calc__head-text">
+              <h3 className="ls-calc__title">Your savings estimate</h3>
+              <p className="ls-calc__subtitle">Drag to match your current bond.</p>
+            </div>
+            <span className="ls-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2 4 5v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5l-8-3Z" fill="currentColor" opacity="0.18"/>
+                <path d="M12 2 4 5v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5l-8-3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              No credit check
+            </span>
           </div>
           <div className="ls-calc__body">
             <div className="ls-field">
@@ -198,54 +268,59 @@ function Hero() {
               </div>
             </div>
             <div className="ls-two">
-              <div className="ls-field">
-                <label htmlFor="ls-rate">Current rate</label>
-                <div className="ls-input">
-                  <input
-                    id="ls-rate"
-                    type="number"
-                    inputMode="decimal"
-                    min="5" max="25" step="0.25"
-                    value={rate}
-                    onChange={onField(setRate, 'rate')}
-                    aria-label="Current interest rate"
-                  />
-                  <span aria-hidden="true">%</span>
+              <div className="ls-field ls-field--slider">
+                <div className="ls-slider__top">
+                  <label htmlFor="ls-rate">Current rate</label>
+                  <span className="ls-slider__val">{rate}%</span>
                 </div>
+                <input
+                  id="ls-rate"
+                  className="ls-slider"
+                  type="range"
+                  min="5" max="25" step="0.25"
+                  value={rate}
+                  onChange={onField(setRate, 'rate')}
+                  style={{ '--fill': `${ratePct}%` }}
+                  aria-label="Current interest rate"
+                  aria-valuetext={`${rate} percent`}
+                />
               </div>
-              <div className="ls-field">
-                <label htmlFor="ls-term">Years remaining</label>
-                <div className="ls-input">
-                  <input
-                    id="ls-term"
-                    type="number"
-                    inputMode="numeric"
-                    min="1" max="30"
-                    value={term}
-                    onChange={onField(setTerm, 'term')}
-                    aria-label="Years remaining on bond"
-                  />
+              <div className="ls-field ls-field--slider">
+                <div className="ls-slider__top">
+                  <label htmlFor="ls-term">Years remaining</label>
+                  <span className="ls-slider__val">{term} yrs</span>
                 </div>
+                <input
+                  id="ls-term"
+                  className="ls-slider"
+                  type="range"
+                  min="1" max="30" step="1"
+                  value={term}
+                  onChange={onField(setTerm, 'term')}
+                  style={{ '--fill': `${termPct}%` }}
+                  aria-label="Years remaining on bond"
+                  aria-valuetext={`${term} years`}
+                />
               </div>
             </div>
 
             {rateWarning && (
-              <p style={{ fontSize: '0.8rem', color: '#b45309', background: '#fef3c7', borderRadius: 6, padding: '6px 10px', margin: '4px 0' }}>
+              <p style={{ fontSize: '0.8rem', color: '#b45309', background: '#fef3c7', borderRadius: 4, padding: '6px 10px', margin: '4px 0' }}>
                 Rates above 25% are unusual — double-check your entry.
               </p>
             )}
             <div className="ls-result" style={{ opacity: inputsValid ? 1 : 0.4, pointerEvents: inputsValid ? 'auto' : 'none' }}>
               <small>{inputsValid ? 'YOU COULD SAVE' : 'ENTER DETAILS TO SEE'}</small>
               <div className="ls-serif ls-result__big" aria-live="polite">
-                {inputsValid ? <>{fmt(monthlySaving)}<sub>/month</sub></> : <span style={{ fontSize: '2rem' }}>—</span>}
+                {inputsValid ? <>{fmt(animMonthly)}<sub>/month</sub></> : <span style={{ fontSize: '2rem' }}>—</span>}
               </div>
-              {inputsValid && <p>≈ {fmt(totalSaving)} over your remaining term · estimate at prime</p>}
+              {inputsValid && <p>≈ {fmt(animTotal)} over your remaining term · estimate at prime</p>}
             </div>
 
             <button className="ls-btn ls-btn--primary ls-calc__cta" onClick={() => goToSwitch('hero_calc')}>
-              Get my 7 real offers →
+              Calculate my savings
             </button>
-            <p className="ls-calc__foot">No credit check · No obligation · Banks compete, you choose</p>
+            <p className="ls-calc__foot">Less than 2 minutes · Bank-level security · No personal info needed</p>
           </div>
         </aside>
       </div>
@@ -310,8 +385,10 @@ function HowItWorks() {
   return (
     <section className="ls-section" id="how-it-works">
       <div className="ls-wrap">
-        <div className="ls-sec-eyebrow">How it works</div>
-        <h2 className="ls-serif ls-h2">Three steps. We do the heavy lifting.</h2>
+        <h2 className="ls-serif ls-h2">Switching your bond is refreshingly simple</h2>
+        <p className="ls-sec-sub">
+          From your first quote to a signed-off switch, Bondly does the heavy lifting. You stay in control of the decision
+        </p>
         <div className="ls-steps">
           {steps.map((s) => (
             <div key={s.n} className="ls-step">

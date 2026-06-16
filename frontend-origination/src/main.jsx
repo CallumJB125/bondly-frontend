@@ -4,6 +4,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { ToastProvider } from '@bondly/ui/components/Toast.jsx';
+import '@bondly/ui/styles/fonts.css';
 import '@bondly/ui/styles/tokens.css';
 import '@bondly/ui/styles/base.css';
 

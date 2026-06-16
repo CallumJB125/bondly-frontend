@@ -3,19 +3,37 @@
    Used by frontend-src (Switch) and frontend-origination (Home)
 ============================================================ */
 :root {
-  /* --- Brand --- */
-  --brand:        #1e3a5f;
-  --brand-light:  #e8eef5;
-  --brand-dark:   #152d4a;
+  /* ============================================================
+     VARO-DERIVED "POSTER-ZINE" SYSTEM (blue-shifted)
+     Flat color collision, hairline black borders, 4px radius,
+     zero shadows, ultra-compressed display headlines.
+     Violet family → bondly blue (blue stays the accent).
+  ============================================================ */
+
+  /* --- Brand (primary action — interactive only) --- */
+  --brand:        #1e3a5f;   /* was Varo violet #8c58d0 */
+  --brand-light:  #e8eef5;   /* was lilac-mist #cdb0fa — soft selected fill */
+  --brand-dark:   #152d4a;   /* hover/darken */
   --gold:         #c49a2e;
   --gold-light:   #fdf6e3;
   /* Accessible gold for TEXT on light/cream surfaces (WCAG AA ≥4.5:1) */
   --gold-fig:     #9a7414;
   --gold-text:    var(--gold-fig);
-  /* Deep blue for trust/CTA bands */
+  /* Deep blue for trust/CTA bands — was deep-plum #42185f */
   --brand-deep:   #0e1b2e;
   /* Warm off-white for alternating section rhythm */
   --bg-warm:      #faf8f4;
+
+  /* --- Varo decorative band palette (carried over verbatim) ---
+     Use as flat full-bleed section fills. Never as the primary
+     action color — that is reserved for --brand only. */
+  --cream:        #faefdc;   /* butter-cream — warm alt section */
+  --salmon:       #f2a295;   /* salmon-wash — warm color band */
+  --lemon:        #fdf0af;   /* lemon-zest — accent text on dark */
+  --lime-pulse:   #d4e84b;   /* vivid lime — feature card fill */
+  --forest-ink:   #183428;   /* deep green — dark feature card */
+  --coral:        #ed6c52;   /* coral-ember — decorative punctuation */
+  --carbon:       #000000;   /* hairline borders, structural ink */
 
   /* --- Backgrounds --- */
   --bg-white:     #ffffff;
@@ -34,10 +52,11 @@
   --text-on-brand:  #ffffff;
   --text-on-dark:   #f9fafb;
 
-  /* --- Borders --- */
-  --border:         #e5e7eb;
-  --border-strong:  #d1d5db;
-  --border-subtle:  var(--border);
+  /* --- Borders — hairline black, Varo style (color lives in fills, not strokes) --- */
+  --border:         #000000;
+  --border-strong:  #000000;
+  --border-subtle:  #1c1c1c;
+  --border-hairline:#000000;
 
   /* --- Semantic status --- */
   --color-success:  #16a34a;
@@ -52,9 +71,14 @@
   --color-grade-d: #f97316;
   --color-grade-e: #ef4444;
 
-  /* --- Typography --- */
-  --font-serif: 'DM Serif Display', Georgia, serif;
-  --font-sans:  'Inter', system-ui, sans-serif;
+  /* --- Typography ---
+     Self-hosted Neue Haas Grotesk (see styles/fonts.css).
+     Display = headlines; Text = body / UI.
+     --font-serif is repointed to the display face so every existing
+     .serif headline across the app inherits the display look. */
+  --font-display: 'Neue Haas Grotesk Display', 'Inter', system-ui, sans-serif;
+  --font-serif: var(--font-display);
+  --font-sans:  'Neue Haas Grotesk Text', 'Inter', system-ui, sans-serif;
 
   /* --- Text size scale --- */
   --text-xs:   0.75rem;
@@ -90,12 +114,12 @@
   --nav-height-mobile:  56px;
   --container-max:      1120px;
 
-  /* --- Radius --- */
-  --radius-sm:   6px;
-  --radius:      10px;
-  --radius-lg:   16px;
-  --radius-xl:   24px;
-  --radius-full: 9999px;
+  /* --- Radius — flat 4px hard rule across the system (Varo). --- */
+  --radius-sm:   4px;
+  --radius:      4px;
+  --radius-lg:   4px;
+  --radius-xl:   4px;
+  --radius-full: 9999px;   /* genuine circles only: avatars, spinner */
 
   /* --- Backward-compat aliases --- */
   --border-color:      var(--border);
@@ -104,12 +128,13 @@
   --border-radius-lg:  var(--radius-lg);
   --border-radius-xl:  var(--radius-xl);
   --text-on-lime:      var(--text-on-brand);
-  --forest:            #111111;
-  --cream:             #f9fafb;
-  --lime:              var(--brand);
+  --forest:            var(--brand-deep);   /* dark band button → deep navy */
+  /* --cream defined above as #faefdc; legacy callers used it as a pale
+     surface — keep the warm cream, it reads fine as a section band. */
+  --lime:              var(--brand);        /* btn--lime stays brand navy (don't break callers) */
   --mint:              var(--brand);
   --muted:             var(--text-secondary);
-  --orange:            #d97706;
+  --orange:            var(--coral);
   --sage:              #374151;
   --ink:               #111111;
   --paper:             #f8f7f5;
@@ -120,12 +145,13 @@
   --color-primary-hover:  var(--brand-dark);
   --color-primary-light:  var(--brand-light);
 
-  /* --- Shadows --- */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.05);
-  --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.06);
+  /* --- Shadows — none. Depth comes from flat color collision and
+     1px black hairline borders, never elevation (Varo hard rule). --- */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow:    none;
+  --shadow-md: none;
+  --shadow-lg: none;
 
   /* --- Focus ring --- */
   --focus-ring: 0 0 0 3px rgba(30,58,95,0.28);

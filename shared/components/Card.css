@@ -1,23 +1,22 @@
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--carbon);
+  border-radius: 4px;
+  box-shadow: none;
   overflow: hidden;
 }
 
 .card--clickable {
   cursor: pointer;
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  transition: background var(--transition-base), border-color var(--transition-base);
 }
 .card--clickable:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  background: var(--brand-light);
 }
 
 .card__header {
   padding: var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--carbon);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -32,17 +31,19 @@
 /* Stat card */
 .stat-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border: 1px solid var(--carbon);
+  border-radius: 4px;
   padding: var(--space-5) var(--space-6);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .stat-card__value {
-  font-size: 1.75rem;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
   font-weight: 700;
-  color: var(--forest);
-  line-height: 1.1;
+  color: var(--text-primary);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
 }
 
 .stat-card__label {
@@ -60,5 +61,5 @@
 }
 
 [data-theme="dark"] .stat-card__value {
-  color: var(--lime);
+  color: var(--lemon);
 }

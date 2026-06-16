@@ -1,2 +1,0 @@
-var e=11.25,t=13.25,n=[`ABSA`,`FNB`,`Nedbank`,`Standard Bank`,`Capitec`,`Investec`,`SA Home Loans`],r={ABSA:0,FNB:0,Nedbank:.25,"Standard Bank":0,Capitec:.5,Investec:-.25,"SA Home Loans":.5};(()=>{let e=Object.entries(r).filter(([e])=>e!==`Investec`);return Math.round(e.reduce((e,[,t])=>e+t,0)/e.length*100)/100})();export{t as i,r as n,e as r,n as t};
-//# sourceMappingURL=constants-BvL1wTOx.js.map
