@@ -1,0 +1,2 @@
+import{r as e,t}from"./react-DPLYeJQc.js";import{i as n,u as r}from"./dist-CBn4h-8r.js";var i=e(t(),1);function a(){let e=r(),[t]=n(),a=t.get(`ref`),o=t.get(`intent`);return(0,i.useEffect)(()=>{e(`/login`,{state:{tab:`register`,referralCode:a||void 0,intent:o||void 0}})},[]),null}export{a as default};
+//# sourceMappingURL=Register-B8626KLz.js.map

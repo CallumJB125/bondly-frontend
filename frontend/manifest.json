@@ -1,0 +1,17 @@
+{
+  "name": "Bondly",
+  "short_name": "Bondly",
+  "description": "South Africa's smartest home bond management app",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e1b2e",
+  "theme_color": "#1e3a5f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+import{t as e}from"./jsx-runtime-C0HpfLVq.js";var t=e();function n({children:e,variant:n=`forest`,size:r=`md`,full:i=!1,loading:a=!1,disabled:o=!1,type:s=`button`,onClick:c,className:l=``,...u}){return(0,t.jsxs)(`button`,{type:s,className:[`btn`,`btn--${n}`,`btn--${r}`,i?`btn--full`:``,a?`btn--loading`:``,l].filter(Boolean).join(` `),onClick:c,disabled:o||a,...u,children:[a?(0,t.jsx)(`span`,{className:`spinner`}):null,e]})}export{n as t};
+//# sourceMappingURL=Button-DJdm156_.js.map
