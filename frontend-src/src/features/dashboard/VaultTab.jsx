@@ -23,6 +23,16 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+// Snapshot optimizations may be plain strings (legacy) or rich objects
+// ({ type, title, action, bondLine, description, ... }) from the advice engine.
+// Rendering the raw object as a React child throws (React error #31), which is
+// what crashed the Docs/Vault tab — always resolve to a display string.
+function optLabel(opt) {
+  if (!opt) return '';
+  if (typeof opt === 'string') return opt;
+  return opt.title || opt.action || opt.bondLine || opt.description || '';
+}
+
 function gradeFromScore(score) {
   if (score >= 80) return 'A';
   if (score >= 65) return 'B';
@@ -160,7 +170,7 @@ export default function VaultTab() {
                         <div style={{ fontSize: '0.875rem', fontWeight: 700 }}>{fmt(s.qualification.maxBond)}</div>
                       )}
                       {s.optimizations?.[0] && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.optimizations[0]}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{optLabel(s.optimizations[0])}</div>
                       )}
                     </div>
                     <div style={{
@@ -181,7 +191,7 @@ export default function VaultTab() {
                       {s.optimizations.map((opt, j) => (
                         <div key={j} style={{ fontSize: '0.8125rem', color: 'var(--color-text)', padding: '4px 0', display: 'flex', gap: 8 }}>
                           <span style={{ color: 'var(--color-primary)', flexShrink: 0 }}>→</span>
-                          <span>{opt}</span>
+                          <span>{optLabel(opt)}</span>
                         </div>
                       ))}
                       {s.qualification?.zone && (

@@ -24,6 +24,14 @@ import {
 } from './EngagementCards.jsx';
 import './HomeTab.css';
 
+// Snapshot optimizations can be strings (legacy) or rich advice objects; render
+// the raw object as a React child throws (React error #31). Always coerce.
+function optLabel(opt) {
+  if (!opt) return '';
+  if (typeof opt === 'string') return opt;
+  return opt.title || opt.action || opt.bondLine || opt.description || '';
+}
+
 function gradeFromScore(score) {
   if (score >= 80) return 'A';
   if (score >= 65) return 'B';
@@ -368,7 +376,7 @@ export default function HomeTab({ loans, user, onTabChange }) {
                   </div>
                   <div className="home-snap-card__mid">
                     {s.qualification?.maxBond > 0 && <div className="home-snap-card__bond">{fmt(s.qualification.maxBond)}</div>}
-                    {s.optimizations?.[0] && <div className="home-snap-card__tip">{s.optimizations[0]}</div>}
+                    {s.optimizations?.[0] && <div className="home-snap-card__tip">{optLabel(s.optimizations[0])}</div>}
                   </div>
                   <div className="home-snap-card__grade"
                     style={{ color: GRADE_COLORS[grade], borderColor: GRADE_COLORS[grade] }}
