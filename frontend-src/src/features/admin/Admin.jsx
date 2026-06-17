@@ -22,10 +22,11 @@ import LeadsTab from './tabs/LeadsTab.jsx';
 import StatementsTab from './tabs/StatementsTab.jsx';
 import CommissionsTab from './tabs/CommissionsTab.jsx';
 import KYCTab from './tabs/KYCTab.jsx';
+import ChatTab from './tabs/ChatTab.jsx';
 import Lbl from './components/Lbl.jsx';
 import { exportCSV } from './leadConstants.jsx';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAdminErrors, useAdminLeads, useAdminCommissions, useAdminKycQueue } from './hooks/useAdminQueries.js';
+import { useAdminErrors, useAdminLeads, useAdminCommissions, useAdminKycQueue, useAdminChats } from './hooks/useAdminQueries.js';
 import BondDeskTab from './tabs/BondDeskTab.jsx';
 import WatchlistTab from './tabs/WatchlistTab.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
@@ -428,14 +429,14 @@ export default function Admin() {
   const [pipeline, setPipeline]   = useState([]);
   const [slaStatus, setSlaStatus] = useState({ overdue: [], dueSoon: [], onTrack: [], contacted: [] });
   const { data: kycQueue = [] } = useAdminKycQueue();
-  const [chats, setChats]         = useState([]);
+  const { data: chats = [] } = useAdminChats();
   const [buyerIntents, setBuyers] = useState([]);
   const { data: commissionData = { commissions: [], totals: {} } } = useAdminCommissions();
   const [alertsData, setAlertsData] = useState({ rateAlerts: [], savingsAlerts: [], primeRate: 11.25 });
   const [loading, setLoading]     = useState(true);
   const [primeInput, setPrimeInput] = useState('');
   // kycReason (rejection reasons) now local to KYCTab
-  const [chatReply, setChatReply] = useState({});
+  // chatReply (per-conversation draft) now local to ChatTab
   const [hideTest, setHideTest]   = useState(() => localStorage.getItem('bondly_hide_test') !== 'false');
   const [jumpCustomerId, setJumpCustomerId] = useState(null);
   const [jumpLeadId, setJumpLeadId] = useState(null);
@@ -525,7 +526,7 @@ export default function Admin() {
       admin.pipeline({ hideTest }).catch(() => []).then(d => setPipeline(d || []));
     }
 
-    if (tab === 'chat')          admin.chats().catch(() => []).then(d => setChats(d || []));
+
     if (tab === 'buyers')        admin.buyerIntents().catch(() => []).then(d => setBuyers(d || []));
 
 
@@ -650,7 +651,7 @@ export default function Admin() {
           {tab === 'commissions'  && <CommissionsTab showToast={showToast} />}
           {(tab === 'watchlist' || tab === 'alerts' || tab === 'buyers') && <WatchlistTab showToast={showToast} />}
           {tab === 'kyc'          && <KYCTab showToast={showToast} onJumpCustomer={id => { setJumpCustomerId(id); setTab('customers'); }} />}
-          {tab === 'chat'         && (chats.length === 0 && !loadedTabs.has('chat') ? <SkeletonList rows={4} /> : <ChatTab chats={chats} setChats={setChats} chatReply={chatReply} setChatReply={setChatReply} showToast={showToast} />)}
+          {tab === 'chat'         && <ChatTab showToast={showToast} />}
           {/* legacy 'buyers' id is handled by the WatchlistTab line above */}
           {/* Switch Apps, Submissions & Broker Queue are sub-tabs inside Deals (see DealsTab); bond-desk kept standalone too */}
           {tab === 'bond-desk'        && <BondDeskTab showToast={showToast} />}
@@ -2384,64 +2385,7 @@ function CustomerProfile({ userId, onClose, showToast, mode = 'overlay', users =
 // ═══════════════════════════════════════════════════════════
 //  CHAT TAB
 // ═══════════════════════════════════════════════════════════
-function ChatTab({ chats, setChats, chatReply, setChatReply, showToast }) {
-  return (
-    <div className="fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-5)', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
-        <h2 style={{ fontFamily: 'var(--font-serif)' }}>Chat Inbox ({chats.length})</h2>
-        {chats.filter(c => c.escalated).length > 0 && (
-          <span style={{ color: '#ef4444', fontWeight: 700 }}>⚠ {chats.filter(c => c.escalated).length} escalated</span>
-        )}
-      </div>
-      {chats.length === 0 ? (
-        <Card><CardBody><p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 'var(--space-8)' }}>No chat conversations yet</p></CardBody></Card>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {chats.map(convo => (
-            <Card key={convo.userId}>
-              <CardBody>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-3)' }}>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{convo.userName}</div>
-                    <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{convo.userEmail} · {convo.messages.length} messages · Last: {fmtDate(convo.updatedAt)}</div>
-                  </div>
-                  {convo.escalated && <span style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: 6, padding: '3px 10px', fontSize: '0.75rem', fontWeight: 700 }}>Needs human</span>}
-                </div>
-                <div style={{ background: 'var(--bg-page)', borderRadius: 8, padding: 'var(--space-3)', marginBottom: 'var(--space-3)', maxHeight: 160, overflowY: 'auto', fontSize: '0.8125rem' }}>
-                  {convo.messages.slice(-6).map(m => (
-                    <div key={m.id} style={{ marginBottom: 6 }}>
-                      <span style={{ fontWeight: 700, color: m.role === 'user' ? 'var(--forest)' : m.role === 'advisor' ? '#6366f1' : 'var(--text-secondary)', marginRight: 6 }}>
-                        {m.role === 'user' ? convo.userName?.split(' ')[0] : m.role === 'advisor' ? 'Advisor' : 'Bot'}:
-                      </span>
-                      <span>{m.text.slice(0, 120)}{m.text.length > 120 ? '…' : ''}</span>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                  <input type="text" placeholder="Reply as advisor…" value={chatReply[convo.userId] || ''}
-                    onChange={e => setChatReply(r => ({ ...r, [convo.userId]: e.target.value }))}
-                    onKeyDown={async e => {
-                      if (e.key === 'Enter' && chatReply[convo.userId]?.trim()) {
-                        try { await admin.replyChat(convo.userId, chatReply[convo.userId]); setChatReply(r => ({ ...r, [convo.userId]: '' })); setChats(cs => cs.map(c => c.userId === convo.userId ? { ...c, escalated: false } : c)); showToast('Reply sent', 'success'); }
-                        catch { showToast('Failed to send', 'error'); }
-                      }
-                    }}
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.875rem', background: 'var(--bg-card)' }}
-                  />
-                  <Button variant="forest" size="sm" onClick={async () => {
-                    if (!chatReply[convo.userId]?.trim()) return;
-                    try { await admin.replyChat(convo.userId, chatReply[convo.userId]); setChatReply(r => ({ ...r, [convo.userId]: '' })); setChats(cs => cs.map(c => c.userId === convo.userId ? { ...c, escalated: false } : c)); showToast('Reply sent', 'success'); }
-                    catch { showToast('Failed to send', 'error'); }
-                  }}>Send</Button>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+// ChatTab extracted to ./tabs/ChatTab.jsx (Phase C cont. — React Query)
 
 // ═══════════════════════════════════════════════════════════
 //  ERRORS TAB
