@@ -68,9 +68,8 @@
   text-transform: uppercase;
   color: var(--intel-gold);
   background: rgba(200,168,75,0.10);
-  border: 1px solid rgba(200,168,75,0.25);
-  padding: 3px 10px;
-  border-radius: 20px;
+  padding: 3px 11px;
+  border-radius: 8px;
   margin-bottom: 8px;
 }
 
@@ -195,9 +194,8 @@
 
 .intel__stat {
   background: var(--intel-card);
-  border: 1px solid var(--intel-border);
   border-radius: 8px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -238,9 +236,8 @@
 /* ── Tier distribution bar ───────────────────────────────── */
 .intel__dist-section {
   background: var(--intel-card);
-  border: 1px solid var(--intel-border);
   border-radius: 8px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   margin-bottom: 20px;
 }
 
@@ -542,9 +539,8 @@
 
 .intel__shap-card {
   background: var(--intel-card);
-  border: 1px solid var(--intel-border);
-  border-radius: 6px;
-  padding: 10px 14px;
+  border-radius: 8px;
+  padding: 11px 15px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -578,9 +574,8 @@
 
 .intel__alert-card {
   background: var(--intel-card);
-  border: 1px solid var(--intel-border);
   border-radius: 8px;
-  padding: 16px 18px;
+  padding: 18px 20px;
   display: flex;
   align-items: flex-start;
   gap: 16px;

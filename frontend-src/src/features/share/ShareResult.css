@@ -110,12 +110,11 @@
 .share-cta {
   display: block;
   text-align: center;
-  padding: 11px 20px;
+  padding: 12px 22px;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  border: 1.5px solid var(--border-color, #e5e7eb);
   color: var(--text-primary);
   transition: background 0.15s;
 }

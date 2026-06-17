@@ -6,9 +6,8 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   flex-wrap: wrap;
 }
 .bv-summary__item { display: flex; align-items: center; gap: 6px; font-size: 0.8125rem; color: var(--color-text-muted); }
@@ -49,9 +48,8 @@
 /* Signal card */
 .bv-signal {
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1);
   cursor: pointer;
   transition: border-color .15s, background .15s;
 }

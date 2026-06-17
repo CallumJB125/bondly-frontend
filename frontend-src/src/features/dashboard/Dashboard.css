@@ -73,9 +73,8 @@
 
 .dash-balance-card {
   background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: var(--border-radius);
-  padding: var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-5) * 1.1);
 }
 
 .dash-balance-label {
@@ -536,9 +535,8 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   text-align: left;
 }
 
@@ -592,9 +590,8 @@
   align-items: flex-start;
   gap: var(--space-2);
   background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
-  padding: var(--space-6);
+  border-radius: 8px;
+  padding: calc(var(--space-6) * 1.1);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, transform 0.1s;
   text-align: left;
@@ -680,9 +677,8 @@
 
 .milestone-card {
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1);
   text-align: center;
 }
 
@@ -760,10 +756,9 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--border-radius);
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
+  border-radius: 8px;
   margin-bottom: var(--space-5);
-  border: 1px solid;
 }
 
 .swap-recommend--good {
@@ -822,9 +817,8 @@
 
 .swap-vault-picker {
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-3);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -852,9 +846,8 @@
   font-size: 0.7rem;
   color: var(--text-secondary);
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 1px 7px;
+  border-radius: 8px;
 }
 
 /* ── Swap progress stepper ──────────────────────────────── */
@@ -869,10 +862,9 @@
 
 .swap-stepper--rejected {
   display: block;
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: rgba(201,122,42,0.08);
-  border: 1px solid rgba(201,122,42,0.25);
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
   color: #c97a2a;
   font-size: 0.875rem;
   font-weight: 600;
@@ -938,9 +930,8 @@
   gap: var(--space-3);
   align-items: flex-start;
   background: rgba(74,127,165,0.06);
-  border: 1px solid rgba(74,127,165,0.15);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.6;
@@ -957,9 +948,8 @@
 /* ── Document checklist ─────────────────────────────────── */
 .doc-checklist {
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   margin-bottom: var(--space-3);
 }
 
@@ -1013,9 +1003,8 @@
   gap: var(--space-4);
   flex-wrap: wrap;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   margin-bottom: var(--space-5);
 }
 
@@ -1101,10 +1090,9 @@
 /* ── Multi-bank status tracker ──────────────────────────── */
 .bank-status-tracker {
   margin-bottom: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
 }
 
 .bank-status-tracker__label {
@@ -1189,10 +1177,9 @@
 /* ── Offer comparison cards ─────────────────────────────── */
 .offer-comparison {
   margin-bottom: var(--space-4);
-  padding: var(--space-4);
+  padding: calc(var(--space-4) * 1.1);
   background: rgba(74,127,165,0.06);
-  border: 1px solid rgba(74,127,165,0.30);
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
 }
 
 .offer-comparison__title {
@@ -1210,9 +1197,8 @@
 
 .offer-card {
   background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1);
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -1307,10 +1293,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
   color: var(--text-primary);
   text-decoration: none;
   transition: border-color var(--transition-fast), background var(--transition-fast);
@@ -1331,10 +1316,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   background: linear-gradient(135deg, #1a1600 0%, #2a2000 100%);
-  border: 1.5px solid #d97706;
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
 }
@@ -1497,9 +1481,8 @@
 .savings-result {
   margin-top: var(--space-4);
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
 }
 
 .savings-result__row {
@@ -1527,10 +1510,9 @@
 /* ── Referral Card ──────────────────────────────────────── */
 .referral-card {
   background: linear-gradient(135deg, var(--forest) 0%, #0a1624 100%);
-  border-radius: var(--border-radius);
-  padding: var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-5) * 1.1);
   margin-top: var(--space-5);
-  border: 1px solid rgba(200,168,75,0.2);
 }
 
 .referral-card__top {
@@ -1702,9 +1684,8 @@
 /* Offer card */
 .app-status__offer {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 22px;
   margin-bottom: 20px;
   border-top: 3px solid var(--lime);
 }
@@ -1789,9 +1770,8 @@
   gap: 16px;
   align-items: flex-start;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 8px;
+  padding: 22px;
   margin-bottom: 20px;
 }
 .app-status__waiting-icon {
@@ -1919,10 +1899,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   background: var(--bg-card);
-  border-radius: var(--border-radius);
-  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
   transition: border-color 0.15s;
 }
 
@@ -1974,9 +1953,8 @@
 
 .journey-strip__step-cta {
   background: none;
-  border: 1.5px solid var(--mint);
-  border-radius: var(--border-radius-sm);
-  padding: 6px 16px;
+  border-radius: 8px;
+  padding: 7px 18px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
@@ -2080,10 +2058,9 @@
 
 .quick-estimate-result__main {
   text-align: center;
-  padding: var(--space-4);
+  padding: calc(var(--space-4) * 1.1);
   background: var(--bg-base);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 .quick-estimate-result__label {

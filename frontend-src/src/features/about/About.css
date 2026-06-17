@@ -78,9 +78,8 @@
   gap: var(--space-6);
   align-items: flex-start;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-6);
+  border-radius: 8px;
+  padding: calc(var(--space-6) * 1.1);
 }
 .about-team__avatar {
   width: 64px;
@@ -126,9 +125,8 @@
 }
 .about-values__card {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-6);
+  border-radius: 8px;
+  padding: calc(var(--space-6) * 1.1);
 }
 .about-values__icon { font-size: 1.75rem; margin-bottom: var(--space-3); }
 .about-values__card-title {

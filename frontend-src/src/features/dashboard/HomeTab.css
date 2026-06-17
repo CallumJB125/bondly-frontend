@@ -28,9 +28,8 @@
 /* ── Command hero ──────────────────────────────────────── */
 .home-hero {
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-5) * 1.1);
   display: flex;
   gap: var(--space-5);
   align-items: center;
@@ -112,9 +111,8 @@
 }
 .home-stat-tile {
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3) var(--space-3) var(--space-2);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-3) * 1.1) calc(var(--space-2) * 1.1);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -199,10 +197,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: color-mix(in srgb, #ef4444 7%, var(--color-surface-1));
-  border: 1px solid color-mix(in srgb, #ef4444 25%, var(--color-border));
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
 }
 .home-anomaly-card__body { flex: 1; min-width: 0; }
 .home-anomaly-card__cat { font-size: 0.8125rem; font-weight: 700; color: var(--color-text); text-transform: capitalize; }
@@ -224,10 +221,9 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-2);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-2) * 1.1);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
@@ -251,10 +247,9 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
 }
 .home-snap-card__date { font-size: 0.8125rem; font-weight: 600; color: var(--color-text); white-space: nowrap; }
 .home-snap-card__months { font-size: 0.75rem; color: var(--color-text-muted); }

@@ -13,6 +13,8 @@
   --ls-cream: #faefdc;      /* butter-cream band */
   --ls-salmon: #f2a295;     /* salmon band */
   --ls-lemon: #fdf0af;      /* accent text on dark */
+  --ls-gold: #e2c87d;       /* soft wheat-gold accent */
+  --ls-gold-light: #f3e2b0; /* light gold / yellow highlight */
   --ls-heading: #06143b;    /* headings over white/light bands */
   --ls-ink: #000000;        /* hairline borders + structural ink */
   --ls-muted: #5a5a5a;
@@ -150,10 +152,42 @@
 
 /* ---- hero (white, oversized display headline) ---- */
 .ls-hero {
-  padding: 72px 0 84px;
-  background: #ffffff;
+  position: relative;
+  padding: 72px 0 28px;
+  /* Subtle navy wash on the left (behind the copy) fading to clear photo on the
+     right — pairs with the hero text-shadows to keep the white copy readable. */
+  background:
+    linear-gradient(to right, rgba(10, 21, 38, 0.82) 0%, rgba(10, 21, 38, 0.62) 30%, rgba(10, 21, 38, 0.25) 58%, rgba(10, 21, 38, 0) 80%),
+    url("/bghero.jpeg") center / cover no-repeat;
+}
+/* frosted-blur layer: strongest on the left (behind copy), fading to sharp on the right */
+.ls-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(to right, #000 0%, #000 30%, rgba(0, 0, 0, 0) 78%);
+  mask-image: linear-gradient(to right, #000 0%, #000 30%, rgba(0, 0, 0, 0) 78%);
+  pointer-events: none;
+}
+/* bottom scrim — keeps the full-width bank strip legible where the photo
+   brightens on the right (the left navy wash has faded out by then) */
+.ls-hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 190px;
+  background: linear-gradient(to top, rgba(10, 21, 38, 0.78) 0%, rgba(10, 21, 38, 0.34) 55%, rgba(10, 21, 38, 0) 100%);
+  z-index: 0;
+  pointer-events: none;
 }
 .ls-hero__grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1.15fr .85fr;
   gap: 72px;
@@ -243,16 +277,97 @@
   flex-shrink: 0;
 }
 
+/* ---- hero text on navy overlay (light treatment for contrast) ---- */
+/* Subtle text shadows lift the white copy off the bright photo background. */
+.ls-hero .ls-eyebrow { color: #ffffff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.ls-hero .ls-eyebrow::before { background: rgba(255, 255, 255, 0.85); }
+.ls-hero__title {
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+.ls-hero__title em {
+  background: linear-gradient(180deg, var(--ls-gold-light) 0%, var(--ls-gold) 52%, #cbac5c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* text-shadow can't render through transparent fill — use a filter instead */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+.ls-hero__sub { color: rgba(255, 255, 255, 0.92); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.ls-hero .ls-reassure { color: rgba(255, 255, 255, 0.78); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.ls-hero .ls-trust-row { border-top-color: rgba(255, 255, 255, 0.25); }
+.ls-hero .ls-trust-row div {
+  color: rgba(255, 255, 255, 0.78);
+  border-right-color: rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.ls-hero .ls-trust-row b { color: #ffffff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.ls-hero .ls-trust-icon { color: #8fc0f5; }
+.ls-hero .ls-btn--ghost { color: #ffffff; border-color: #ffffff; }
+.ls-hero .ls-btn--ghost:hover { background: rgba(255, 255, 255, 0.12); }
+
+/* ---- "We negotiate with" bank strip (full-width, bottom of hero) ---- */
+.ls-negotiate {
+  position: relative;
+  z-index: 1;
+  /* pin to the bottom of the hero, clear of the grid above */
+  margin-top: 56px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+.ls-negotiate__label {
+  flex-shrink: 0;
+  font-family: var(--ls-subtext);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.ls-negotiate__row {
+  flex: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+.ls-negotiate__logo {
+  width: auto;
+  flex-shrink: 0;
+  /* normalise every logo to a single flat white, regardless of source colour */
+  filter: brightness(0) invert(1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+  opacity: 0.9;
+  transition: opacity 0.18s ease;
+}
+.ls-negotiate__logo:hover { opacity: 1; }
+
+@media (max-width: 860px) {
+  .ls-negotiate { flex-direction: column; align-items: flex-start; gap: 18px; margin-top: 40px; }
+  .ls-negotiate__row { flex-wrap: wrap; justify-content: flex-start; gap: 20px 28px; }
+}
+
+/* Get an offer CTA — only the arrow shifts right on hover. */
+.ls-get-offer__arrow {
+  display: inline-block;
+  transition: transform .18s ease;
+}
+.ls-get-offer:hover .ls-get-offer__arrow,
+.ls-get-offer:focus-visible .ls-get-offer__arrow { transform: translateX(4px); }
+
 /* ---- calculator card (white, hairline, flat) ---- */
 .ls-calc {
   background: #fff;
-  border: 1px solid var(--ls-ink);
-  border-radius: 4px;
+  border-radius: 14px;
   box-shadow: none;
   overflow: hidden;
 }
 .ls-calc__head {
-  padding: 20px 24px;
+  padding: 25px 30px;
   border-bottom: 1px solid var(--ls-ink);
   display: flex;
   justify-content: space-between;
@@ -288,7 +403,7 @@
   white-space: nowrap;
 }
 .ls-pill svg { color: var(--ls-navy); flex-shrink: 0; }
-.ls-calc__body { padding: 24px; }
+.ls-calc__body { padding: 30px; }
 
 .ls-field { margin-bottom: 16px; }
 .ls-field label {
@@ -412,10 +527,9 @@
 }
 
 .ls-result {
-  background: var(--ls-cream);
-  border: 1px solid var(--ls-ink);
-  border-radius: 4px;
-  padding: 20px 22px;
+  background: var(--bg-subtle);
+  border-radius: 14px;
+  padding: 26px 30px;
   margin: 20px 0 18px;
   text-align: center;
 }
@@ -505,9 +619,8 @@
 .ls-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .ls-step {
   background: #fff;
-  border: 1px solid var(--ls-ink);
-  border-radius: 4px;
-  padding: 30px 28px;
+  border-radius: 8px;
+  padding: 33px 31px;
   position: relative;
 }
 .ls-step__num {
@@ -573,14 +686,172 @@
   margin-top: 14px;
 }
 
+/* ---- banks + saver stats (intro left, stat panel right) ---- */
+.ls-banks { background: #F2F6FC; }
+.ls-banks__grid {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 56px;
+  align-items: center;
+}
+.ls-banks__title {
+  font-size: clamp(30px, 3.5vw, 44px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: var(--ls-heading);
+  max-width: 17ch;
+  margin: 0 0 18px;
+}
+.ls-banks__sub {
+  font-family: var(--ls-subtext);
+  font-size: 17px;
+  line-height: 1.5;
+  color: #333333;
+  max-width: 42ch;
+  margin: 0 0 32px;
+}
+.ls-banks__logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 32rem;
+}
+.ls-banks__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e3e9f1;
+  border-radius: 10px;
+  padding: 8px 16px 8px 9px;
+}
+.ls-banks__mono {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--ls-navy-deep);
+  color: var(--ls-gold);
+  font-family: var(--font-display, 'Neue Haas Grotesk Display', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.ls-banks__name {
+  font-family: var(--ls-subtext);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ls-heading);
+}
+
+/* stat panel — navy bento, staggered glass tiles */
+.ls-banks__panel {
+  position: relative;
+  background:
+    radial-gradient(130% 120% at 100% 0%, rgba(226, 200, 125, 0.18) 0%, rgba(226, 200, 125, 0) 44%),
+    linear-gradient(158deg, #1a2c45 0%, var(--ls-navy-deep) 62%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 40px 80px -48px rgba(6, 20, 59, 0.7);
+  overflow: hidden;
+}
+.ls-banks__stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  /* room for the staggered (translated) right column below the grid box */
+  padding-bottom: 28px;
+}
+.ls-banks__stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 22px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: transform .28s cubic-bezier(.2, .7, .2, 1), background .28s ease, border-color .28s ease;
+}
+/* a tile reads as a "card" — tiny gold tick above the number */
+.ls-banks__stat::before {
+  content: "";
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ls-gold);
+  opacity: .7;
+}
+/* staggered rhythm — right column drops to break the grid lockstep */
+.ls-banks__stat:nth-child(2n) { transform: translateY(28px); }
+.ls-banks__stat:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(226, 200, 125, 0.42);
+}
+.ls-banks__stat:nth-child(odd):hover { transform: translateY(-4px); }
+.ls-banks__stat:nth-child(2n):hover { transform: translateY(24px); }
+.ls-banks__big {
+  font-size: clamp(40px, 4.2vw, 58px);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.02em;
+  color: var(--ls-gold);
+}
+.ls-banks__meta { display: flex; flex-direction: column; gap: 5px; }
+.ls-banks__label {
+  font-family: var(--ls-subtext);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+.ls-banks__detail {
+  font-family: var(--ls-subtext);
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #93a4ba;
+}
+/* note spans full width, clears the staggered grid */
+.ls-banks__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: rgba(226, 200, 125, 0.08);
+  border: 1px solid rgba(226, 200, 125, 0.16);
+  border-radius: 14px;
+}
+.ls-banks__note-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  color: var(--ls-gold);
+}
+.ls-banks__note-icon svg { width: 100%; height: 100%; }
+.ls-banks__note p {
+  font-family: var(--ls-subtext);
+  font-size: 14px;
+  line-height: 1.45;
+  color: #c2d0e0;
+  margin: 0;
+}
+
 /* ---- final CTA (deep navy band) ---- */
 .ls-final {
   background: var(--ls-navy-deep);
-  border: 1px solid var(--ls-ink);
-  border-radius: 4px;
+  border-radius: 8px;
   color: #fff;
   text-align: center;
-  padding: 72px 40px;
+  padding: 79px 44px;
   margin-bottom: 88px;
 }
 .ls-final .ls-h2 { color: #fff; margin-bottom: 14px; }
@@ -591,6 +862,91 @@
   border-color: var(--ls-lemon);
 }
 .ls-final .ls-btn--primary:hover { background: #fbe98c; }
+
+/* ---- FAQ (sticky heading + accordion) ---- */
+.ls-faq { background: #fbfcfe; }
+.ls-faq__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+  gap: 64px;
+  /* Stretch the aside column to the full row height so the sticky heading
+     has room to travel as the (taller) question list scrolls past it. */
+  align-items: stretch;
+}
+.ls-faq__sticky {
+  position: sticky;
+  top: 96px; /* clears the 64px sticky nav + breathing room */
+}
+.ls-faq__title {
+  font-size: clamp(34px, 4vw, 2.6rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  color: var(--ls-heading);
+  margin: 0 0 18px;
+}
+.ls-faq__sub {
+  font-family: var(--ls-subtext);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ls-muted);
+  max-width: 32ch;
+  margin: 0;
+}
+.ls-faq__list { display: flex; flex-direction: column; }
+.ls-faq__item {
+  border: 1px solid transparent;
+  border-bottom: 1px solid #e3e8f0;
+  border-radius: var(--ls-radius);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.ls-faq__item.is-open {
+  border-color: var(--ls-navy);
+  background: #fff;
+}
+.ls-faq__q {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 22px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-display, 'Neue Haas Grotesk Display', sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ls-heading);
+}
+.ls-faq__q:hover { color: var(--ls-navy); }
+.ls-faq__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #c5cede;
+  border-radius: 50%;
+  color: var(--ls-navy);
+  transition: transform 0.25s ease, border-color 0.2s ease;
+}
+.ls-faq__icon svg { width: 16px; height: 16px; }
+.ls-faq__item.is-open .ls-faq__icon {
+  transform: rotate(135deg);
+  border-color: var(--ls-navy);
+}
+.ls-faq__panel { padding: 0 22px 24px; }
+.ls-faq__panel p {
+  font-family: var(--ls-subtext);
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333333;
+  max-width: 60ch;
+  margin: 0;
+}
 
 /* ---- footer ---- */
 .ls-footer {
@@ -618,17 +974,29 @@
   .ls-case__right { border-left: none; }
   .ls-band__grid { flex-wrap: wrap; row-gap: 22px; }
   .ls-band__grid .ls-stat { flex: 1 1 30%; }
+  .ls-faq__grid { grid-template-columns: 1fr; gap: 36px; }
+  .ls-faq__sticky { position: static; }
+  .ls-banks__grid { grid-template-columns: 1fr; gap: 40px; }
 }
 
 @media (max-width: 640px) {
   .ls-wrap { padding: 0 20px; }
   .ls-nav__links { display: none; }
   .ls-crosssell { display: none; }
-  .ls-hero { padding: 48px 0 56px; }
+  .ls-hero { padding: 48px 0 24px; }
   .ls-hero__ctas { flex-wrap: wrap; gap: 12px; }
   .ls-section { padding: 56px 0; }
   .ls-case-wrap { padding-top: 56px; }
   .ls-case__left, .ls-case__right { padding: 30px 26px; }
   .ls-footer { flex-direction: column; }
   .ls-footer__links a { margin-left: 0; margin-right: 18px; }
+  .ls-faq__q { padding: 20px 4px; font-size: 16px; gap: 14px; }
+  .ls-faq__panel { padding: 0 4px 20px; }
+  .ls-banks__panel { padding: 20px; border-radius: 18px; }
+  .ls-banks__stats { grid-template-columns: 1fr; gap: 12px; padding-bottom: 0; }
+  .ls-banks__stat { padding: 20px; }
+  .ls-banks__stat:nth-child(2n) { transform: none; }
+  .ls-banks__stat:nth-child(odd):hover,
+  .ls-banks__stat:nth-child(2n):hover { transform: translateY(-3px); }
+  .ls-banks__note { margin-top: 12px; }
 }

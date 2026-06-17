@@ -58,10 +58,9 @@
 
 /* ───────────── LAYER 2 — THE PATH ───────────── */
 .sv-lever {
-  padding: var(--space-5) var(--space-6);
-  border-radius: var(--border-radius);
+  padding: calc(var(--space-5) * 1.1) calc(var(--space-6) * 1.1);
+  border-radius: 8px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-left: 4px solid var(--lime);
   box-shadow: var(--shadow-sm);
 }

@@ -203,13 +203,12 @@
   flex-direction: column;
   gap: 20px;
   max-width: 540px;
-  padding: 28px;
+  padding: 31px;
   /* Subtle layered depth: faint gradient wash + 1px border + soft layered shadow */
   background:
     linear-gradient(180deg, rgba(30,58,95,0.025) 0%, transparent 120px),
     var(--bg-card);
-  border: 1px solid rgba(15, 26, 36, 0.08);
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow:
     0 1px 2px rgba(15,26,36,0.04),
     0 12px 28px rgba(15,26,36,0.07),
@@ -560,9 +559,8 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
 .hook-paper {
   position: relative;
   background: #fdfaf0;
-  border: 1px solid rgba(15, 26, 36, 0.10);
-  border-radius: 6px;
-  padding: 30px 36px 32px;
+  border-radius: 8px;
+  padding: 33px 40px 35px;
   color: #1a2530;
   font-family: var(--font-sans);
   box-shadow:
@@ -796,12 +794,11 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
 }
 
 .hook-delta {
-  padding: 28px 30px;
+  padding: 31px 33px;
   background:
     radial-gradient(420px 200px at 100% 0%, rgba(239,68,68,0.07), transparent 70%),
     #fffaf9;
-  border: 1px solid rgba(239, 68, 68, 0.18);
-  border-radius: 18px;
+  border-radius: 8px;
   margin-bottom: 36px;
   box-shadow: var(--shadow-sm);
 }
@@ -1028,10 +1025,9 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
 /* ── Bond Health Score gauge ─────────────────────────── */
 .bhs-wrap {
   margin-bottom: 32px;
-  padding: 28px 28px 24px;
+  padding: 31px 31px 26px;
   background: #f8fafc;
-  border: 1px solid rgba(15, 26, 36, 0.08);
-  border-radius: 16px;
+  border-radius: 8px;
 }
 .bhs-inner {
   display: flex;
@@ -1116,13 +1112,12 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 16px;
+  padding: 9px 18px;
   font-size: 0.8125rem;
   font-weight: 600;
   font-family: var(--font-sans);
   color: rgba(15, 26, 36, 0.65);
   background: #fff;
-  border: 1px solid rgba(15, 26, 36, 0.14);
   border-radius: 8px;
   cursor: pointer;
   transition: color 0.12s, border-color 0.12s, background 0.12s;
@@ -1176,12 +1171,10 @@ select.hook-input { appearance: none; background: var(--bg-input) url("data:imag
 }
 
 /* ── LIVE IN-FORM PREVIEW ────────────────────────────────── */
-.hook-livepreview {
-  border: 1px solid rgba(30,58,95,0.16);
-  border-radius: 16px;
+.hook-livepreview {  border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(30,58,95,0.04) 0%, rgba(30,58,95,0.01) 100%);
-  padding: 18px 20px 16px;
+  padding: 20px 22px 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;

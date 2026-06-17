@@ -7,6 +7,7 @@ import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import { publicStats } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import GetAnOfferButton from './GetAnOfferButton.jsx';
 import './Landing.css';
 
 // Env-aware sister-product URL (Bondly Home / origination), mirroring the
@@ -119,6 +120,43 @@ function LandingNav() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// BANK STRIP — "We negotiate with" trust row of bank logos.
+// Logos are normalised to uniform white via CSS filter; per-logo
+// heights keep them optically balanced (icons read taller than
+// pure wordmarks). Assets live in /public/banks.
+// ─────────────────────────────────────────────────────────────
+const NEGOTIATE_BANKS = [
+  { src: '/banks/absa.png',         alt: 'Absa',          h: 22 },
+  { src: '/banks/fnb.png',          alt: 'FNB',           h: 30 },
+  { src: '/banks/nedbank.png',      alt: 'Nedbank',       h: 18 },
+  { src: '/banks/standardbank.png', alt: 'Standard Bank', h: 29 },
+  { src: '/banks/capitec.png',      alt: 'Capitec',       h: 20 },
+  { src: '/banks/investec.png',     alt: 'Investec',      h: 22 },
+  { src: '/banks/sahomeloans.png',  alt: 'SA Home Loans', h: 29 },
+];
+
+function BankStrip() {
+  return (
+    <div className="ls-wrap ls-negotiate" aria-label="Banks we negotiate with">
+      <span className="ls-negotiate__label">We negotiate with</span>
+      <div className="ls-negotiate__row">
+        {NEGOTIATE_BANKS.map((b) => (
+          <img
+            key={b.alt}
+            className="ls-negotiate__logo"
+            src={b.src}
+            alt={b.alt}
+            loading="lazy"
+            decoding="async"
+            style={{ height: `${b.h}px` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // HERO + live SAVINGS CHECK calculator
 // ─────────────────────────────────────────────────────────────
 function Hero() {
@@ -175,6 +213,18 @@ function Hero() {
     trackAction('calculator_interacted', { field });
   };
 
+  // Outstanding balance: store raw digits, display with space thousands separators.
+  const fmtBalance = (raw) => {
+    const digits = String(raw).replace(/[^\d]/g, '');
+    if (!digits) return '';
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' '); // non-breaking space
+  };
+  const onBalanceChange = (e) => {
+    const raw = e.target.value.replace(/[^\d]/g, '');
+    setBalance(raw);
+    trackAction('calculator_interacted', { field: 'balance' });
+  };
+
   const goToSwitch = (source) => {
     trackAction('hero_calc_cta_clicked', { balance: bal, rate: rt, term: trm, location: source });
     try {
@@ -200,9 +250,7 @@ function Hero() {
             We negotiate with all seven major South African banks to find your best rate — and switch your bond for free.
           </p>
           <div className="ls-hero__ctas">
-            <button className="ls-btn ls-btn--primary ls-btn--lg" onClick={() => goToSwitch('hero')}>
-              Get an offer →
-            </button>
+            <GetAnOfferButton onClick={() => goToSwitch('hero')} />
             <a
               className="ls-btn ls-btn--ghost"
               href="#how-it-works"
@@ -261,8 +309,8 @@ function Hero() {
                   id="ls-balance"
                   type="text"
                   inputMode="numeric"
-                  value={balance}
-                  onChange={onField(setBalance, 'balance')}
+                  value={fmtBalance(balance)}
+                  onChange={onBalanceChange}
                   aria-label="Outstanding balance"
                 />
               </div>
@@ -324,6 +372,7 @@ function Hero() {
           </div>
         </aside>
       </div>
+      <BankStrip />
     </header>
   );
 }
@@ -368,18 +417,18 @@ function HowItWorks() {
   const steps = [
     {
       n: '1',
-      title: 'Share your bond details',
-      body: 'Your balance, current rate and a few details — or just upload a statement. No bank visit, no credit check at this stage.',
+      title: 'Tell us about your bond',
+      body: 'Share your balance, current rate, or just upload a statement. No bank visit, no credit check at this stage.',
     },
     {
       n: '2',
-      title: '7 banks compete',
-      body: 'ABSA, FNB, Nedbank, Standard Bank, Capitec, Investec and SA Home Loans each submit their best offer, side by side within 48 hours.',
+      title: 'We gather the best rates',
+      body: 'Bondly negotiates with all seven major South African banks and brings back their best offers, side by side.',
     },
     {
       n: '3',
-      title: 'Pick your offer, we switch you',
-      body: 'Choose the best rate. We handle the paperwork, cancellation and registration end-to-end. Banks pay us the same fee whichever you pick.',
+      title: 'Pick the offer you like',
+      body: 'Choose the rate which suits you. Bondly handles the paperwork and legal registration to switch seamlessly at no cost to you.',
     },
   ];
   return (
@@ -435,6 +484,167 @@ function CaseStudy() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// BANKS + SAVER STATS — "no matter which bank you're with"
+// ─────────────────────────────────────────────────────────────
+const SAVER_BANKS = [
+  { abbr: 'SB',  name: 'Standard Bank' },
+  { abbr: 'a',   name: 'Absa' },
+  { abbr: 'N',   name: 'Nedbank' },
+  { abbr: 'FNB', name: 'FNB' },
+  { abbr: 'Iv',  name: 'Investec' },
+  { abbr: 'RMB', name: 'RMB Private Bank' },
+  { abbr: 'SA',  name: 'SA Home Loans' },
+];
+
+const SAVER_STATS = [
+  { big: '48hr', label: 'To your first quote',     detail: 'most clients hear back within two days' },
+  { big: 'R920', label: 'Average monthly saving',  detail: 'on bond repayments' },
+  { big: '94%',  label: 'Approval rate',           detail: 'based on successful switches' },
+  { big: 'R0',   label: 'Cost to you, ever',       detail: '100% free service, always' },
+];
+
+function BanksSaver() {
+  return (
+    <section className="ls-section ls-banks" id="banks">
+      <div className="ls-wrap ls-banks__grid">
+        <div className="ls-banks__intro">
+          <h2 className="ls-serif ls-banks__title">
+            Bondly can help you save on your home, no matter which bank you're with.
+          </h2>
+          <p className="ls-banks__sub">
+            We negotiate with every major lender in South Africa, so a better rate is never more
+            than a switch away.
+          </p>
+          <div className="ls-banks__logos">
+            {SAVER_BANKS.map((b) => (
+              <div key={b.name} className="ls-banks__chip">
+                <span className="ls-banks__mono" aria-hidden="true">{b.abbr}</span>
+                <span className="ls-banks__name">{b.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ls-banks__panel">
+          <ul className="ls-banks__stats">
+            {SAVER_STATS.map((s) => (
+              <li key={s.label} className="ls-banks__stat">
+                <span className="ls-serif ls-banks__big">{s.big}</span>
+                <span className="ls-banks__meta">
+                  <span className="ls-banks__label">{s.label}</span>
+                  <span className="ls-banks__detail">{s.detail}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="ls-banks__note">
+            <span className="ls-banks__note-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M3 11l4-4 4 3 3-3 4 4M3 11v4a2 2 0 002 2h2m-4-6h4m10-4v4a2 2 0 01-2 2h-2m4-6h-4m-7 6l2 2 3-3"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <p>Bondly is free because we're paid by the bank you switch to, never by you.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// FAQ — sticky heading + accordion list ("Questions, answered.")
+// ─────────────────────────────────────────────────────────────
+const FAQ_ITEMS = [
+  {
+    q: 'Is Bondly really free?',
+    a: 'Yes. Bondly is completely free for homeowners — we never charge you a cent. We earn a fee from the bank you choose to switch to, so our interests stay aligned with finding you the lowest rate.',
+  },
+  {
+    q: 'Will checking my rate affect my credit score?',
+    a: "No. Getting your initial estimate takes no credit check at all. A formal credit enquiry only happens once you pick an offer and decide to proceed — and we'll always tell you before that point.",
+  },
+  {
+    q: 'How long does switching take?',
+    a: 'Most switches complete in about 4–6 weeks. You typically get your first quote within 48 hours, and Bondly handles the bond registration and legal paperwork so you barely have to lift a finger.',
+  },
+  {
+    q: 'Which banks does Bondly work with?',
+    a: 'We negotiate with all seven major South African banks, so you see their best offers side by side and switch to whichever rate suits you — without shopping around bank by bank yourself.',
+  },
+  {
+    q: 'Am I obligated to switch if I get a quote?',
+    a: "Not at all. Your quote is yours to keep with zero obligation. If none of the offers beat what you already have, you walk away — no cost, no pressure, no catch.",
+  },
+  {
+    q: 'What does Bondly actually handle for me?',
+    a: 'Everything between you and a lower rate: we gather competing offers, compare them, negotiate on your behalf, and manage the attorneys and bond registration through to a signed-off switch. You just choose the offer you like.',
+  },
+];
+
+function FAQ() {
+  const [open, setOpen] = useState(null);
+
+  const toggle = (i) => {
+    setOpen((prev) => {
+      const next = prev === i ? null : i;
+      if (next === i) trackAction('faq_opened', { question: FAQ_ITEMS[i].q });
+      return next;
+    });
+  };
+
+  return (
+    <section className="ls-section ls-faq" id="faq">
+      <div className="ls-wrap ls-faq__grid">
+        <div className="ls-faq__aside">
+          <div className="ls-faq__sticky">
+            <h2 className="ls-serif ls-faq__title">Questions, answered.</h2>
+            <p className="ls-faq__sub">Everything you might want to know before you check your rate.</p>
+          </div>
+        </div>
+
+        <div className="ls-faq__list">
+          {FAQ_ITEMS.map((item, i) => {
+            const isOpen = open === i;
+            return (
+              <div key={item.q} className={`ls-faq__item${isOpen ? ' is-open' : ''}`}>
+                <button
+                  type="button"
+                  className="ls-faq__q"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${i}`}
+                  onClick={() => toggle(i)}
+                >
+                  <span>{item.q}</span>
+                  <span className="ls-faq__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                </button>
+                <div
+                  id={`faq-panel-${i}`}
+                  className="ls-faq__panel"
+                  role="region"
+                  hidden={!isOpen}
+                >
+                  <p>{item.a}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // FINAL CTA
 // ─────────────────────────────────────────────────────────────
 function FinalCTA() {
@@ -483,9 +693,10 @@ export default function Landing() {
       <Announce />
       <LandingNav />
       <Hero />
-      <ProofBand />
       <HowItWorks />
       <CaseStudy />
+      <BanksSaver />
+      <FAQ />
       <FinalCTA />
       <Footer />
     </div>

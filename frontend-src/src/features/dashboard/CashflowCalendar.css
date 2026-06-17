@@ -4,9 +4,8 @@
 /* Balance chart */
 .cfc-chart-wrap {
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -36,9 +35,8 @@
 }
 .cfc-stat {
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
 }
 .cfc-stat__label { font-size: 0.6875rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .cfc-stat__val   { font-size: 1rem; font-weight: 800; color: var(--color-text); margin-top: 2px; }
@@ -56,11 +54,10 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 5px 2px;
+  padding: 6px 2px;
   min-height: 42px;
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.15s;
 }
@@ -87,9 +84,8 @@
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  padding: calc(var(--space-2) * 1.1) calc(var(--space-3) * 1.1);
   white-space: nowrap;
   z-index: 10;
   box-shadow: 0 4px 16px rgba(0,0,0,.15);

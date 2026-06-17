@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import Button from '@bondly/ui/components/Button.jsx';
 import './FAQ.css';
 
@@ -297,6 +299,7 @@ function SearchBar({ value, onChange }) {
 // ── FAQ item ──────────────────────────────────────────────────────────────────
 function FaqItem({ item, isOpen, onToggle, allItems, onRelatedClick }) {
   const ref = useRef(null);
+  const reduce = useReducedMotion();
 
   const [helpful, setHelpful] = useState(() => {
     try { return JSON.parse(localStorage.getItem('faq_helpful') || '{}')[item.id] || null; } catch { return null; }
@@ -325,14 +328,26 @@ function FaqItem({ item, isOpen, onToggle, allItems, onRelatedClick }) {
         aria-controls={`faq-body-${item.id}`}
       >
         <span>{item.q}</span>
-        <span className="faq-item__chevron" aria-hidden="true">
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </span>
+        <motion.span
+          animate={{ rotate: isOpen ? 45 : 0 }}
+          transition={{ duration: reduce ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className={`faq-item__plus${isOpen ? ' faq-item__plus--open' : ''}`}
+          aria-hidden="true"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+        </motion.span>
       </button>
 
+      <AnimatePresence initial={false}>
       {isOpen && (
+        <motion.div
+          key="content"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: reduce ? 0 : 0.32, ease: [0.16, 1, 0.3, 1] }}
+          style={{ overflow: 'hidden' }}
+        >
         <div className="faq-item__body" id={`faq-body-${item.id}`}>
           <div className="faq-item__answer">{item.body}</div>
 
@@ -382,7 +397,9 @@ function FaqItem({ item, isOpen, onToggle, allItems, onRelatedClick }) {
             {helpful && <span className="faq-item__helpful-thanks">Thanks for the feedback</span>}
           </div>
         </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -173,9 +173,8 @@
 
 .ff-reveal {
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 28px;
+  border-radius: 8px;
+  padding: 31px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -309,10 +308,8 @@
   margin-bottom: 4px;
 }
 
-.ff-reveal__finding {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
+.ff-reveal__finding {  border-radius: 8px;
+  padding: 13px 15px;
 }
 
 .ff-reveal__finding--critical {
@@ -352,9 +349,8 @@
   align-items: flex-start;
   gap: 10px;
   background: rgba(22, 163, 74, 0.08);
-  border: 1px solid rgba(22, 163, 74, 0.2);
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 8px;
+  padding: 15px 18px;
   font-size: 0.875rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -406,9 +402,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
+  padding: 11px 18px;
+  border-radius: 8px;
   font-size: 0.82rem;
   gap: 12px;
 }
@@ -432,9 +427,8 @@
   align-items: center;
   gap: 6px;
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 6px 12px;
+  border-radius: 8px;
+  padding: 7px 13px;
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -453,9 +447,8 @@
   align-items: center;
   gap: 20px;
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px 24px;
+  border-radius: 8px;
+  padding: 22px 26px;
 }
 
 .ff-summary__ring-wrap {
@@ -690,10 +683,8 @@
   outline: none;
 }
 
-.ff-goal__input--date {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
+.ff-goal__input--date {  border-radius: 8px;
+  padding: 10px 13px;
   font-size: 0.875rem;
   color: var(--text-primary);
   background: var(--card-bg);
@@ -816,9 +807,8 @@
 
 .ff-goal__shortfall {
   background: rgba(249,115,22,0.08);
-  border: 1px solid rgba(249,115,22,0.2);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 13px 15px;
   font-size: 0.82rem;
   color: var(--text-secondary);
   line-height: 1.5;
@@ -916,10 +906,9 @@
 
 .ff-proj__result {
   margin-top: 24px;
-  padding: 16px;
+  padding: 18px;
   background: rgba(163,230,53,0.06);
-  border: 1px solid rgba(163,230,53,0.2);
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1003,9 +992,8 @@
 
 .ff-payoff__result {
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 18px;
+  border-radius: 8px;
+  padding: 20px;
 }
 
 .ff-payoff__extra {
@@ -1026,9 +1014,8 @@
   flex: 1;
   min-width: 120px;
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 13px 15px;
   text-align: center;
 }
 
@@ -1143,15 +1130,14 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 4px 11px;
+  border-radius: 8px;
   font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
   background: rgba(239,68,68,0.08);
   color: #dc2626;
-  border: 1px solid rgba(239,68,68,0.20);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -1187,9 +1173,8 @@
 .ff-prog__metric {
   flex: 1 1 100px;
   background: var(--bg-card, #1a1a2e);
-  border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 13px 15px;
   text-align: center;
 }
 .ff-prog__metric-label {
@@ -1355,9 +1340,8 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 13px 15px;
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
@@ -1457,11 +1441,10 @@
 /* ── Gross income note ──────────────────────────────────────────────────────── */
 .ff-gross-note {
   display: flex; flex-wrap: wrap; gap: 8px 20px;
-  padding: 10px 16px; margin-top: -10px;
+  padding: 11px 18px; margin-top: -10px;
   font-size: 0.82rem; color: var(--text-secondary);
   background: rgba(6,182,212,0.04);
-  border: 1px solid rgba(6,182,212,0.15);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 .ff-gross-note strong { color: var(--text-primary); }
 .ff-gross-note__bond  { color: #0891b2; font-weight: 600; }
@@ -1580,8 +1563,9 @@
 /* ── Goal chips ─────────────────────────────────────────────────────────────── */
 .ff-goal__chips  { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .ff-goal__chip   {
-  padding: 5px 13px; border-radius: 99px; font-size: 0.8rem; font-weight: 600;
-  border: 1px solid var(--border-color); background: var(--bg-page);
+  border-radius: 8px;
+  padding: 6px 14px; border-radius: 99px; font-size: 0.8rem; font-weight: 600;
+background: var(--bg-page);
   color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 .ff-goal__chip:hover      { border-color: var(--color-lime); color: var(--text-primary); }

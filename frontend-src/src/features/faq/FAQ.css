@@ -38,10 +38,9 @@
 
 .faq-search__input {
   width: 100%;
-  padding: var(--space-3) var(--space-5) var(--space-3) calc(var(--space-4) + 18px + var(--space-3));
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-5) * 1.1) calc(var(--space-3) * 1.1) calc(var(--space-4) + 20px + calc(var(--space-3) * 1.1) );
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   font-size: 0.9375rem;
   color: var(--text-primary);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -77,9 +76,8 @@
 /* ── No results ───────────────────────────────────────────── */
 .faq-no-results {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-8);
+  border-radius: 8px;
+  padding: calc(var(--space-8) * 1.1);
   text-align: center;
   color: var(--text-secondary);
   margin: var(--space-6) 0;
@@ -138,16 +136,21 @@
   background: rgba(134,194,170,0.04);
 }
 
-.faq-item__chevron {
+.faq-item__plus {
   flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
-  transition: transform var(--transition-fast);
-  display: flex;
-  align-items: center;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
-.faq-item--open .faq-item__chevron {
-  transform: rotate(180deg);
+.faq-item__plus--open {
+  border-color: var(--mint);
+  background: rgba(134, 194, 170, 0.1);
   color: var(--mint);
 }
 
@@ -227,10 +230,9 @@
 }
 
 .faq-item__chip {
-  padding: var(--space-1) var(--space-3);
+  padding: calc(var(--space-1) * 1.1) calc(var(--space-3) * 1.1);
   background: var(--bg-page);
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 0.8125rem;
   color: var(--text-secondary);
   cursor: pointer;
@@ -303,9 +305,8 @@
   align-items: center;
   gap: var(--space-3);
   background: rgba(134,194,170,0.07);
-  border: 1px solid rgba(134,194,170,0.2);
-  border-radius: var(--border-radius-sm);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   margin: var(--space-6) 0;
   font-size: 0.9375rem;
   color: var(--text-secondary);
@@ -325,9 +326,8 @@
 /* ── Bottom CTA ───────────────────────────────────────────── */
 .faq-cta {
   background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: var(--space-8);
+  border-radius: 8px;
+  padding: calc(var(--space-8) * 1.1);
   text-align: center;
   margin: var(--space-6) 0 var(--space-10);
 }

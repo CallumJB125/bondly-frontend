@@ -5,9 +5,8 @@
   align-items: center;
   gap: var(--space-5);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-5) * 1.1);
 }
 .dc-gauge { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
 .dc-gauge__label { font-size: 0.75rem; font-weight: 700; }
@@ -70,10 +69,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-3);
+  padding: calc(var(--space-3) * 1.1);
   background: var(--color-surface-1);
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
   text-align: left;
   cursor: pointer;
 }
@@ -103,10 +101,9 @@
 .dc-extra__header { display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: var(--color-text); }
 .dc-extra__slider { width: 100%; accent-color: var(--color-primary); cursor: pointer; }
 .dc-extra__impact {
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-1));
-  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
   font-size: 0.875rem;
   color: var(--color-text);
 }

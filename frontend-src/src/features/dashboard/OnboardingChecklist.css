@@ -1,9 +1,8 @@
 /* ── Onboarding Checklist ──────────────────────────────── */
 .onboarding-checklist {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
   margin-bottom: var(--space-5);
   position: relative;
 }
@@ -108,9 +107,8 @@
 
 .onboarding-checklist__step-cta {
   background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 2px 10px;
+  border-radius: 8px;
+  padding: 2px 11px;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--lime);

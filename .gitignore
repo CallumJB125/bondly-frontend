@@ -6,3 +6,4 @@ frontend-origination-dist/
 .DS_Store
 *.map
 .omc/
+.screenshots/

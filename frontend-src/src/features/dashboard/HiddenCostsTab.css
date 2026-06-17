@@ -54,9 +54,8 @@
   align-items: center;
   gap: var(--space-4);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1) calc(var(--space-5) * 1.1);
 }
 .hc-timeline__tally-divider {
   width: 1px;
@@ -85,11 +84,10 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 6px 2px;
-  border-radius: var(--radius-md);
+  padding: 7px 2px;
+  border-radius: 8px;
   min-height: 44px;
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
 }
 .hc-calendar__slot--has {
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface-1));
@@ -123,10 +121,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
 }
 .hc-sub-row--dormant {
   background: color-mix(in srgb, #eab308 8%, var(--color-surface-1));
@@ -160,12 +157,11 @@
 }
 .hc-sub-row__cancel {
   background: none;
-  border: 1px solid #eab308;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   color: #854d0e;
   font-size: 0.6875rem;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 2px 7px;
   cursor: pointer;
 }
 [data-theme="dark"] .hc-sub-row__cancel { color: #fef08a; }
@@ -178,10 +174,9 @@
 }
 .hc-fees__hero {
   text-align: center;
-  padding: var(--space-5);
+  padding: calc(var(--space-5) * 1.1);
   background: color-mix(in srgb, #ef4444 6%, var(--color-surface-1));
-  border: 1px solid color-mix(in srgb, #ef4444 20%, var(--color-border));
-  border-radius: var(--radius-xl);
+  border-radius: 8px;
 }
 .hc-fees__hero-val {
   font-size: 2rem;
@@ -238,10 +233,9 @@
 
 /* Switch CTA */
 .hc-fees__cta {
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-1));
-  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-primary);
@@ -261,10 +255,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
 }
 .hc-fee-row__desc {
   font-size: 0.8125rem;

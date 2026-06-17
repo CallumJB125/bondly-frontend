@@ -6,9 +6,8 @@
   align-items: center;
   gap: var(--space-5);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-5);
+  border-radius: 8px;
+  padding: calc(var(--space-5) * 1.1);
 }
 .ii-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
 .ii-ring__label { font-size: 0.75rem; font-weight: 700; }
@@ -89,10 +88,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: var(--color-surface-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: 8px;
 }
 .ii-source-row__icon { color: #22c55e; flex-shrink: 0; }
 .ii-source-row__left { flex: 1; min-width: 0; }

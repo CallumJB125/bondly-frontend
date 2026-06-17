@@ -7,9 +7,8 @@
 
 .ml-hero-card {
   background: #1a2f42;
-  border: 1px solid #2a4560;
-  border-radius: 10px;
-  padding: 20px 24px;
+  border-radius: 8px;
+  padding: 22px 26px;
   text-align: center;
 }
 
@@ -68,9 +67,8 @@
 
 .ml-section {
   background: #1a2f42;
-  border: 1px solid #2a4560;
-  border-radius: 10px;
-  padding: 20px 24px;
+  border-radius: 8px;
+  padding: 22px 26px;
   margin-bottom: 20px;
 }
 
@@ -182,9 +180,8 @@
 
 .ml-synthetic-card {
   background: linear-gradient(135deg, #1a2f42 0%, #162535 100%);
-  border: 1px solid #c8a84b44;
-  border-radius: 10px;
-  padding: 20px 24px;
+  border-radius: 8px;
+  padding: 22px 26px;
   margin-bottom: 20px;
 }
 

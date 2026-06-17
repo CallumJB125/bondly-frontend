@@ -124,10 +124,9 @@
   display: flex;
   gap: var(--space-4);
   align-items: flex-start;
-  padding: var(--space-4);
+  padding: calc(var(--space-4) * 1.1);
   background: var(--bg-page);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 8px;
 }
 .kyc-step__num {
   width: 28px;
@@ -166,10 +165,9 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
+  padding: calc(var(--space-3) * 1.1) calc(var(--space-4) * 1.1);
   background: #dcfce722;
-  border: 1px solid #22c55e33;
-  border-radius: var(--border-radius-sm);
+  border-radius: 8px;
   font-size: 0.8125rem;
   color: var(--text-secondary);
 }
