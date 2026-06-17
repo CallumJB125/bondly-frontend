@@ -66,3 +66,27 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// Service worker registration.
+//
+// A previous build (commit ad2a0934) registered a CACHE-FIRST service worker
+// and the v2.0 rebuild (b351674f) then removed the registration entirely while
+// leaving sw.js on the server. The result: returning mobile / PWA users kept
+// the old cache-first worker controlling the page, which serves a stale
+// index.html referencing JS chunk hashes that no longer exist after a deploy —
+// so every lazy()-loaded route (i.e. every bottom-tab navigation) 404s its
+// chunk and the app crashes into the ErrorBoundary.
+//
+// Re-registering points those devices at the current network-first sw.js, whose
+// activate handler deletes all non-current caches and calls skipWaiting() +
+// clients.claim() — evicting the poisoned cache-first store and un-bricking
+// existing users. updateViaCache: 'none' + reg.update() force the browser to
+// revalidate the worker script itself rather than serve a cached copy.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js', { updateViaCache: 'none' })
+      .then(reg => reg.update())
+      .catch(() => {});
+  });
+}

@@ -66,6 +66,17 @@ export default function Nav() {
 
   const unread = notifs.filter(n => !n.read).length;
 
+  // Switch dashboard tabs from the mobile bottom bar. navigate() only feeds
+  // Dashboard's mount-time initial tab, so when the user is already on
+  // /dashboard it does nothing — fire bondly:navigate too, which the mounted
+  // Dashboard listens for and uses to switch the panel in place.
+  const goTab = (t) => {
+    sessionStorage.setItem('bondly_dash_tab', t);
+    setDashTab(t);
+    window.dispatchEvent(new CustomEvent('bondly:navigate', { detail: { tab: t } }));
+    navigate('/dashboard', { state: { tab: t } });
+  };
+
   if (['/login', '/register', '/forgot-password', '/admin', '/hook', '/bank'].some(p => location.pathname.startsWith(p))) {
     return null;
   }
@@ -249,35 +260,35 @@ export default function Nav() {
         <nav className="nav-mobile" aria-label="Main navigation">
           <button
             className={`nav-mobile__item ${location.pathname === '/dashboard' && dashTab === 'home' ? 'active' : ''}`}
-            onClick={() => { navigate('/dashboard', { state: { tab: 'home' } }); sessionStorage.setItem('bondly_dash_tab', 'home'); setDashTab('home'); }}
+            onClick={() => goTab('home')}
           >
             <span aria-hidden="true">{ICON.home}</span>
             <span>Overview</span>
           </button>
           <button
             className={`nav-mobile__item ${location.pathname === '/dashboard' && dashTab === 'money' ? 'active' : ''}`}
-            onClick={() => { navigate('/dashboard', { state: { tab: 'money' } }); sessionStorage.setItem('bondly_dash_tab', 'money'); setDashTab('money'); }}
+            onClick={() => goTab('money')}
           >
             <span aria-hidden="true"><svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
             <span>Finances</span>
           </button>
           <button
             className={`nav-mobile__item ${location.pathname === '/dashboard' && dashTab === 'vault' ? 'active' : ''}`}
-            onClick={() => { navigate('/dashboard', { state: { tab: 'vault' } }); sessionStorage.setItem('bondly_dash_tab', 'vault'); setDashTab('vault'); }}
+            onClick={() => goTab('vault')}
           >
             <span aria-hidden="true"><svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
             <span>Docs</span>
           </button>
           <button
             className={`nav-mobile__item ${location.pathname === '/dashboard' && dashTab === 'costs' ? 'active' : ''}`}
-            onClick={() => { navigate('/dashboard', { state: { tab: 'costs' } }); sessionStorage.setItem('bondly_dash_tab', 'costs'); setDashTab('costs'); }}
+            onClick={() => goTab('costs')}
           >
             <span aria-hidden="true"><svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>
             <span>Tools</span>
           </button>
           <button
             className={`nav-mobile__item ${location.pathname === '/dashboard' && dashTab === 'bond' ? 'active' : ''}`}
-            onClick={() => { navigate('/dashboard', { state: { tab: 'bond' } }); sessionStorage.setItem('bondly_dash_tab', 'bond'); setDashTab('bond'); }}
+            onClick={() => goTab('bond')}
           >
             <span aria-hidden="true"><svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
             <span>My Bond</span>
