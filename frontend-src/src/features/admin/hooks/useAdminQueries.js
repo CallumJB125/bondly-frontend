@@ -41,7 +41,8 @@ export function useAdminSwapApps(options = {}) {
 export function useAdminCommissions(options = {}) {
   return useQuery({
     queryKey: ['admin', 'commissions'],
-    queryFn: () => admin.commissions().then(r => r.data || { commissions: [], totalReceived: 0, totalPending: 0 }),
+    // apiFetch already unwraps the envelope; endpoint returns { commissions, totals }.
+    queryFn: () => admin.commissions().then(d => d || { commissions: [], totals: {} }),
     ...options,
   });
 }
