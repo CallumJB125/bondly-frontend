@@ -60,7 +60,7 @@ export function useAdminStats(options = {}) {
 export function useAdminKycQueue(options = {}) {
   return useQuery({
     queryKey: ['admin', 'kyc'],
-    queryFn: () => admin.kycQueue().then(r => r.data || []),
+    queryFn: () => admin.kycQueue().then(d => Array.isArray(d) ? d : []),
     ...options,
   });
 }
