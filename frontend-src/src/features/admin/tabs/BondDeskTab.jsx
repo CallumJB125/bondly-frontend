@@ -98,7 +98,7 @@ export default function BondDeskTab({ showToast }) {
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button onClick={() => approve(r)}
-                style={{ padding: '7px 14px', background: 'var(--forest, #1e3a5f)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                style={{ padding: '7px 14px', background: 'var(--forest, #1a3c2e)', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 Approve
               </button>
               <button onClick={() => deny(r)}

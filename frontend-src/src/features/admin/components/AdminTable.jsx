@@ -292,7 +292,7 @@ export default function AdminTable({
                 <tr
                   key={k}
                   onClick={onRowClick ? () => onRowClick(r) : undefined}
-                  style={{ cursor: onRowClick ? 'pointer' : 'default', background: sel ? 'rgba(30,58,95,0.08)' : 'transparent' }}
+                  style={{ cursor: onRowClick ? 'pointer' : 'default', background: sel ? 'rgba(74,158,107,0.08)' : 'transparent' }}
                 >
                   {selectable && (
                     <td onClick={e => e.stopPropagation()}>

@@ -89,7 +89,7 @@ export default function WatchlistTab({ showToast }) {
       key: 'watchType', label: 'Watching', sortable: true, width: 110,
       render: r => {
         const tag = { rate: 'Rate', saving: 'Savings', buyer: 'Buyer' }[r.watchType] || r.watchType;
-        const colour = { rate: '#1e3a5f', saving: '#152d4a', buyer: '#92400e' }[r.watchType] || '#374151';
+        const colour = { rate: '#1e3a5f', saving: '#16502d', buyer: '#92400e' }[r.watchType] || '#374151';
         const bg     = { rate: '#dbeafe', saving: '#dcfce7', buyer: '#fef3c7' }[r.watchType] || '#f3f4f6';
         return <span style={{ padding: '2px 10px', borderRadius: 999, background: bg, color: colour, fontSize: '0.75rem', fontWeight: 700 }}>{tag}</span>;
       },

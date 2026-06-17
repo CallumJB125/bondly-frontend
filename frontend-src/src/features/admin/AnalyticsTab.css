@@ -20,8 +20,9 @@
 }
 
 .at-subtab {
-  padding: 7px 15px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
   background: transparent;
   color: var(--text-secondary);
   font-size: 0.8125rem;
@@ -90,8 +91,9 @@
 }
 .at-kpi {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 15px 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px 16px;
 }
 .at-kpi-label {
   font-size: 0.6875rem;
@@ -116,8 +118,9 @@
 /* ── Card ────────────────────────────────────────────────────────────────────── */
 .at-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-bottom: 16px;
 }
 .at-card-head {
@@ -410,8 +413,9 @@
 }
 .at-funnel-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
   cursor: pointer;
   transition: border-color 0.15s;
   display: flex;
@@ -440,8 +444,9 @@
 }
 .at-seg-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
 }
 .at-seg-name { font-size: 0.875rem; font-weight: 700; text-transform: capitalize; margin-bottom: 8px; }
 .at-seg-count { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 2px; }
@@ -451,8 +456,9 @@
 /* ── Experiments ─────────────────────────────────────────────────────────────── */
 .at-create-form {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -473,8 +479,9 @@
 
 .at-exp-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-bottom: 12px;
 }
 .at-exp-header {
@@ -505,8 +512,9 @@
 }
 .at-variant-card {
   background: var(--bg-page);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 13px;
+  padding: 12px;
 }
 .at-variant-key { font-size: 0.8125rem; font-weight: 700; margin-bottom: 6px; font-family: monospace; }
 .at-variant-stat { font-size: 0.75rem; color: var(--text-secondary); }
@@ -571,8 +579,9 @@
 /* ── AI Insights ─────────────────────────────────────────────────────────────── */
 .at-insight-card {
   background: var(--bg-card);
-  border-radius: 8px;
-  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px 20px;
   margin-bottom: 12px;
 }
 .at-insight-meta {

@@ -1,0 +1,65 @@
+/* ── Admin shared primitives ──────────────────────────────
+   Low-level building blocks reused across admin tabs. Keep these visual
+   rules generic; tab-specific styling stays in each tab's own CSS.
+   NOTE: EmptyState already exists at components/EmptyState.jsx (styled by
+   .adm-empty in Admin.css) — reuse that, don't redefine it here. */
+
+/* Truncate — single-line ellipsis with native tooltip */
+.adm-truncate {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+/* dash() — styled placeholder for missing values */
+.adm-dash {
+  color: var(--text-secondary);
+  opacity: 0.6;
+  cursor: help;
+}
+
+/* Drawer — right-side overlay detail panel */
+.adm-drawer__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(15, 23, 20, 0.42);
+  display: flex;
+  justify-content: flex-end;
+  animation: adm-drawer-fade 0.15s ease;
+}
+.adm-drawer {
+  height: 100%;
+  background: var(--bg-page);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  animation: adm-drawer-slide 0.18s ease;
+}
+.adm-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: var(--bg-card);
+}
+.adm-drawer__title { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
+.adm-drawer__close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.adm-drawer__close:hover { background: var(--bg-page); color: var(--text-primary); }
+.adm-drawer__body { flex: 1; overflow-y: auto; }
+@keyframes adm-drawer-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes adm-drawer-slide { from { transform: translateX(24px); opacity: 0.6; } to { transform: translateX(0); opacity: 1; } }

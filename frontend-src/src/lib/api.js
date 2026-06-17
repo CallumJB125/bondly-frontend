@@ -313,6 +313,21 @@ export const financialFitness = {
 
 export const adminApi = {
   auditSnapshot: (snapshotId) => apiFetch('/api/admin/audit-snapshot/' + snapshotId, { method: 'POST' }),
+
+  // Header-auth blob download — the admin JWT goes in the Authorization header,
+  // never the URL, so it can't leak into access logs / browser history / Referer.
+  download: async (path, filename) => {
+    const tok = getToken();
+    const r = await fetch(path, { headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+    if (!r.ok) throw new Error('Download failed (' + r.status + ')');
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = filename || ''; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  },
+
+  // Single-use SSE ticket — avoids putting the admin JWT in the EventSource URL.
+  sseTicket: () => apiFetch('/api/admin/sse-ticket', { method: 'POST' }),
 };
 
 // ── Async parse job poller — polls /api/qualify/job/:id until done/failed/timeout ─
@@ -425,6 +440,12 @@ export const feedback = {
 
 export const admin = {
   stats:        (opts = {}) => apiFetch('/api/admin/stats' + (opts.hideTest ? '?hideTest=true' : '')),
+  investorMetrics: () => apiFetch('/api/admin/investor/metrics'),
+  claudeUsage:  () => apiFetch('/api/admin/claude-usage'),
+  customers:    () => apiFetch('/api/admin/customers'),
+  swapApps:     () => apiFetch('/api/admin/swap-applications'),
+  kycQueue:     () => apiFetch('/api/admin/kyc'),
+  updateCustomer: (id, data) => apiFetch('/api/admin/customers/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   users:        (opts = {}) => {
     const p = new URLSearchParams();
     if (opts.hideTest)  p.set('hideTest', 'true');
@@ -462,10 +483,11 @@ export const admin = {
   chats:        () => apiFetch('/api/admin/chats'),
   replyChat:    (userId, message) => apiFetch(`/api/admin/chats/${userId}`, { method: 'POST', body: JSON.stringify({ message }) }),
   buyerIntents: () => apiFetch('/api/admin/buyer-intents'),
-  leads:        () => apiFetch('/api/admin/leads'),
+  leads:        (includeConverted) => apiFetch('/api/admin/leads' + (includeConverted ? '?includeConverted=1' : '')),
   updateLead:   (id, data) => apiFetch('/api/admin/leads/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   deleteLead:   (id) => apiFetch('/api/admin/leads/' + id, { method: 'DELETE' }),
   statements:   () => apiFetch('/api/admin/statements'),
+  statementDetail: (id) => apiFetch('/api/admin/statements/' + id),
   downloadStatementUrl: (id) => '/api/admin/statements/' + id + '/download',
   updateCommission: (id, data) => apiFetch('/api/admin/commissions/' + id, { method: 'PUT', body: JSON.stringify(data) }),
   userActivity:   (id) => apiFetch('/api/admin/users/' + id + '/activity'),
@@ -478,10 +500,19 @@ export const admin = {
   alerts:       () => apiFetch('/api/admin/alerts'),
   bulkEmail:    (data) => apiFetch('/api/admin/bulk-email', { method: 'POST', body: JSON.stringify(data) }),
   staff:              () => apiFetch('/api/admin/staff'),
-  inviteStaff:        (email) => apiFetch('/api/admin/staff/invite', { method: 'POST', body: JSON.stringify({ email }) }),
+  inviteStaff:        (email, accessLevel = 'admin') => apiFetch('/api/admin/staff/invite', { method: 'POST', body: JSON.stringify({ email, accessLevel }) }),
   cancelInvite:       (token) => apiFetch(`/api/admin/staff/invite/${token}`, { method: 'DELETE' }),
   resetStaffPassword: (id, password) => apiFetch(`/api/admin/staff/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+  setStaffRole:       (id, accessLevel) => apiFetch(`/api/admin/staff/${id}/role`, { method: 'PUT', body: JSON.stringify({ accessLevel }) }),
   deleteStaff:        (id) => apiFetch(`/api/admin/staff/${id}`, { method: 'DELETE' }),
+  b2b: (params = {}) => {
+    const p = new URLSearchParams();
+    for (const k of ['status', 'type', 'province', 'search']) if (params[k] && params[k] !== 'all') p.set(k, params[k]);
+    const qs = p.toString();
+    return apiFetch('/api/admin/b2b' + (qs ? '?' + qs : ''));
+  },
+  b2bSync:   () => apiFetch('/api/admin/b2b/sync', { method: 'POST' }),
+  b2bUpdate: (id, body) => apiFetch(`/api/admin/b2b/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   auditLog: (params = {}) => {
     const p = new URLSearchParams();
     if (params.page)  p.set('page',  String(params.page));

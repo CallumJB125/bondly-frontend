@@ -14,6 +14,15 @@ import AuditTab from './tabs/AuditTab.jsx';
 import ParserHealthTab from './tabs/ParserHealthTab.jsx';
 import FairLendingTab from './tabs/FairLendingTab.jsx';
 import ApplicationsTab from './tabs/ApplicationsTab.jsx';
+import B2BTab from './tabs/B2BTab.jsx';
+import InvestorTab from './tabs/InvestorTab.jsx';
+import ErrorsTab from './tabs/ErrorsTab.jsx';
+import SessionsTab from './tabs/SessionsTab.jsx';
+import LeadsTab from './tabs/LeadsTab.jsx';
+import Lbl from './components/Lbl.jsx';
+import { exportCSV } from './leadConstants.jsx';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAdminErrors, useAdminLeads } from './hooks/useAdminQueries.js';
 import BondDeskTab from './tabs/BondDeskTab.jsx';
 import WatchlistTab from './tabs/WatchlistTab.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
@@ -23,8 +32,12 @@ import EditableField from './components/EditableField.jsx';
 import ActivityTimeline from './components/ActivityTimeline.jsx';
 import useAdminEventStream from './components/useAdminEventStream.js';
 import MentionInput, { renderWithMentions } from './components/MentionInput.jsx';
+import AdminTable from './components/AdminTable.jsx';
+import EmptyState from './components/EmptyState.jsx';
+import Drawer from './components/primitives/Drawer.jsx';
+import Truncate from './components/primitives/Truncate.jsx';
 import { useTheme } from '../../context/ThemeContext.jsx';
-import { fmt, fmtPct, fmtDate } from '@bondly/ui/lib/format.js';
+import { fmt, fmtPct, fmtDate, daysAgo } from '@bondly/ui/lib/format.js';
 import { useToast } from '@bondly/ui/components/Toast.jsx';
 import Button from '@bondly/ui/components/Button.jsx';
 import Card, { CardHeader, CardBody, StatCard } from '@bondly/ui/components/Card.jsx';
@@ -61,70 +74,30 @@ function apiFetchAdmin(path) {
     .then(j => { if (!j) return null; if (!j.success) throw new Error(j.error); return j.data; });
 }
 
-function daysAgo(iso) {
-  if (!iso) return '—';
-  const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
-  return d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d}d ago`;
-}
+// daysAgo moved to lib/format.js (shared, imported above)
 
 const RISK_COLOR = { A: 'var(--color-grade-a)', B: 'var(--color-info)', C: 'var(--color-warning)', D: 'var(--color-error)', E: 'var(--text-secondary)' };
 const AVATAR_COLORS = ['#4a7fa5', '#e06c3e', '#7c5cbf', '#2da44e', '#d36a3f', '#c75b9b'];
 function avatarColor(name) { return AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_COLORS.length]; }
 
-function Lbl({ children, style }) {
-  return <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: 4, ...style }}>{children}</div>;
-}
-
-// ─── Lead CRM constants ────────────────────────────────────
-const LEAD_STAGES = [
-  { value: 'new',            label: 'New',           color: '#3b82f6', icon: <Zap size={14}/> },
-  { value: 'contacted',      label: 'Contacted',     color: '#8b5cf6', icon: <Phone size={14}/> },
-  { value: 'qualified',      label: 'Qualified',     color: '#f59e0b', icon: <CheckCircle size={14}/> },
-  { value: 'sent_to_broker', label: 'With Broker',   color: '#6366f1', icon: <Handshake size={14}/> },
-  { value: 'converted',      label: 'Converted',     color: '#16a34a', icon: <DollarSign size={14}/> },
-  { value: 'not_qualified',  label: 'Not Qualified', color: '#9ca3af', icon: '✕' },
-];
-
-const SOURCE_LABELS = {
-  get_a_quote:      'Get a Quote',
-  preapproval_form: 'Pre-Approval',
-  manual:           'Manual entry',
-  website:          'Website',
-  email_inbound:    'Email reply',
-  b2b_outreach:     'B2B outreach',
-  unknown:          'Unknown',
-};
-
-const ASSIGNEES = ["Callum", "Oliver", "Unassigned"];
-
-const EMPTY_LEAD = { name: '', phone: '', email: '', currentBank: '', currentBalance: '', currentRate: '', currentTerm: '20', monthlyIncome: '', employment: 'Permanent employee', contactMethod: 'Phone call', source: 'manual', referredBy: '' };
-
-const B2B_STAGES = [
-  { value: 'new',            label: 'New',           color: '#3b82f6', icon: <Zap size={14}/> },
-  { value: 'contacted',      label: 'Contacted',     color: '#8b5cf6', icon: <Phone size={14}/> },
-  { value: 'meeting_booked', label: 'Meeting',       color: '#f59e0b', icon: '📅' },
-  { value: 'proposal_sent',  label: 'Proposal',      color: '#6366f1', icon: '📄' },
-  { value: 'won',            label: 'Won',           color: '#16a34a', icon: <DollarSign size={14}/> },
-  { value: 'lost',           label: 'Lost',          color: '#9ca3af', icon: '✕' },
-];
-
-const B2B_EMPTY_LEAD = { name: '', company: '', email: '', phone: '', dealValue: '', notes: '', source: 'b2b_outreach', leadType: 'b2b' };
-
-function isB2bLead(l) { return l.leadType === 'b2b' || l.source === 'email_inbound' || l.source === 'b2b_outreach'; }
-
-function exportCSV(leads) {
-  const cols = ['name','phone','email','source','status','currentBank','currentBalance','currentRate','currentTerm','monthlyIncome','employment','contactMethod','assignedTo','brokerNotes','createdAt'];
-  const rows = [cols.join(','), ...leads.map(l => cols.map(c => JSON.stringify(l[c] ?? '')).join(','))];
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `bondly-leads-${new Date().toISOString().slice(0,10)}.csv`; a.click();
-}
+// Lbl, lead constants and exportCSV moved to ./components/Lbl.jsx + ./leadConstants.jsx (Phase D)
 
 // ─── Sidebar ──────────────────────────────────────────────
 // Five groups, most-used at the top. Daily is what you live in every morning;
 // Pipeline is the entire "submitted → bank → registered" path; Revenue is
 // what you check before invoicing; Intelligence answers "is the platform
 // healthy"; System is super-admin power tools.
-function buildNav(isSuperAdmin) {
+// Consolidated nav (clutter audit 2026-06): redundant/empty modules grouped or
+// moved to "More" so the daily nav stays tight. Every tab is still reachable —
+// nothing was deleted, only reorganised. Deal pipelines grouped under "Deals";
+// AI/parser observability under "AI & Parsing"; empty/low-traffic tabs (Inbox,
+// Commissions, Feedback, Fair Lending, Sessions, Errors) live under "More".
+function buildNav(user) {
+  const isSuperAdmin = !!user?.superAdmin;
+  // Investors get a single read-only Overview — none of the operational tabs.
+  if (user?.accessLevel === 'investor') {
+    return [{ label: 'Investor', items: [{ id: 'investor', label: 'Overview', icon: IC.chart }] }];
+  }
   return [
     {
       label: 'Daily',
@@ -132,24 +105,14 @@ function buildNav(isSuperAdmin) {
         { id: 'home',         label: 'Dashboard',  icon: IC.home  },
         { id: 'leads',        label: 'Leads',      icon: IC.leads },
         { id: 'customers',    label: 'Customers',  icon: IC.users },
-        { id: 'chat',         label: 'Inbox',      icon: IC.chat  },
+        { id: 'b2b',          label: 'B2B Leads',  icon: IC.users },
       ],
     },
     {
-      label: 'Pipeline',
+      label: 'Deals',
       items: [
-        { id: 'pipeline',    label: 'Broker Queue', icon: IC.pipe },
-        { id: 'submissions', label: 'Submissions',  icon: IC.swap },
-        { id: 'applications', label: 'Switch Apps', icon: IC.swap },
-        { id: 'bond-desk',   label: 'Bond Desk',    icon: IC.users },
-        { id: 'kyc',         label: 'KYC',          icon: IC.kyc  },
-      ],
-    },
-    {
-      label: 'Revenue',
-      items: [
-        { id: 'commissions', label: 'Commissions', icon: IC.money },
-        { id: 'watchlist',   label: 'Watchlist',   icon: IC.bell  },
+        { id: 'deals',        label: 'Deals',        icon: IC.pipe },
+        { id: 'kyc',          label: 'KYC',          icon: IC.kyc  },
       ],
     },
     {
@@ -157,25 +120,38 @@ function buildNav(isSuperAdmin) {
       items: [
         { id: 'analytics',     label: 'Analytics',     icon: IC.chart },
         { id: 'statements',    label: 'Statements',    icon: IC.apps  },
+        { id: 'watchlist',     label: 'Watchlist',     icon: IC.bell  },
+      ],
+    },
+    {
+      label: 'AI & Parsing',
+      items: [
         { id: 'parser-health', label: 'Parser Health', icon: IC.chart },
         { id: 'ai-audit',      label: 'AI Audit',      icon: IC.chart },
-        { id: 'sessions',      label: 'Sessions',      icon: IC.chart },
-        { id: 'feedback',      label: 'Feedback',      icon: IC.bell  },
-        { id: 'fair-lending',  label: 'Fair Lending',  icon: IC.audit },
+        { id: 'claude-usage',  label: 'AI Usage',      icon: IC.chart },
       ],
     },
     {
       label: 'System',
       items: [
         ...(isSuperAdmin ? [
-          { id: 'bulk-email', label: 'Bulk Email', icon: IC.bell  },
           { id: 'staff',      label: 'Staff',      icon: IC.users },
+          { id: 'bulk-email', label: 'Bulk Email', icon: IC.bell  },
         ] : []),
         { id: 'audit-log',    label: 'Audit Log',  icon: IC.audit },
-        { id: 'errors',       label: 'Errors',     icon: IC.error },
-        { id: 'claude-usage', label: 'AI Usage',   icon: IC.chart },
         { id: 'diary',        label: 'Diary',      icon: IC.audit },
         { id: 'settings',     label: 'Settings',   icon: IC.settings },
+      ],
+    },
+    {
+      label: 'More',
+      items: [
+        { id: 'chat',         label: 'Inbox',       icon: IC.chat  },
+        { id: 'commissions',  label: 'Commissions', icon: IC.money },
+        { id: 'feedback',     label: 'Feedback',    icon: IC.bell  },
+        { id: 'sessions',     label: 'Sessions',    icon: IC.chart },
+        { id: 'errors',       label: 'Errors',      icon: IC.error },
+        { id: 'fair-lending', label: 'Fair Lending', icon: IC.audit },
       ],
     },
   ];
@@ -186,6 +162,9 @@ const TAB_TITLES = {
   leads:        ['Leads', 'CRM — manage your pipeline'],
   'bond-desk':  ['Bond Desk', 'Customer file management'],
   customers:    ['Customers', 'All registered users'],
+  b2b:          ['B2B Leads', 'Estate agents & brokers — partnership CRM'],
+  deals:        ['Deals', 'Broker queue, switch apps, submissions & bond desk'],
+  investor:     ['Investor Overview', 'Read-only topline metrics'],
   applications: ['Switch Apps', 'Bond switch application tracker'],
   commissions:  ['Commissions', 'Revenue tracking'],
   alerts:       ['Watchlist', 'Users watching for their rate or savings target'],
@@ -212,12 +191,34 @@ const TAB_TITLES = {
 };
 
 function AdminSidebar({ tab, setTab, badges, dangerBadges, user, deployInfo }) {
-  const nav = buildNav(user?.superAdmin);
+  const nav = buildNav(user);
+  // Manual pin/unpin of the rail, persisted across sessions. Driven via a
+  // body class so both the fixed sidebar AND the content margin respond
+  // without threading state through the whole admin shell.
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('bondly_admin_nav_collapsed') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bondly_admin_nav_collapsed', collapsed ? '1' : '0'); } catch {}
+    document.body.classList.toggle('admin-nav-collapsed', collapsed);
+    return () => document.body.classList.remove('admin-nav-collapsed');
+  }, [collapsed]);
   return (
     <aside className="admin-sidebar">
       <div className="admin-sidebar__brand">
         <span className="admin-sidebar__logo">Bondly</span>
         <span className="admin-sidebar__pill">Admin</span>
+        <button
+          className="admin-sidebar__collapse"
+          onClick={() => setCollapsed(c => !c)}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-pressed={collapsed}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <polyline points={collapsed ? '9 18 15 12 9 6' : '15 18 9 12 15 6'} />
+          </svg>
+        </button>
       </div>
 
       <nav className="admin-sidebar__nav">
@@ -229,9 +230,10 @@ function AdminSidebar({ tab, setTab, badges, dangerBadges, user, deployInfo }) {
                 key={item.id}
                 className={`admin-nav-item ${tab === item.id ? 'active' : ''}`}
                 onClick={() => setTab(item.id)}
+                title={item.label}
               >
                 {item.icon}
-                {item.label}
+                <span className="admin-nav-item__label">{item.label}</span>
                 {badges[item.id] > 0 && (() => {
                   // Danger badge takes precedence — SLA breach, escalated
                   // chat, or live server error means this tab needs attention
@@ -390,226 +392,22 @@ function GlobalSearch({ leads, onJumpCustomer, onJumpLead, onClose }) {
 
 // ─── Main Admin component ──────────────────────────────────
 // ─── Statements Tab ───────────────────────────────────────
-function SessionsTab({ sessions }) {
-  const [selected, setSelected] = useState(null);
-  const [filter, setFilter] = useState('all'); // all | errors | dropped
-
-  const ROUTE_LABELS = {
-    '/':            'Landing',
-    '/login':       'Login',
-    '/register':    'Register',
-    '/preapproval': 'Pre-approval',
-    '/dashboard':   'Dashboard',
-    '/optimize':    'Optimizer',
-    '/profile':     'Profile',
-    '/application': 'Application',
-    '/onboarding':  'Onboarding',
-    '/tools':       'Tools',
-    '/tools/repayment-calculator': 'Repayment calc',
-    '/blog':        'Blog',
-    '/about':       'About',
-    '/faq':         'FAQ',
-    '/get-a-quote': 'Get a quote',
-  };
-
-  function labelRoute(r) { return ROUTE_LABELS[r] || r || '?'; }
-
-  function fmtDuration(s) {
-    if (!s) return '—';
-    if (s < 60) return `${s}s`;
-    return `${Math.floor(s/60)}m ${s%60}s`;
-  }
-
-  function fmtDwell(ms) {
-    if (!ms) return null;
-    const s = Math.round(ms / 1000);
-    if (s < 5) return null; // noise
-    if (s < 60) return `${s}s`;
-    return `${Math.floor(s/60)}m ${s%60}s`;
-  }
-
-  // ── Funnel — count how many sessions hit each key route ──────────────────
-  const FUNNEL_STEPS = ['/', '/preapproval', '/register', '/onboarding', '/dashboard', '/optimize', '/application'];
-  const funnelCounts = {};
-  FUNNEL_STEPS.forEach(r => {
-    funnelCounts[r] = sessions.filter(s => (s.pages || []).some(p => p.route === r)).length;
-  });
-  const funnelMax = Math.max(...Object.values(funnelCounts), 1);
-
-  // ── Drop-off: sessions that visited a page and never went further ─────────
-  const dropOffCounts = {};
-  sessions.forEach(s => {
-    if (!s.exitPage) return;
-    dropOffCounts[s.exitPage] = (dropOffCounts[s.exitPage] || 0) + 1;
-  });
-  const topDropOff = Object.entries(dropOffCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
-
-  // ── Filter sessions ───────────────────────────────────────────────────────
-  const filtered = sessions.filter(s => {
-    if (filter === 'errors') return s.hadError;
-    if (filter === 'dropped') return s.pageCount > 1 && !s.userId;
-    return true;
-  });
-
-  return (
-    <div style={{ padding: '0 0 48px' }}>
-      {/* ── Funnel ── */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 12 }}>Conversion Funnel</div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-          {FUNNEL_STEPS.map((route, i) => {
-            const count = funnelCounts[route] || 0;
-            const pct   = Math.round((count / funnelMax) * 100);
-            const prev  = i > 0 ? (funnelCounts[FUNNEL_STEPS[i-1]] || 1) : count;
-            const rawDrop = i > 0 && prev > 0 ? Math.round((1 - count / prev) * 100) : null;
-            const drop    = rawDrop !== null ? Math.min(100, Math.max(-100, rawDrop)) : null;
-            return (
-              <div key={route} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 80 }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, marginBottom: 4 }}>{count}</div>
-                <div style={{ width: 64, background: 'var(--bg-page)', borderRadius: 4, height: 80, display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>
-                  <div style={{ width: '100%', height: `${Math.max(pct, 4)}%`, background: 'var(--mint)', borderRadius: '4px 4px 0 0', transition: 'height 0.3s' }} />
-                </div>
-                {drop !== null && drop !== 0 && (
-                  <div style={{ fontSize: '0.65rem', color: drop > 50 ? '#ef4444' : drop > 25 ? '#f59e0b' : 'var(--text-secondary)', fontWeight: drop > 25 ? 700 : 400, marginTop: 2 }}>
-                    {drop > 0 ? `-${drop}%` : `+${Math.abs(drop)}%`}
-                  </div>
-                )}
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: 4, textAlign: 'center', maxWidth: 72 }}>{labelRoute(route)}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Drop-off pages ── */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontWeight: 700, fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-secondary)', marginBottom: 10 }}>Where sessions end</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {topDropOff.map(([route, count]) => (
-            <div key={route} style={{ padding: '6px 12px', borderRadius: 6, background: 'var(--bg-page)', border: '1px solid var(--border-color)', fontSize: '0.8125rem' }}>
-              <span style={{ fontWeight: 700 }}>{count}</span>
-              <span style={{ color: 'var(--text-secondary)', marginLeft: 6 }}>{labelRoute(route)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Session list ── */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{filtered.length} sessions</span>
-        {['all','errors','dropped'].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            style={{ padding: '4px 12px', borderRadius: 6, border: '1.5px solid', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer',
-              borderColor: filter === f ? 'var(--mint)' : 'var(--border-color)',
-              background:  filter === f ? 'var(--mint)' : 'var(--bg-card)',
-              color:       filter === f ? 'var(--forest)' : 'var(--text-primary)' }}>
-            {f === 'all' ? 'All' : f === 'errors' ? '⚠ Had error' : 'Anon drop-off'}
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gap: 8 }}>
-        {filtered.slice(0, 80).map(s => (
-          <div key={s.id} onClick={() => setSelected(selected?.id === s.id ? null : s)}
-            style={{ background: 'var(--bg-card)', border: `1.5px solid ${s.hadError ? '#ef444440' : 'var(--border-color)'}`, borderRadius: 10, padding: '12px 16px', cursor: 'pointer', userSelect: 'none' }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                  {s.userName || <span style={{ color: 'var(--text-secondary)' }}>Anonymous</span>}
-                  {s.hadError    && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#ef4444', fontWeight: 700 }}>⚠ error</span>}
-                  {s.hadRageClick && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#f59e0b', fontWeight: 700 }}>👊 rage click</span>}
-                  {s.gotStuck    && <span style={{ marginLeft: 6, fontSize: '0.75rem', color: '#8b5cf6', fontWeight: 700 }}>⏸ stuck</span>}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {s.startedAt ? new Date(s.startedAt).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 16, fontSize: '0.8125rem' }}>
-                <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 700 }}>{s.pageCount || 0}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>pages</div></div>
-                <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 700 }}>{fmtDuration(s.duration)}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>duration</div></div>
-                <div style={{ textAlign: 'center' }}><div style={{ fontWeight: 700, color: 'var(--text-secondary)' }}>{labelRoute(s.exitPage)}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>exit page</div></div>
-              </div>
-              {/* Page path breadcrumb */}
-              <div style={{ width: '100%', display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap', marginTop: 4 }}>
-                {(s.pages || []).map((p, i) => {
-                  const dwell = fmtDwell(p.dwellMs);
-                  return (
-                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <span style={{ fontSize: '0.75rem', padding: '2px 7px', background: i === (s.pages.length-1) ? (s.hadError ? '#ef444420' : 'var(--bg-page)') : 'transparent', borderRadius: 4, color: i === (s.pages.length-1) ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: i === (s.pages.length-1) ? 600 : 400 }}>
-                        {labelRoute(p.route)}{dwell ? ` · ${dwell}` : ''}
-                      </span>
-                      {i < (s.pages.length-1) && <span style={{ color: 'var(--text-secondary)', fontSize: '0.7rem' }}>›</span>}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Expanded detail — actions + errors */}
-            {selected?.id === s.id && (
-              <div style={{ marginTop: 12, borderTop: '1px solid var(--border-color)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {s.actions?.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Actions</div>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {s.actions.map((a, i) => {
-                        const isError = a.name?.includes('failed') || a.name?.includes('error');
-                        const isSuccess = a.name?.includes('success') || a.name?.includes('submitted') || a.name?.includes('started');
-                        return (
-                          <span key={i} style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: 99, fontWeight: 600,
-                            background: isError ? '#ef444420' : isSuccess ? '#10b98120' : 'var(--bg-page)',
-                            color: isError ? '#ef4444' : isSuccess ? '#10b981' : 'var(--text-secondary)',
-                            border: '1px solid', borderColor: isError ? '#ef444440' : isSuccess ? '#10b98140' : 'var(--border-color)' }}
-                            title={[a.page, a.type, a.error, a.at?.slice(0,16)?.replace('T',' ')].filter(Boolean).join(' · ')}>
-                            {a.name}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {s.signals?.some(sig => sig.type === 'rage_click' || sig.type === 'stuck') && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Friction signals</div>
-                    {s.signals.filter(sig => sig.type === 'rage_click' || sig.type === 'stuck').map((sig, i) => (
-                      <div key={i} style={{ fontSize: '0.8125rem', padding: '4px 10px', background: '#f59e0b10', borderRadius: 6, marginBottom: 3 }}>
-                        {sig.type === 'rage_click' ? `👊 Rage click on "${sig.text || sig.element}"` : `⏸ Stuck for 90s`}
-                        <span style={{ color: 'var(--text-secondary)', marginLeft: 8, fontSize: '0.75rem' }}>{sig.page}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {s.errors?.length > 0 && (
-                  <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ef4444', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Errors</div>
-                    {s.errors.map((e, i) => (
-                      <div key={i} style={{ fontSize: '0.8125rem', padding: '6px 10px', background: '#ef444410', borderRadius: 6, marginBottom: 4 }}>
-                        <div style={{ fontWeight: 600, marginBottom: 2 }}>{e.message}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{e.page} · {e.at ? e.at.slice(0,16).replace('T',' ') : '—'}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px 24px', color: 'var(--text-secondary)' }}>
-          <div style={{ fontSize: '2rem', marginBottom: 12 }}>📈</div>
-          <div style={{ fontWeight: 600 }}>No sessions recorded yet</div>
-          <div style={{ fontSize: '0.875rem', marginTop: 4 }}>Sessions are recorded as users browse the site.</div>
-        </div>
-      )}
-    </div>
-  );
-}
+// SessionsTab extracted to ./tabs/SessionsTab.jsx (Phase C — React Query + EmptyState)
 
 function StatementsTab({ statements, showToast }) {
   const token = localStorage.getItem('bondly_token');
   const [inspecting, setInspecting] = useState(null); // statement record being inspected
+
+  // Show the summary immediately, then lazy-load raw transactions (kept out of
+  // the list payload to keep it light).
+  async function inspectStatement(s) {
+    setInspecting(s);
+    if (s.rawTransactions) return;
+    try {
+      const d = await admin.statementDetail(s.id);
+      setInspecting(cur => (cur && cur.id === s.id) ? { ...cur, rawTransactions: d.rawTransactions || [] } : cur);
+    } catch { /* leave summary-only */ }
+  }
 
   function download(stmt) {
     fetch('/api/admin/statements/' + stmt.id + '/download', { headers: { Authorization: 'Bearer ' + token } })
@@ -732,7 +530,7 @@ function StatementsTab({ statements, showToast }) {
                     }
                   </td>
                   <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap', display: 'flex', gap: 6 }}>
-                    <button onClick={() => setInspecting(s)}
+                    <button onClick={() => inspectStatement(s)}
                       style={{ padding: '5px 12px', borderRadius: 6, border: '1.5px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer' }}>
                       Inspect
                     </button>
@@ -756,7 +554,9 @@ export default function Admin() {
   const { user } = useAuth();
   const { tab: paramTab } = useParams();
   const navigate = useNavigate();
-  const tab = paramTab || localStorage.getItem('bondly_admin_tab') || 'home';
+  // Investors are read-only: pin them to the Investor overview regardless of URL.
+  const isInvestor = user?.accessLevel === 'investor';
+  const tab = isInvestor ? 'investor' : (paramTab || localStorage.getItem('bondly_admin_tab') || 'home');
 
   function setTab(t) {
     localStorage.setItem('bondly_admin_tab', t);
@@ -767,10 +567,14 @@ export default function Admin() {
   const [submissions, setSubmissions] = useState([]);
   const [c360Id, setC360Id]           = useState(null);
   const [users, setUsers]         = useState([]);
-  const [leads, setLeads]         = useState([]);
+  // Leads come from React Query (same cache LeadsTab uses) so the nav badge updates
+  // live when leads are added/edited/deleted — single source of truth.
+  const { data: leadsQuery } = useAdminLeads();
+  const leads = leadsQuery?.leads || [];
   const [swapApps, setSwapApps]   = useState([]);
-  const [errors, setErrors]       = useState([]);
-  const [stmtFailures, setStmtFailures] = useState([]);
+  // Errors come from React Query so the nav badge stays accurate without a manual
+  // lazy-fetch; ErrorsTab (extracted) self-fetches the same cache + statement failures.
+  const { data: errors = [] } = useAdminErrors();
   const [pipeline, setPipeline]   = useState([]);
   const [slaStatus, setSlaStatus] = useState({ overdue: [], dueSoon: [], onTrack: [], contacted: [] });
   const [kycQueue, setKycQueue]   = useState([]);
@@ -787,7 +591,7 @@ export default function Admin() {
   const [jumpLeadId, setJumpLeadId] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [statements, setStatements] = useState([]);
-  const [sessions,   setSessions]   = useState([]);
+  // sessions now self-fetched inside SessionsTab via React Query (no parent state).
   const [feedbackData, setFeedbackData] = useState({ feedback: [], reports: [] });
   const [auditLog, setAuditLog] = useState({ entries: [], total: 0, page: 1, pages: 1 });
   const [deployInfo, setDeployInfo] = useState(null);
@@ -811,7 +615,7 @@ export default function Admin() {
         headers: { Authorization: 'Bearer ' + (localStorage.getItem('bondly_token') || '') },
       }).then(r => r.json()).then(d => d?.data && setSlaStatus(d.data)).catch(() => {});
     }
-  });
+  }, !isInvestor);
 
   // ⌘K / Ctrl+K hotkey is owned by CommandPalette now — keeping just an
   // Escape fallback for the legacy GlobalSearch overlay if it's open.
@@ -832,32 +636,29 @@ export default function Admin() {
 
   // Fetch deploy version info once on mount
   useEffect(() => {
+    if (isInvestor) return;
     admin.version().then(d => { if (d?.current) setDeployInfo(d.current); }).catch(() => {});
   }, []);
 
   // Load critical data upfront (dashboard needs stats + leads + alerts)
   // Re-fetches stats + clears hideTest-sensitive tabs when toggle changes
   useEffect(() => {
+    if (isInvestor) { setLoading(false); return; }  // investors load only their own metrics
     setLoading(true);
     // Clear tabs that filter by hideTest so they reload fresh on next visit
-    setLoadedTabs(prev => { const s = new Set(prev); s.delete('pipeline'); s.delete('applications'); return s; });
+    setLoadedTabs(prev => { const s = new Set(prev); s.delete('deals'); return s; });
     setSwapApps([]);
     setPipeline([]);
     Promise.all([
       admin.stats({ hideTest }).catch(() => null),
-      admin.leads().catch(() => ({ leads: [] })),
       admin.alerts().catch(() => ({ rateAlerts: [], savingsAlerts: [], primeRate: 11.25 })),
       // SLA status feeds the home-tab priority queue so overdue applications
       // surface ABOVE leads and KYC. Critical for the broker-team workflow.
       fetch('/api/admin/applications/sla-status', { headers: { Authorization: 'Bearer ' + (localStorage.getItem('bondly_token') || '') } })
         .then(r => r.json()).then(d => d?.data || { overdue: [], dueSoon: [], onTrack: [], contacted: [] })
         .catch(() => ({ overdue: [], dueSoon: [], onTrack: [], contacted: [] })),
-    ]).then(([s, lds, al, sla]) => {
+    ]).then(([s, al, sla]) => {
       setStats(s);
-      // Endpoint now returns { leads, convertedCount, totalAll } so we can
-      // filter out leads that already became users — that was the dupe
-      // source. Stays compatible with the old array shape.
-      setLeads(Array.isArray(lds) ? lds : (lds?.leads || []));
       setAlertsData(al || { rateAlerts: [], savingsAlerts: [], primeRate: 11.25 });
       setSlaStatus(sla);
       setPrimeInput(String(s?.primeRate || 11.25));
@@ -868,16 +669,16 @@ export default function Admin() {
   useEffect(() => {
     if (loadedTabs.has(tab)) return;
     setLoadedTabs(prev => new Set([...prev, tab]));
-    if (tab === 'applications')  admin.swaps().catch(() => []).then(d => setSwapApps(d || []));
-    if (tab === 'errors')        { admin.errors().catch(() => []).then(d => setErrors(d || [])); admin.statementFailures().catch(() => []).then(d => setStmtFailures(d || [])); }
-    if (tab === 'pipeline')      admin.pipeline({ hideTest }).catch(() => []).then(d => setPipeline(d || []));
+    if (tab === 'deals') {       // unified Deals module loads all sub-pipelines (swaps, submissions, broker queue)
+      admin.swaps().catch(() => []).then(d => setSwapApps(d || []));
+      bsApi.list().catch(() => ({ submissions: [] })).then(d => setSubmissions(d.submissions || []));
+      admin.pipeline({ hideTest }).catch(() => []).then(d => setPipeline(d || []));
+    }
     if (tab === 'kyc')           admin.kycList().catch(() => []).then(d => setKycQueue(Array.isArray(d) ? d : []));
     if (tab === 'chat')          admin.chats().catch(() => []).then(d => setChats(d || []));
     if (tab === 'buyers')        admin.buyerIntents().catch(() => []).then(d => setBuyers(d || []));
     if (tab === 'commissions')   admin.commissions().catch(() => ({ commissions: [], totals: {} })).then(d => setComms(d || { commissions: [], totals: {} }));
-    if (tab === 'submissions')   bsApi.list().catch(() => ({ submissions: [] })).then(d => setSubmissions(d.submissions || []));
     if (tab === 'statements')    admin.statements().catch(() => []).then(d => setStatements(d || []));
-    if (tab === 'sessions')      admin.sessions().catch(() => []).then(d => setSessions(d || []));
     if (tab === 'feedback')      admin.feedback().catch(() => ({ feedback: [], reports: [] })).then(d => setFeedbackData(d || { feedback: [], reports: [] }));
     if (tab === 'audit-log')     admin.auditLog({ page: 1, limit: 50 }).catch(() => null).then(d => d && setAuditLog(d));
     // customers tab has its own internal fetching
@@ -939,13 +740,13 @@ export default function Admin() {
               users={users}
               leads={leads}
               slaApps={[...(slaStatus.overdue || []), ...(slaStatus.dueSoon || []), ...(slaStatus.onTrack || []), ...(slaStatus.contacted || [])]}
-              navItems={buildNav(user?.superAdmin).flatMap(g => g.items.map(i => ({ id: i.id, label: i.label, group: g.label })))}
+              navItems={buildNav(user).flatMap(g => g.items.map(i => ({ id: i.id, label: i.label, group: g.label })))}
               onNavigate={(id) => setTab(id)}
               onPickCustomer={(uid) => { setTab('customers'); setJumpCustomerId(uid); }}
               onPickLead={(lid) => { setTab('leads'); setJumpLeadId(lid); }}
               actions={[
                 { id: 'toggle-hide-test', label: hideTest ? 'Show test users' : 'Hide test users', run: toggleHideTest },
-                { id: 'jump-overdue',     label: 'Jump to overdue applications', run: () => setTab('pipeline') },
+                { id: 'jump-overdue',     label: 'Jump to overdue applications', run: () => setTab('deals') },
                 { id: 'jump-watchlist',   label: 'Open Watchlist',               run: () => setTab('watchlist') },
                 { id: 'jump-errors',      label: 'Open server errors',           run: () => setTab('errors') },
               ]}
@@ -992,26 +793,26 @@ export default function Admin() {
         {/* Content */}
         <div className="admin-body">
           {tab === 'home'         && <DashboardHomeTab stats={stats} leads={leads} kycQueue={kycQueue} chats={chats} swapApps={swapApps} pipeline={pipeline} buyerIntents={buyerIntents} commissionData={commissionData} alertsData={alertsData} submissions={submissions} slaStatus={slaStatus} setTab={setTab} hideTest={hideTest} onHideTest={toggleHideTest} />}
-          {tab === 'leads'        && <LeadsTab leads={leads} setLeads={setLeads} showToast={showToast} initialSelectedId={jumpLeadId} onClearJump={() => setJumpLeadId(null)} />}
+          {tab === 'leads'        && <LeadsTab showToast={showToast} initialSelectedId={jumpLeadId} onClearJump={() => setJumpLeadId(null)} />}
           {tab === 'customers'    && <CustomersTab showToast={showToast} hideTest={hideTest} initialSelectedId={jumpCustomerId} onClearJump={() => setJumpCustomerId(null)} />}
-          {tab === 'applications' && (swapApps.length === 0 && !loadedTabs.has('applications') ? <SkeletonList /> : <SwapsKanban swapApps={swapApps} setSwapApps={setSwapApps} showToast={showToast} />)}
+          {tab === 'b2b'          && <B2BTab showToast={showToast} />}
+          {tab === 'investor'     && <InvestorTab />}
           {tab === 'commissions'  && (commissionData.commissions.length === 0 && !loadedTabs.has('commissions') ? <SkeletonList /> : <CommissionsTab data={commissionData} setData={setComms} showToast={showToast} />)}
           {(tab === 'watchlist' || tab === 'alerts' || tab === 'buyers') && <WatchlistTab showToast={showToast} />}
           {tab === 'kyc'          && (kycQueue.length === 0 && !loadedTabs.has('kyc') ? <SkeletonList rows={4} /> : <KYCTab kycQueue={kycQueue} setKycQueue={setKycQueue} kycReason={kycReason} setKycReason={setKycReason} showToast={showToast} onJumpCustomer={id => { setJumpCustomerId(id); setTab('customers'); }} />)}
           {tab === 'chat'         && (chats.length === 0 && !loadedTabs.has('chat') ? <SkeletonList rows={4} /> : <ChatTab chats={chats} setChats={setChats} chatReply={chatReply} setChatReply={setChatReply} showToast={showToast} />)}
           {/* legacy 'buyers' id is handled by the WatchlistTab line above */}
-          {tab === 'submissions'  && <BankSubmissionsTab submissions={submissions} setSubmissions={setSubmissions} showToast={showToast} />}
-          {tab === 'pipeline'         && <ApplicationsTab showToast={showToast} onJump={(r) => setTab(r.type === 'swap' ? 'applications' : 'submissions')} />}
+          {/* Switch Apps, Submissions & Broker Queue are sub-tabs inside Deals (see DealsTab); bond-desk kept standalone too */}
           {tab === 'bond-desk'        && <BondDeskTab showToast={showToast} />}
-          {tab === 'pipeline-legacy'  && (pipeline.length === 0 && !loadedTabs.has('pipeline') ? <SkeletonList /> : <PipelineTab pipeline={pipeline} setPipeline={setPipeline} showToast={showToast} />)}
+          {tab === 'deals'            && <DealsTab swapApps={swapApps} setSwapApps={setSwapApps} submissions={submissions} setSubmissions={setSubmissions} showToast={showToast} setTab={setTab} />}
           {tab === 'analytics'    && <BehaviouralAnalyticsTab />}
-          {tab === 'errors'       && (errors.length === 0 && !loadedTabs.has('errors') ? <SkeletonList rows={3} /> : <ErrorsTab errors={errors} setErrors={setErrors} stmtFailures={stmtFailures} showToast={showToast} />)}
+          {tab === 'errors'       && <ErrorsTab showToast={showToast} />}
           {tab === 'settings'     && <SettingsTab primeInput={primeInput} setPrimeInput={setPrimeInput} showToast={showToast} />}
           {tab === 'claude-usage'  && <ClaudeUsageTab />}
           {tab === 'bulk-email'   && <BulkEmailTab showToast={showToast} />}
           {tab === 'staff'        && <StaffTab showToast={showToast} />}
           {tab === 'statements'   && <StatementsTab statements={statements} showToast={showToast} />}
-          {tab === 'sessions'     && <SessionsTab sessions={sessions} />}
+          {tab === 'sessions'     && <SessionsTab />}
           {tab === 'feedback'     && <FeedbackAdminTab data={feedbackData} />}
           {tab === 'audit-log'   && <AuditLogTab data={auditLog} onPageChange={p => admin.auditLog({ page: p, limit: 50 }).catch(() => null).then(d => d && setAuditLog(d))} />}
           {tab === 'diary'       && <DiaryTab showToast={showToast} />}
@@ -1235,7 +1036,7 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
   // Top candidates and activity come from stats (pre-computed, test-aware)
   const topCandidates  = stats?.topCandidates || [];
   const activityItems  = [
-    ...leads.map(l => ({ date: l.createdAt, title: l.name || 'New lead', detail: `Lead · ${l.currentBank || '?'} · ${l.currentBalance ? fmt(l.currentBalance) : '?'}`, color: '#3b82f6' })),
+    ...leads.map(l => ({ date: l.createdAt, title: l.name || 'New lead', detail: ['Lead', l.currentBank, l.currentBalance ? fmt(l.currentBalance) : null].filter(Boolean).join(' · '), color: '#3b82f6' })),
     ...(stats?.recentActivity || []),
   ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
 
@@ -1248,12 +1049,12 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
     overdueCount > 0 && {
       level: 'critical', color: '#dc2626', bg: '#dc262612',
       icon: '⏰', text: `SLA breached — broker hasn't made contact`,
-      count: overdueCount, tab: 'pipeline', label: 'Assign now'
+      count: overdueCount, tab: 'deals', label: 'Assign now'
     },
     dueSoonCount > 0 && {
       level: 'high', color: '#d97706', bg: '#d9770612',
       icon: '⌛', text: 'Applications nearing SLA deadline (< 4h)',
-      count: dueSoonCount, tab: 'pipeline', label: 'Contact next'
+      count: dueSoonCount, tab: 'deals', label: 'Contact next'
     },
     chats.filter(c=>c.escalated).length > 0 && {
       level: 'critical', color: '#ef4444', bg: '#ef444412',
@@ -1273,7 +1074,7 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
     pipeline.filter(e=>e.priority==='active'&&!e.brokerSentAt).length > 0 && {
       level: 'medium', color: '#6366f1', bg: '#6366f112',
       icon: '🟣', text: 'Applications ready to send to broker',
-      count: pipeline.filter(e=>e.priority==='active'&&!e.brokerSentAt).length, tab: 'pipeline', label: 'Send now'
+      count: pipeline.filter(e=>e.priority==='active'&&!e.brokerSentAt).length, tab: 'deals', label: 'Send now'
     },
     newLeads > 0 && {
       level: 'medium', color: '#3b82f6', bg: '#3b82f612',
@@ -1403,7 +1204,7 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
         <div className="dash-panel">
           <div className="dash-panel__head">
             <span className="dash-panel__title">Submissions pipeline</span>
-            <button className="dash-panel__link" onClick={() => setTab('submissions')}>Manage →</button>
+            <button className="dash-panel__link" onClick={() => setTab('deals')}>Manage →</button>
           </div>
           <div className="dash-panel__body">
             {/* Submissions in flight */}
@@ -1415,7 +1216,7 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
                   { label: 'Quotes received',    value: stats.submissions.banksQuoted,  color: '#16a34a' },
                   { label: 'Won today',          value: stats.submissions.wonToday,     color: '#16a34a' },
                 ].map(r => (
-                  <div key={r.label} className="dash-rev-item" onClick={() => setTab('submissions')} style={{ cursor:'pointer' }}>
+                  <div key={r.label} className="dash-rev-item" onClick={() => setTab('deals')} style={{ cursor:'pointer' }}>
                     <div className="dash-rev-item__top">
                       <span className="dash-rev-item__label">{r.label}</span>
                       <span className="dash-rev-item__value" style={{ color: r.color }}>{r.value}</span>
@@ -1423,7 +1224,7 @@ function DashboardHomeTab({ stats, leads, kycQueue, chats, swapApps, pipeline, b
                   </div>
                 ))}
                 {stats.submissions.stale?.length > 0 && (
-                  <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 6, fontSize: '0.8125rem', color: '#ef4444', marginTop: 8, cursor: 'pointer' }} onClick={() => setTab('submissions')}>
+                  <div style={{ padding: '8px 12px', background: 'rgba(239,68,68,0.06)', borderRadius: 6, fontSize: '0.8125rem', color: '#ef4444', marginTop: 8, cursor: 'pointer' }} onClick={() => setTab('deals')}>
                     ⚠ {stats.submissions.stale.length} deal{stats.submissions.stale.length > 1 ? 's' : ''} stale for 3+ days
                   </div>
                 )}
@@ -1698,83 +1499,97 @@ function CustomersTab({ showToast, hideTest, initialSelectedId, onClearJump }) {
         </div>
       </div>
 
-      {/* ── Two-panel layout ── */}
-      <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border-color)', borderRadius: 12, overflow: 'hidden', height: 'calc(100vh - 320px)', minHeight: 500 }}>
-
-        {/* ── Left: name list ── */}
-        <div style={{ width: 280, flexShrink: 0, borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', background: 'var(--bg-card)' }}>
-          {/* List header */}
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--border-color)', fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-            <span>{filtered.length} shown</span>
-            {pages > 1 && (
-              <div style={{ display: 'flex', gap: 4 }}>
-                <button onClick={() => setPage(p => Math.max(1, p-1))} disabled={page<=1}
-                  style={{ background:'none', border:'none', cursor:page>1?'pointer':'default', color:page>1?'var(--text-primary)':'var(--text-secondary)', fontSize:'0.8rem' }}>← </button>
-                <span>{page}/{pages}</span>
-                <button onClick={() => setPage(p => Math.min(pages, p+1))} disabled={page>=pages}
-                  style={{ background:'none', border:'none', cursor:page<pages?'pointer':'default', color:page<pages?'var(--text-primary)':'var(--text-secondary)', fontSize:'0.8rem' }}> →</button>
-              </div>
-            )}
-          </div>
-
-          {/* List body */}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {loading ? (
-              <div style={{ padding: 32, textAlign: 'center' }}>
-                <div className="spinner" style={{ width: 24, height: 24, borderWidth: 2, margin: '0 auto' }} />
-              </div>
-            ) : filtered.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>No customers match</div>
-            ) : filtered.map(u => {
-              const isSelected = selectedId === u.id;
-              const grade = u.riskScore?.grade;
-              const gradeColor = RISK_COLOR[grade] || '#9ca3af';
-              return (
-                <div key={u.id} onClick={() => setSelectedId(u.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', background: isSelected ? 'var(--bg-page)' : 'transparent', borderLeft: isSelected ? '3px solid var(--mint)' : '3px solid transparent', transition: 'background 0.12s', borderBottom: '1px solid var(--border-color)' }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--bg-page)'; }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <div style={{ width: 36, height: 36, borderRadius: 8, background: u.isAnonymous ? '#64748b' : u.isTest ? '#d97706' : avatarColor(u.name), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.9375rem', flexShrink: 0 }}>
+      {/* ── Customer table ── */}
+      {loading ? (
+        <div style={{ padding: 48, textAlign: 'center' }}>
+          <div className="spinner" style={{ width: 28, height: 28, borderWidth: 3, margin: '0 auto' }} />
+        </div>
+      ) : (
+        <AdminTable
+          rows={filtered}
+          getRowKey={u => u.id}
+          onRowClick={u => setSelectedId(u.id)}
+          dense
+          defaultSort={{ key: 'name', dir: 'asc' }}
+          emptyState="No customers match this filter."
+          columns={[
+            {
+              key: 'name', label: 'Customer', sortable: true,
+              sortValue: u => (u.name || '').toLowerCase(),
+              render: u => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: u.isAnonymous ? '#64748b' : u.isTest ? '#d97706' : avatarColor(u.name), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
                     {u.isAnonymous ? '?' : u.name?.[0]?.toUpperCase() || '?'}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {u.name}
-                      {u.isTest && <span style={{ fontSize: '0.6rem', fontWeight: 700, background: '#d9770620', color: '#d97706', padding: '1px 4px', borderRadius: 3, flexShrink: 0 }}>TEST</span>}
-                      {u.isAnonymous && <span style={{ fontSize: '0.6rem', fontWeight: 700, background: '#64748b20', color: '#64748b', padding: '1px 4px', borderRadius: 3, flexShrink: 0 }}>NOT SIGNED IN</span>}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {u.isAnonymous ? `${u.statementCount || 0} statement${u.statementCount !== 1 ? 's' : ''} — no account created` : u.email}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {!u.isAnonymous && <CustomerHealthRing customer={u} size={34} />}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                      {grade && <span style={{ fontSize: '0.7rem', fontWeight: 800, color: gradeColor }}>{grade}</span>}
-                      {(u.mthSaving||0) > 0 && <span style={{ fontSize: '0.65rem', color: 'var(--mint)', fontWeight: 600 }}>+{fmt(u.mthSaving)}</span>}
-                      {u.latestSwapStatus && <span style={{ fontSize: '0.6rem', color: SWAP_STATUS_COLORS[u.latestSwapStatus]||'#6366f1', fontWeight: 600 }}>{u.latestSwapStatus.replace(/_/g,' ').slice(0,10)}</span>}
-                    </div>
-                  </div>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                    <Truncate style={{ fontWeight: 600, maxWidth: 180 }}>{u.name || 'Unknown'}</Truncate>
+                    {u.isTest && <span style={{ fontSize: '0.55rem', fontWeight: 700, background: '#d9770620', color: '#d97706', padding: '1px 4px', borderRadius: 3, flexShrink: 0 }}>TEST</span>}
+                    {u.isAnonymous && <span style={{ fontSize: '0.55rem', fontWeight: 700, background: '#64748b20', color: '#64748b', padding: '1px 4px', borderRadius: 3, flexShrink: 0 }}>GUEST</span>}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              ),
+            },
+            {
+              key: 'email', label: 'Email', sortable: true,
+              sortValue: u => (u.email || '').toLowerCase(),
+              render: u => u.isAnonymous
+                ? <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{u.statementCount || 0} statements · no account</span>
+                : <Truncate style={{ maxWidth: 220, color: 'var(--text-secondary)' }}>{u.email}</Truncate>,
+            },
+            {
+              key: 'grade', label: 'Risk', sortable: true, align: 'center',
+              sortValue: u => u.riskScore?.grade || 'ZZ',
+              render: u => u.riskScore?.grade
+                ? <span style={{ fontWeight: 800, fontSize: '0.8rem', color: RISK_COLOR[u.riskScore.grade] || '#9ca3af' }}>{u.riskScore.grade}</span>
+                : <span className="adm-dash" title="No risk score yet">—</span>,
+            },
+            {
+              key: 'mthSaving', label: 'Mth saving', sortable: true, align: 'right',
+              sortValue: u => u.mthSaving || 0,
+              render: u => (u.mthSaving || 0) > 0
+                ? <span style={{ color: 'var(--mint)', fontWeight: 600 }}>+{fmt(u.mthSaving)}</span>
+                : <span className="adm-dash" title="No switch saving identified">—</span>,
+            },
+            {
+              key: 'loanCount', label: 'Bonds', sortable: true, align: 'center',
+              sortValue: u => u.loanCount || 0,
+              render: u => u.loanCount > 0 ? u.loanCount : <span className="adm-dash">0</span>,
+            },
+            {
+              key: 'kycStatus', label: 'KYC', sortable: true, align: 'center',
+              sortValue: u => u.kycStatus || '',
+              render: u => {
+                if (u.kycStatus === 'approved') return <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '0.78rem' }}>✓ Verified</span>;
+                if (u.kycStatus === 'pending_review') return <span style={{ color: '#d97706', fontWeight: 600, fontSize: '0.78rem' }}>Pending</span>;
+                return <span className="adm-dash" title="No KYC submitted">—</span>;
+              },
+            },
+            {
+              key: 'latestSwapStatus', label: 'Status', sortable: true,
+              sortValue: u => u.latestSwapStatus || '',
+              render: u => u.latestSwapStatus
+                ? <span style={{ fontSize: '0.72rem', fontWeight: 600, color: SWAP_STATUS_COLORS[u.latestSwapStatus] || '#6366f1' }}>{u.latestSwapStatus.replace(/_/g, ' ')}</span>
+                : <span className="adm-dash">—</span>,
+            },
+          ]}
+        />
+      )}
 
-        {/* ── Right: account detail ── */}
-        <div style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-page)' }}>
-          {selectedId ? (
-            <CustomerProfile userId={selectedId} mode="inline" onClose={() => setSelectedId(null)} showToast={showToast} users={rows} onMerged={() => { refreshList(); setSelectedId(null); }} />
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)', gap: 12 }}>
-              <div style={{ fontSize: '2.5rem', opacity: 0.25 }}>👤</div>
-              <div style={{ fontWeight: 600, fontSize: '0.9375rem' }}>Select a customer</div>
-              <div style={{ fontSize: '0.875rem' }}>Click a name on the left to view their account</div>
-            </div>
-          )}
+      {/* Pagination */}
+      {pages > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 14 }}>
+          <button className="adm-quick-action" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>← Prev</button>
+          <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Page {page} of {pages}</span>
+          <button className="adm-quick-action" onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page >= pages}>Next →</button>
         </div>
-      </div>
+      )}
+
+      {/* ── Detail drawer ── */}
+      <Drawer open={!!selectedId} onClose={() => setSelectedId(null)} title="Customer" width={780}>
+        {selectedId && (
+          <CustomerProfile userId={selectedId} mode="inline" onClose={() => setSelectedId(null)} showToast={showToast} users={rows} onMerged={() => { refreshList(); setSelectedId(null); }} />
+        )}
+      </Drawer>
     </div>
   );
 }
@@ -2532,10 +2347,9 @@ function CustomerProfile({ userId, onClose, showToast, mode = 'overlay', users =
                           <div
                             onClick={() => {
                               if (item._type === 'doc' && item.filename)
-                                window.open(`/api/admin/vault/${item.userId}/${item.filename}?token=${localStorage.getItem('bondly_token')||''}`, '_blank');
+                                adminApi.download(`/api/admin/vault/${item.userId}/${item.filename}`, item.filename).catch(() => {});
                               else if (item._type === 'pdf')
-                                fetch(`/api/admin/statements/${item.id}/download`, { headers: { Authorization: 'Bearer ' + localStorage.getItem('bondly_token') } })
-                                  .then(r => r.blob()).then(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = item.filename; a.click(); });
+                                adminApi.download(`/api/admin/statements/${item.id}/download`, item.filename).catch(() => {});
                             }}
                             style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', background:'var(--bg-card)', borderBottom:'1px solid var(--border)', cursor: (item._type === 'doc' && item.filename) || item._type === 'pdf' ? 'pointer' : 'default' }}
                           >
@@ -2563,14 +2377,13 @@ function CustomerProfile({ userId, onClose, showToast, mode = 'overlay', users =
               )}
               {zone && <span style={{ padding:'2px 9px', borderRadius:10, fontSize:'0.75rem', fontWeight:700, background:zoneColor+'18', color:zoneColor }}>{az?.label || zone}</span>}
                               {item._type === 'doc' && item.filename && (
-                                <a
-                                  href={`/api/admin/vault/${item.userId}/${item.filename}?token=${localStorage.getItem('bondly_token')||''}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  style={{ padding:'5px 12px', borderRadius:6, background:'var(--forest)', color:'white', fontSize:'0.8125rem', fontWeight:600, textDecoration:'none', whiteSpace:'nowrap' }}
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); adminApi.download(`/api/admin/vault/${item.userId}/${item.filename}`, item.filename).catch(() => {}); }}
+                                  style={{ padding:'5px 12px', borderRadius:6, background:'var(--forest)', color:'white', fontSize:'0.8125rem', fontWeight:600, border:'none', cursor:'pointer', whiteSpace:'nowrap' }}
                                 >
                                   Download
-                                </a>
+                                </button>
                               )}
                             </div>
                           </div>
@@ -2672,22 +2485,20 @@ function CustomerProfile({ userId, onClose, showToast, mode = 'overlay', users =
                   {/* PDF view of the most recent submitted application — the same
                       pack we'd actually send to a bank. Only renders when the
                       customer has at least one application in flight. */}
-                  {(data?.applications || []).slice(0, 1).map(a => {
-                    const tok = encodeURIComponent(localStorage.getItem('bondly_token') || '');
-                    return (
-                      <span key={a.id} style={{ display:'inline-flex', gap:6 }}>
-                        <a href={`/api/admin/applications/${a.id}/broker-pdf?token=${tok}`}
-                           target="_blank" rel="noopener noreferrer"
-                           className="cust-profile__action-btn">
-                          Preview bank PDF →
-                        </a>
-                        <a href={`/api/admin/applications/${a.id}/broker-pack.zip?token=${tok}`}
-                           className="cust-profile__action-btn">
-                          Download full pack (ZIP) →
-                        </a>
-                      </span>
-                    );
-                  })}
+                  {(data?.applications || []).slice(0, 1).map(a => (
+                    <span key={a.id} style={{ display:'inline-flex', gap:6 }}>
+                      <button type="button"
+                         onClick={() => adminApi.download(`/api/admin/applications/${a.id}/broker-pdf`, `bondly-application-${a.id}.pdf`).catch(() => {})}
+                         className="cust-profile__action-btn">
+                        Preview bank PDF →
+                      </button>
+                      <button type="button"
+                         onClick={() => adminApi.download(`/api/admin/applications/${a.id}/broker-pack.zip`, `bondly-pack-${a.id}.zip`).catch(() => {})}
+                         className="cust-profile__action-btn">
+                        Download full pack (ZIP) →
+                      </button>
+                    </span>
+                  ))}
                   <button onClick={copyMemo} className="cust-profile__action-btn cust-profile__action-btn--primary">Copy memo</button>
                 </div>
               </div>
@@ -3037,87 +2848,7 @@ function ChatTab({ chats, setChats, chatReply, setChatReply, showToast }) {
 // ═══════════════════════════════════════════════════════════
 //  ERRORS TAB
 // ═══════════════════════════════════════════════════════════
-function ErrorsTab({ errors, setErrors, stmtFailures, showToast }) {
-  return (
-    <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-
-      {/* Statement parse failures */}
-      <div>
-        <h2 style={{ fontFamily: 'var(--font-serif)', marginBottom: 16 }}>
-          Statement Parse Failures ({stmtFailures.length})
-        </h2>
-        {stmtFailures.length === 0 ? (
-          <Card><CardBody><p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 'var(--space-6)' }}>No parse failures — all statements processing cleanly.</p></CardBody></Card>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {stmtFailures.map(f => (
-              <Card key={f.id}>
-                <CardBody>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, marginBottom: 2 }}>
-                        {f.userName || 'Anonymous'}{f.bank ? ` · ${f.bank.toUpperCase()}` : ''}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
-                        {f.fileName}
-                      </div>
-                      <div style={{ fontSize: '0.8125rem', color: '#ef4444' }}>
-                        {f.error || 'unknown error'}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                      {fmtDate(f.at)}
-                    </div>
-                  </div>
-                  {f.userId && (
-                    <div style={{ marginTop: 8 }}>
-                      <button
-                        style={{ fontSize: '0.75rem', color: 'var(--lime)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                        onClick={() => window.open(`/admin?tab=customers&user=${f.userId}`, '_self')}
-                      >View user →</button>
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Frontend/backend error log */}
-      <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontFamily: 'var(--font-serif)' }}>Error Log ({errors.length})</h2>
-          {errors.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={async () => {
-              try {
-                await fetch('/api/admin/errors', { method: 'DELETE', headers: { Authorization: 'Bearer ' + localStorage.getItem('bondly_token') } });
-                setErrors([]);
-                showToast('Error log cleared', 'success');
-              } catch { showToast('Failed to clear', 'error'); }
-            }}>Clear all</Button>
-          )}
-        </div>
-        {errors.length === 0 ? (
-          <Card><CardBody><p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: 'var(--space-8)' }}>No errors logged — great!</p></CardBody></Card>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {errors.map(e => (
-              <Card key={e.id}>
-                <CardBody>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{e.message}</div>
-                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{fmtDate(e.createdAt)} · {e.url}</div>
-                  {e.stack && <pre style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'pre-wrap', background: 'var(--bg-page)', padding: 8, borderRadius: 4 }}>{e.stack.slice(0, 400)}</pre>}
-                </CardBody>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-    </div>
-  );
-}
+// ErrorsTab extracted to ./tabs/ErrorsTab.jsx (Phase C — React Query + AdminTable + EmptyState)
 
 // ═══════════════════════════════════════════════════════════
 //  SETTINGS TAB
@@ -3128,488 +2859,7 @@ function ErrorsTab({ errors, setErrors, stmtFailures, showToast }) {
 // ═══════════════════════════════════════════════════════════
 //  LEADS CRM
 // ═══════════════════════════════════════════════════════════
-function LeadsTab({ leads, setLeads, showToast, initialSelectedId, onClearJump }) {
-  const [selected, setSelected]   = useState(initialSelectedId || null);
-  const [search, setSearch]       = useState('');
-  const [noteInput, setNoteInput] = useState('');
-  const [addOpen, setAddOpen]     = useState(false);
-  const [addForm, setAddForm]     = useState(EMPTY_LEAD);
-  const [addLoading, setAddLoading] = useState(false);
-  const [viewMode, setViewMode]   = useState('b2c'); // 'b2c' | 'b2b'
-  // Converted-lead state — populated on first load + when toggling. Lets
-  // us tell the admin "you're not seeing N leads that already registered"
-  // and offer a one-click toggle into the full list for audit purposes.
-  const [convertedMeta,  setConvertedMeta]  = useState({ convertedCount: 0, totalAll: leads.length });
-  const [showConverted,  setShowConverted]  = useState(false);
-  useEffect(() => {
-    fetch('/api/admin/leads', { headers: { Authorization: 'Bearer ' + (localStorage.getItem('bondly_token') || '') } })
-      .then(r => r.json()).then(d => {
-        if (d?.data) setConvertedMeta({ convertedCount: d.data.convertedCount || 0, totalAll: d.data.totalAll || 0 });
-      }).catch(() => {});
-  }, []);
-  async function toggleConverted() {
-    try {
-      const r = await fetch('/api/admin/leads?includeConverted=' + (showConverted ? '0' : '1'),
-        { headers: { Authorization: 'Bearer ' + (localStorage.getItem('bondly_token') || '') } }).then(r => r.json());
-      const ls = Array.isArray(r?.data) ? r.data : (r?.data?.leads || []);
-      setLeads(ls);
-      setShowConverted(v => !v);
-    } catch { showToast('Could not switch view', 'error'); }
-  }
-
-  const selectedLead = leads.find(l => l.id === selected) || null;
-
-  useEffect(() => {
-    if (initialSelectedId) { setSelected(initialSelectedId); onClearJump?.(); }
-  }, [initialSelectedId]);
-
-  // Close drawer on Escape key
-  useEffect(() => {
-    if (!selected) return;
-    function onKey(e) { if (e.key === 'Escape') setSelected(null); }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [selected]);
-
-  const isB2b = viewMode === 'b2b';
-  const activeStages = isB2b ? B2B_STAGES : LEAD_STAGES;
-  const visibleLeads = leads.filter(l => isB2b ? isB2bLead(l) : !isB2bLead(l));
-
-  const totalCommission    = visibleLeads.filter(l => l.status === 'converted' && l.currentBalance).reduce((s, l) => s + Math.round(l.currentBalance * 0.005), 0);
-  const pipelineCommission = visibleLeads.filter(l => ['qualified','sent_to_broker'].includes(l.status) && l.currentBalance).reduce((s, l) => s + Math.round(l.currentBalance * 0.005), 0);
-  const newToday = visibleLeads.filter(l => new Date(l.createdAt).toDateString() === new Date().toDateString()).length;
-  const repliedCount = visibleLeads.filter(l => l.repliedAt).length;
-  const q = search.toLowerCase();
-  const matchesSearch = l => !q || [l.name, l.phone, l.email, l.currentBank, l.company].some(v => v?.toLowerCase().includes(q));
-
-  async function updateLead(id, patch) {
-    try {
-      const updated = await admin.updateLead(id, patch);
-      setLeads(ls => ls.map(l => l.id === id ? updated : l));
-      return updated;
-    } catch (err) { showToast(err.message || 'Could not update', 'error'); throw err; }
-  }
-
-  async function deleteLead(id) {
-    if (!window.confirm('Delete this lead permanently?')) return;
-    try {
-      await admin.deleteLead(id);
-      setLeads(ls => ls.filter(l => l.id !== id));
-      setSelected(null);
-      showToast('Lead deleted', 'info');
-    } catch (err) { showToast(err.message || 'Failed to delete', 'error'); }
-  }
-
-  async function saveNote() {
-    const note = noteInput.trim();
-    if (!note || !selectedLead) return;
-    const existing = selectedLead.brokerNotes ? selectedLead.brokerNotes + '\n' : '';
-    const ts = new Date().toLocaleString('en-ZA', { dateStyle: 'short', timeStyle: 'short' });
-    await updateLead(selectedLead.id, { brokerNotes: `${existing}[${ts}] ${note}` });
-    setNoteInput('');
-    showToast('Note saved', 'success');
-  }
-
-  async function handleAddLead(e) {
-    e.preventDefault();
-    if (!addForm.name.trim() || (!addForm.phone.trim() && !addForm.email.trim())) { showToast('Name and phone or email required', 'error'); return; }
-    if (addForm.phone.trim() && !/^(\+27|0)[6-8]\d{8}$/.test(addForm.phone.trim().replace(/\s/g, ''))) { showToast('Enter a valid SA mobile number (e.g. 0821234567)', 'error'); return; }
-    if (addForm.email.trim() && !addForm.email.includes('@')) { showToast('Enter a valid email address', 'error'); return; }
-    setAddLoading(true);
-    try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...addForm, currentBalance: parseFloat(addForm.currentBalance) || undefined, currentRate: parseFloat(addForm.currentRate) || undefined, currentTerm: parseInt(addForm.currentTerm) || undefined, monthlyIncome: parseFloat(addForm.monthlyIncome) || undefined }),
-      }).then(r => r.json());
-      if (!res.success) throw new Error(res.error || 'Failed');
-      const r2 = await admin.leads();
-      setLeads(Array.isArray(r2) ? r2 : (r2?.leads || []));
-      setAddOpen(false);
-      setAddForm(EMPTY_LEAD);
-      showToast('Lead added', 'success');
-    } catch (err) { showToast(err.message || 'Could not add', 'error'); }
-    finally { setAddLoading(false); }
-  }
-
-  return (
-    <div className="fade-in" style={{ position: 'relative' }}>
-      {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        {/* View toggle */}
-        <div style={{ display: 'flex', borderRadius: 8, border: '1.5px solid var(--border-color)', overflow: 'hidden', flexShrink: 0 }}>
-          {[['b2c', '🏠 Homeowners'], ['b2b', '🏢 B2B']].map(([mode, label]) => (
-            <button key={mode} onClick={() => { setViewMode(mode); setSelected(null); }}
-              style={{ padding: '7px 14px', border: 'none', cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 700,
-                background: viewMode === mode ? 'var(--forest)' : 'var(--bg-card)',
-                color: viewMode === mode ? '#fff' : 'var(--text-secondary)' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-        <input type="search" placeholder={isB2b ? 'Search company, name, email…' : 'Search name, phone, email, bank…'} value={search} onChange={e => setSearch(e.target.value)}
-          style={{ padding: '8px 14px', borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '0.875rem', width: 240 }} />
-        <button onClick={() => exportCSV(visibleLeads)} style={{ padding: '8px 14px', borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontSize: '0.8125rem', cursor: 'pointer', fontWeight: 600 }}>⬇ CSV</button>
-        <button onClick={() => { setAddForm(isB2b ? B2B_EMPTY_LEAD : EMPTY_LEAD); setAddOpen(true); }}
-          style={{ padding: '8px 18px', borderRadius: 8, background: 'var(--forest)', color: '#fff', border: 'none', fontSize: '0.875rem', cursor: 'pointer', fontWeight: 700 }}>
-          + {isB2b ? 'Add B2B lead' : 'Add lead'}
-        </button>
-      </div>
-
-      {/* Converted-lead banner — surfaces what was hidden by the dedupe so
-          the admin trusts the count instead of suspecting missing records. */}
-      {convertedMeta.convertedCount > 0 && (
-        <div className="adm-notice">
-          <span>
-            Hiding <strong>{convertedMeta.convertedCount}</strong> lead{convertedMeta.convertedCount === 1 ? '' : 's'} that already became registered customers
-            {!showConverted && convertedMeta.totalAll > 0 && (
-              <> &middot; {convertedMeta.totalAll - convertedMeta.convertedCount} unconverted of {convertedMeta.totalAll} total</>
-            )}.
-          </span>
-          <button className="adm-notice__action" onClick={toggleConverted}>
-            {showConverted ? 'Hide converted' : 'Show all'} →
-          </button>
-        </div>
-      )}
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
-        {(isB2b ? [
-          { label: 'Total B2B',       value: visibleLeads.length },
-          { label: 'New today',       value: newToday },
-          { label: 'Replied',         value: repliedCount },
-          { label: 'Active pipeline', value: visibleLeads.filter(l => ['contacted','meeting_booked','proposal_sent'].includes(l.status)).length },
-          { label: 'Won',             value: visibleLeads.filter(l => l.status === 'won').length },
-        ] : [
-          { label: 'Total',            value: visibleLeads.length },
-          { label: 'New today',        value: newToday },
-          { label: 'Active pipeline',  value: visibleLeads.filter(l => ['contacted','qualified','sent_to_broker'].includes(l.status)).length },
-          { label: 'Pipeline commission', value: fmt(pipelineCommission) },
-          { label: 'Earned commission',   value: fmt(totalCommission) },
-        ]).map(s => (
-          <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 10, padding: '14px 16px' }}>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: '1.375rem', fontWeight: 800 }}>{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Kanban */}
-      <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 16, alignItems: 'flex-start' }}>
-        {activeStages.map(stage => {
-          const col = visibleLeads.filter(l => l.status === stage.value && matchesSearch(l));
-          return (
-            <div key={stage.value} style={{ minWidth: 240, maxWidth: 260, flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '6px 10px', borderRadius: 8, background: `${stage.color}18`, border: `1.5px solid ${stage.color}30` }}>
-                <span>{stage.icon}</span>
-                <span style={{ fontWeight: 700, fontSize: '0.875rem', color: stage.color }}>{stage.label}</span>
-                <span style={{ marginLeft: 'auto', background: stage.color, color: '#fff', borderRadius: 999, padding: '1px 8px', fontSize: '0.75rem', fontWeight: 700 }}>{col.length}</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {col.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '0.8125rem', border: '1.5px dashed var(--border-color)', borderRadius: 8 }}>Empty</div>
-                )}
-                {col.map(lead => {
-                  const commission = lead.currentBalance ? Math.round(lead.currentBalance * 0.005) : null;
-                  const isSel = selected === lead.id;
-                  return (
-                    <div key={lead.id} onClick={() => { setSelected(lead.id); setNoteInput(''); }}
-                      style={{ background: 'var(--bg-card)', border: `1.5px solid ${isSel ? stage.color : 'var(--border-color)'}`, borderLeft: `4px solid ${stage.color}`, borderRadius: 8, padding: 12, cursor: 'pointer', boxShadow: isSel ? `0 0 0 2px ${stage.color}40` : 'var(--shadow-sm)', transition: 'all 0.15s' }}>
-                      {isB2b ? (
-                        <>
-                          <div style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: 2 }}>{lead.company || lead.name || '—'}</div>
-                          {lead.company && lead.name && <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 2 }}>👤 {lead.name}</div>}
-                          {lead.email && <div style={{ fontSize: '0.8125rem', color: 'var(--mint)', marginBottom: 2 }}>✉ {lead.email}</div>}
-                          {lead.repliedAt && (
-                            <div style={{ marginTop: 4, padding: '4px 7px', background: '#16a34a10', border: '1px solid #16a34a30', borderRadius: 4 }}>
-                              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#16a34a', marginBottom: 1 }}>📬 Replied {daysAgo(lead.repliedAt)}</div>
-                              {lead.lastEmailSubject && <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{lead.lastEmailSubject}</div>}
-                            </div>
-                          )}
-                          {lead.dealValue > 0 && <div style={{ marginTop: 4, fontSize: '0.75rem', fontWeight: 700, color: '#16a34a' }}>{fmt(lead.dealValue)}</div>}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-                            {lead.assignedTo && lead.assignedTo !== 'Unassigned' ? <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>👤 {lead.assignedTo}</span> : <span />}
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{daysAgo(lead.createdAt)}</span>
-                          </div>
-                          {lead.followUpAt && new Date(lead.followUpAt) < new Date() && (
-                            <div style={{ marginTop: 3, fontSize: '0.7rem', color: '#ef4444', fontWeight: 700 }}>⚠ Follow-up overdue</div>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ fontWeight: 700, fontSize: '0.9375rem', marginBottom: 4 }}>{lead.name || '—'}</div>
-                          {lead.phone && <div style={{ fontSize: '0.8125rem', color: 'var(--mint)', marginBottom: 2 }}>💬 {lead.phone}</div>}
-                          {lead.currentBank && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 2 }}>{lead.currentBank}{lead.currentBalance ? ` · ${fmt(lead.currentBalance)}` : ''}</div>}
-                          {lead.monthlyIncome > 0 && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: 2 }}>
-                              Income: <strong style={{ color: 'var(--text-primary)' }}>{fmt(lead.monthlyIncome)}</strong>
-                              {lead.maxBond > 0 && <> · Max bond: <strong style={{ color: 'var(--text-primary)' }}>{fmt(lead.maxBond)}</strong></>}
-                              {lead.affordabilityZone?.zone && (() => {
-                                const z = lead.affordabilityZone.zone;
-                                const zc = z==='green'?'#16a34a':z==='yellow'?'#d97706':'#ef4444';
-                                return <span style={{ marginLeft:4, padding:'1px 5px', borderRadius:4, fontSize:'0.7rem', fontWeight:700, background:`${zc}18`, color:zc }}>{lead.affordabilityZone.label}</span>;
-                              })()}
-                            </div>
-                          )}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                            {commission ? <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#16a34a' }}>~{fmt(commission)}</span> : <span />}
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{daysAgo(lead.createdAt)}</span>
-                          </div>
-                          {lead.phone && (
-                            <a href={`https://wa.me/${lead.phone.replace(/\D/g,'')}?text=Hi+${encodeURIComponent(lead.name?.split(' ')[0]||'')}%2C+this+is+Bondly+following+up+on+your+bond+enquiry.`}
-                              target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 4, fontSize: '0.7125rem', color: '#128C7E', textDecoration: 'none', padding: '2px 7px', background: '#25D36618', border: '1px solid #25D36630', borderRadius: 4, fontWeight: 600 }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                              WA
-                            </a>
-                          )}
-                          {lead.followUpAt && new Date(lead.followUpAt) < new Date() && (
-                            <div style={{ marginTop: 3, fontSize: '0.7rem', color: '#ef4444', fontWeight: 700 }}>⚠ Follow-up overdue</div>
-                          )}
-                          {lead.assignedTo && lead.assignedTo !== 'Unassigned' && <div style={{ marginTop: 3, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>👤 {lead.assignedTo}</div>}
-                          {lead.referredBy && <div style={{ marginTop: 3, fontSize: '0.7rem', color: 'var(--text-secondary)' }}>🏘 {lead.referredBy}</div>}
-                          {lead.brokerNotes && <div style={{ marginTop: 3, fontSize: '0.7rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>📝 {lead.brokerNotes.split('\n').pop()}</div>}
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Detail drawer */}
-      {selectedLead && (
-        <>
-          <div className="lead-drawer-overlay" onClick={() => setSelected(null)} />
-          <div className="lead-drawer">
-            {/* Sticky header */}
-            <div className="lead-drawer__header">
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: 0, lineHeight: 1.2 }}>{selectedLead.name || 'Unknown'}</h3>
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4 }}>
-                  {SOURCE_LABELS[selectedLead.source] || selectedLead.source} · {daysAgo(selectedLead.createdAt)}
-                  {selectedLead.status && (
-                    <span style={{ marginLeft: 8, padding: '2px 7px', borderRadius: 4, fontSize: '0.75rem', fontWeight: 700,
-                      background: (LEAD_STAGES.find(s => s.value === selectedLead.status)?.color || '#9ca3af') + '20',
-                      color: LEAD_STAGES.find(s => s.value === selectedLead.status)?.color || '#9ca3af' }}>
-                      {LEAD_STAGES.find(s => s.value === selectedLead.status)?.icon} {LEAD_STAGES.find(s => s.value === selectedLead.status)?.label || selectedLead.status}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
-                <button className="lead-drawer__delete" onClick={() => deleteLead(selectedLead.id)}>Delete</button>
-                <button className="lead-drawer__close" onClick={() => setSelected(null)} title="Close (Esc)">×</button>
-              </div>
-            </div>
-
-            {/* Scrollable body */}
-            <div className="lead-drawer__body">
-              {/* Contact actions */}
-              <div style={{ display: 'grid', gap: 8 }}>
-                {selectedLead.phone && (
-                  <a href={`https://wa.me/${selectedLead.phone.replace(/\D/g,'')}?text=Hi ${encodeURIComponent(selectedLead.name?.split(' ')[0]||'')}%2C+this+is+Bondly+following+up+on+your+bond+switch+enquiry.`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="lead-contact-btn"
-                    style={{ background: '#25D36618', border: '1.5px solid #25D36640', color: '#128C7E' }}>
-                    💬 {selectedLead.phone} <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.8 }}>WhatsApp →</span>
-                  </a>
-                )}
-                {selectedLead.email && (
-                  <a href={`mailto:${selectedLead.email}`}
-                    className="lead-contact-btn"
-                    style={{ border: '1.5px solid var(--border-color)', color: 'var(--text-secondary)', fontWeight: 400 }}>
-                    ✉️ {selectedLead.email}
-                  </a>
-                )}
-              </div>
-
-              {/* Bond details */}
-              {selectedLead.currentBank && (
-                <div style={{ background: 'var(--bg-page)', borderRadius: 8, padding: 16 }}>
-                  <Lbl>Bond Details</Lbl>
-                  <div className="lead-bond-grid">
-                    {[['Bank', selectedLead.currentBank], ['Balance', selectedLead.currentBalance ? fmt(selectedLead.currentBalance) : null], ['Rate', selectedLead.currentRate ? `${selectedLead.currentRate}%` : null], ['Remaining', selectedLead.currentTerm ? `${selectedLead.currentTerm} yrs` : null], ['Income', selectedLead.monthlyIncome ? fmt(selectedLead.monthlyIncome) : null], ['Employment', selectedLead.employment ? selectedLead.employment.replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase()) : null]].filter(([,v])=>v).map(([label, value]) => (
-                      <div key={label}>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: 2 }}>{label}</div>
-                        <div style={{ fontWeight: 600 }}>{value}</div>
-                      </div>
-                    ))}
-                  </div>
-                  {selectedLead.currentBalance && (
-                    <div style={{ marginTop: 12, padding: 10, background: '#f0fdf4', borderRadius: 6, display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.8125rem', color: '#15803d' }}>Est. commission</span>
-                      <span style={{ fontWeight: 800, color: '#16a34a', fontSize: '1.125rem' }}>~{fmt(Math.round(selectedLead.currentBalance * 0.005))}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Pre-approval financial data */}
-              {(selectedLead.maxBond > 0 || selectedLead.affordabilityZone?.zone || selectedLead.statementVerified) && (
-                <div style={{ background: 'var(--bg-page)', borderRadius: 8, padding: 16 }}>
-                  <Lbl style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    Pre-Approval Data
-                    {selectedLead.statementVerified && <span style={{ padding:'1px 7px', borderRadius:10, fontSize:'0.7rem', fontWeight:700, background:'#16a34a18', color:'#16a34a' }}>Statement verified</span>}
-                    {selectedLead.affordabilityZone?.zone && (() => {
-                      const z = selectedLead.affordabilityZone.zone;
-                      const zc = z==='green'?'#16a34a':z==='yellow'?'#d97706':'#ef4444';
-                      return <span style={{ padding:'1px 7px', borderRadius:10, fontSize:'0.7rem', fontWeight:700, background:`${zc}18`, color:zc }}>{selectedLead.affordabilityZone.label}</span>;
-                    })()}
-                  </Lbl>
-                  <div className="lead-bond-grid">
-                    {[
-                      ['Monthly Income', selectedLead.monthlyIncome > 0 ? fmt(selectedLead.monthlyIncome) : null],
-                      ['Max Bond',       selectedLead.maxBond > 0 ? fmt(selectedLead.maxBond) : null],
-                      ['Home Readiness', selectedLead.homeReadinessScore ? `${selectedLead.homeReadinessScore}/100` : null],
-                    ].filter(([,v])=>v).map(([label, value]) => (
-                      <div key={label}>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: 2 }}>{label}</div>
-                        <div style={{ fontWeight: 600 }}>{value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* B2B-specific: last email reply */}
-              {isB2b && selectedLead.repliedAt && (
-                <div style={{ background: '#16a34a0d', border: '1px solid #16a34a30', borderRadius: 8, padding: 12 }}>
-                  <Lbl>Last email reply</Lbl>
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 600, marginBottom: 4 }}>{selectedLead.lastEmailSubject || '(no subject)'}</div>
-                  {selectedLead.lastEmailSnippet && <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>{selectedLead.lastEmailSnippet}</div>}
-                  <div style={{ marginTop: 6, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Received {new Date(selectedLead.repliedAt).toLocaleString('en-ZA')}</div>
-                </div>
-              )}
-
-              {/* Stage */}
-              <div>
-                <Lbl>Stage</Lbl>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {activeStages.map(s => (
-                    <button key={s.value} className="lead-stage-btn"
-                      onClick={() => updateLead(selectedLead.id, { status: s.value }).catch(()=>{})}
-                      style={{ background: selectedLead.status === s.value ? s.color : 'var(--bg-page)', color: selectedLead.status === s.value ? '#fff' : s.color, borderColor: s.color }}>
-                      {s.icon} {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Assigned to */}
-              <div>
-                <Lbl>Assigned to</Lbl>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {ASSIGNEES.map(a => (
-                    <button key={a} className="lead-assign-btn"
-                      onClick={() => updateLead(selectedLead.id, { assignedTo: a }).catch(()=>{})}
-                      style={{ background: selectedLead.assignedTo === a ? 'var(--forest)' : 'var(--bg-page)', color: selectedLead.assignedTo === a ? '#fff' : 'var(--text-secondary)' }}>
-                      {a}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Follow-up date */}
-              <div>
-                <Lbl>Follow-up date</Lbl>
-                <input type="date" value={selectedLead.followUpAt || ''} onChange={e => updateLead(selectedLead.id, { followUpAt: e.target.value }).catch(()=>{})}
-                  style={{ padding: '8px 12px', borderRadius: 6, border: `1.5px solid ${selectedLead.followUpAt && new Date(selectedLead.followUpAt) < new Date() ? '#ef4444' : 'var(--border-color)'}`, background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }} />
-                {selectedLead.followUpAt && new Date(selectedLead.followUpAt) < new Date() && (
-                  <div style={{ marginTop: 4, fontSize: '0.75rem', color: '#ef4444', fontWeight: 600 }}>⚠ Overdue — update or clear this date</div>
-                )}
-              </div>
-
-              {/* Referred by (estate agent / source) */}
-              <div>
-                <Lbl>Referred by</Lbl>
-                <input type="text" value={selectedLead.referredBy || ''} placeholder="e.g. Jane (Pam Golding CT)"
-                  onChange={e => updateLead(selectedLead.id, { referredBy: e.target.value }).catch(()=>{})}
-                  style={{ padding: '8px 12px', borderRadius: 6, border: '1.5px solid var(--border-color)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '0.875rem', width: '100%', boxSizing: 'border-box' }} />
-              </div>
-
-              {/* Notes */}
-              <div>
-                <Lbl>Notes</Lbl>
-                {selectedLead.brokerNotes && (
-                  <div style={{ background: 'var(--bg-page)', borderRadius: 8, padding: '8px 10px', marginBottom: 8, maxHeight: 200, overflowY: 'auto' }}>
-                    {selectedLead.brokerNotes.trim().split('\n').filter(Boolean).map((line, i) => {
-                      const m = line.match(/^\[([^\]]+)\]\s*(.*)/);
-                      return m ? (
-                        <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.8125rem' }}>
-                          <span style={{ color: 'var(--text-secondary)', flexShrink: 0, fontSize: '0.75rem', marginTop: 1 }}>{m[1]}</span>
-                          <span style={{ color: 'var(--text-primary)' }}>{m[2]}</span>
-                        </div>
-                      ) : (
-                        <div key={i} style={{ padding: '5px 0', fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{line}</div>
-                      );
-                    })}
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <textarea rows={2} value={noteInput} onChange={e => setNoteInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), saveNote())} placeholder="Add a note… (Enter to save)"
-                    style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1.5px solid var(--border-color)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '0.8125rem', resize: 'none', fontFamily: 'inherit' }} />
-                  <button onClick={saveNote} style={{ alignSelf: 'flex-end', padding: '8px 14px', borderRadius: 6, background: 'var(--forest)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.8125rem' }}>Save</button>
-                </div>
-              </div>
-
-              {selectedLead.contactMethod && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: 12 }}>
-                  Prefers: <strong>{selectedLead.contactMethod}</strong>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Add lead modal */}
-      {addOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-          onClick={e => e.target === e.currentTarget && setAddOpen(false)}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: 12, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-              <h3 style={{ fontFamily: 'var(--font-serif)', margin: 0 }}>{isB2b ? 'Add B2B lead' : 'Add lead manually'}</h3>
-              <button onClick={() => setAddOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>×</button>
-            </div>
-            <form onSubmit={handleAddLead} style={{ display: 'grid', gap: 14 }}>
-              {(isB2b ? [
-                { label: 'Company / Organisation *', key: 'company',    type: 'text',   placeholder: 'Capitec Bank' },
-                { label: 'Contact name *',           key: 'name',       type: 'text',   placeholder: 'Jane Smith' },
-                { label: 'Email *',                  key: 'email',      type: 'email',  placeholder: 'jane@capitec.co.za' },
-                { label: 'Phone',                    key: 'phone',      type: 'tel',    placeholder: '+27 82 123 4567' },
-                { label: 'Deal value (R, optional)', key: 'dealValue',  type: 'number', placeholder: '500 000' },
-                { label: 'Notes',                    key: 'notes',      type: 'text',   placeholder: 'Intro via LinkedIn, interested in fraud intelligence' },
-              ] : [
-                { label: 'Full name *',             key: 'name',           type: 'text',   placeholder: 'Jane Smith' },
-                { label: 'Phone (WhatsApp) *',      key: 'phone',          type: 'tel',    placeholder: '+27 82 123 4567' },
-                { label: 'Email',                   key: 'email',          type: 'email',  placeholder: 'jane@example.com' },
-                { label: 'Referred by (estate agent / source)', key: 'referredBy', type: 'text', placeholder: 'Jane Smith — Pam Golding' },
-                { label: 'Current bank',            key: 'currentBank',    type: 'text',   placeholder: 'ABSA' },
-                { label: 'Outstanding balance (R)', key: 'currentBalance', type: 'number', placeholder: '1 200 000' },
-                { label: 'Current rate (%)',        key: 'currentRate',    type: 'number', placeholder: '11.75' },
-                { label: 'Monthly income (R)',      key: 'monthlyIncome',  type: 'number', placeholder: '45 000' },
-              ]).map(f => (
-                <div key={f.key}>
-                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>{f.label}</label>
-                  <input type={f.type} value={addForm[f.key]} placeholder={f.placeholder} onChange={e => setAddForm(fm => ({ ...fm, [f.key]: e.target.value }))}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1.5px solid var(--border-color)', background: 'var(--bg-page)', color: 'var(--text-primary)', fontSize: '0.875rem', boxSizing: 'border-box' }} />
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                <button type="button" onClick={() => setAddOpen(false)} style={{ flex: 1, padding: 10, borderRadius: 8, border: '1.5px solid var(--border-color)', background: 'var(--bg-page)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
-                <button type="submit" disabled={addLoading} style={{ flex: 2, padding: 10, borderRadius: 8, background: 'var(--forest)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>{addLoading ? 'Adding…' : 'Add lead'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// LeadsTab extracted to ./tabs/LeadsTab.jsx (Phase D — React Query + shared leadConstants/Lbl)
 
 // ═══════════════════════════════════════════════════════════
 //  PIPELINE TAB (unchanged)
@@ -3619,236 +2869,6 @@ const PIPELINE_STAGES = { swap: ['awaiting_documents','submitted','under_review'
 function pipelineProgress(type, status) { const stages = PIPELINE_STAGES[type] || PIPELINE_STAGES.swap; const idx = stages.indexOf(status); if (idx < 0) return 0; return Math.round(((idx + 1) / stages.length) * 100); }
 const CONVEYANCING_STAGES = ['offer_accepted','cancellation_notice_sent','attorney_instructed','valuation_ordered','valuation_done','registration_in_progress','registered','complete'];
 
-function PipelineTab({ pipeline, setPipeline, showToast }) {
-  const [filter, setFilter]         = useState('active');
-  const [expanded, setExpanded]     = useState(null);
-  const [brokerForm, setBrokerForm] = useState({});
-  const [sending, setSending]       = useState(null);
-  const [statusUpdating, setStatusUpdating] = useState(null);
-  const [offerForms, setOfferForms] = useState({});
-  const [stageForms, setStageForms] = useState({});
-  const [bankStatusForms, setBankStatusForms] = useState({});
-
-  const filtered = pipeline.filter(e => {
-    if (filter === 'active')  return e.priority === 'active';
-    if (filter === 'unsent')  return e.priority === 'active' && !e.brokerSentAt;
-    if (filter === 'sent')    return !!e.brokerSentAt;
-    return true;
-  });
-  const unsent = pipeline.filter(e => e.priority === 'active' && !e.brokerSentAt).length;
-
-  async function sendToBroker(entry) {
-    const bf = brokerForm[entry.pipelineId] || {};
-    setSending(entry.pipelineId);
-    try {
-      const [type, id] = [entry.type, entry.application.id];
-      const result = await admin.brokerAction(type, id, { brokerName: bf.brokerName || '', brokerEmail: bf.brokerEmail || '', notes: bf.notes || '', action: 'send' });
-      setPipeline(p => p.map(e2 => e2.pipelineId === entry.pipelineId ? { ...e2, brokerSentAt: result.brokerSentAt, brokerSentTo: bf.brokerName || 'Broker' } : e2));
-      showToast('Sent to broker and client notified', 'success');
-    } catch(err) { showToast(err.message || 'Failed', 'error'); }
-    finally { setSending(null); }
-  }
-
-  async function updateStatus(entry, status) {
-    setStatusUpdating(entry.pipelineId);
-    try {
-      await admin.updateSwap(entry.application.id, { status });
-      setPipeline(p => p.map(e2 => e2.pipelineId === entry.pipelineId ? { ...e2, application: { ...e2.application, status } } : e2));
-      showToast('Status updated', 'success');
-    } catch(err) { showToast(err.message || 'Failed', 'error'); }
-    finally { setStatusUpdating(null); }
-  }
-
-  async function recordOffer(entry) {
-    const of = offerForms[entry.pipelineId] || {};
-    if (!of.bank || !of.rate) { showToast('Bank and rate required', 'error'); return; }
-    try {
-      const offer = await admin.recordOffer(entry.application.id, { bank: of.bank, rate: parseFloat(of.rate), monthlyPayment: of.monthlyPayment ? parseFloat(of.monthlyPayment) : null, term: of.term ? parseInt(of.term) : null, conditions: of.conditions || null, initiationFee: of.initiationFee ? parseFloat(of.initiationFee) : null, expiryDays: parseInt(of.expiryDays) || 30 });
-      setPipeline(p => p.map(e2 => e2.pipelineId === entry.pipelineId ? { ...e2, application: { ...e2.application, offers: [...(e2.application.offers||[]), offer] } } : e2));
-      setOfferForms(f => ({ ...f, [entry.pipelineId]: {} }));
-      showToast(`Offer from ${of.bank} recorded — customer notified`, 'success');
-    } catch(err) { showToast(err.message || 'Failed', 'error'); }
-  }
-
-  async function updateStage(entry, stage, note) {
-    try {
-      const updated = await admin.updateStage(entry.application.id, stage, note);
-      setPipeline(p => p.map(e2 => e2.pipelineId === entry.pipelineId ? { ...e2, application: updated } : e2));
-      showToast('Stage updated — customer notified', 'success');
-    } catch(err) { showToast(err.message || 'Failed', 'error'); }
-  }
-
-  async function updateBankStatus(entry, bank, status) {
-    try {
-      const updated = await admin.updateBankStatus(entry.application.id, bank, status);
-      setPipeline(p => p.map(e2 => e2.pipelineId === entry.pipelineId ? { ...e2, application: { ...e2.application, bankStatuses: updated } } : e2));
-      showToast(`${bank} status updated`, 'success');
-    } catch(err) { showToast(err.message || 'Failed', 'error'); }
-  }
-
-  return (
-    <div className="fade-in">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: 4 }}>Broker Pipeline</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            {unsent > 0 && <strong style={{ color: 'var(--lime)' }}>{unsent} ready to send · </strong>}
-            {pipeline.length} total
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[['active','Active'],['unsent','Needs Action'],['sent','Sent'],['all','All']].map(([v, l]) => (
-            <button key={v} onClick={() => setFilter(v)} className={`pipeline-filter-btn ${filter === v ? 'active' : ''}`}>{l}</button>
-          ))}
-        </div>
-      </div>
-
-      {filtered.length === 0 ? <div className="empty-state"><p>No applications in this view.</p></div> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {filtered.map(entry => {
-            const { pipelineId, type, application: app, profile } = entry;
-            const rs = profile?.riskScore;
-            const isOpen = expanded === pipelineId;
-            const progress = pipelineProgress(type, app.status);
-            const bf = brokerForm[pipelineId] || {};
-            const gradeColor = RISK_GRADE_COLOR[rs?.grade] || '#9ca3af';
-            return (
-              <Card key={pipelineId} className={`pipeline-card ${!entry.brokerSentAt && entry.priority === 'active' ? 'pipeline-card--needs-action' : ''}`}>
-                <CardBody>
-                  <div className="pipeline-card__header" onClick={() => setExpanded(isOpen ? null : pipelineId)} style={{ cursor: 'pointer' }}>
-                    <div className="pipeline-card__left">
-                      <div className="pipeline-risk-badge" style={{ background: gradeColor }}>{rs?.grade || '?'}</div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '1rem' }}>
-                          {profile?.name || 'Unknown'}
-                          {type === 'swap' && <span style={{ color: 'var(--text-secondary)', fontWeight: 400, fontSize: '0.875rem', marginLeft: 8 }}>{app.currentBank} → {app.targetBank}</span>}
-                        </div>
-                        <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 2 }}>
-                          {profile?.email}{profile?.phone && <span style={{ marginLeft: 8 }}>· {profile.phone}</span>}
-                          <span style={{ marginLeft: 8 }}>· Applied {fmtDate(app.createdAt || app.submittedAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pipeline-card__right">
-                      {app.monthlySaving > 0 && <div className="pipeline-saving"><span style={{ color: 'var(--mint)', fontWeight: 700 }}>{fmt(app.monthlySaving)}/mo</span><span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>savings</span></div>}
-                      <span className={`pill pill--${app.status === 'approved' || app.status === 'completed' ? 'green' : app.status === 'rejected' ? 'orange' : 'blue'}`}>{(app.status || 'pending').replace(/_/g,' ')}</span>
-                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{isOpen ? '▲' : '▼'}</span>
-                    </div>
-                  </div>
-
-                  <div className="pipeline-progress">
-                    <div className="pipeline-progress__bar"><div className="pipeline-progress__fill" style={{ width: `${progress}%` }} /></div>
-                    <span className="pipeline-progress__label">{progress}% complete</span>
-                  </div>
-
-                  {entry.brokerSentAt && <div className="pipeline-sent-banner">✓ Sent to {entry.brokerSentTo} on {fmtDate(entry.brokerSentAt)}</div>}
-
-                  {isOpen && (
-                    <div className="pipeline-detail fade-in">
-                      <div className="pipeline-detail__grid">
-                        <div className="pipeline-section">
-                          <div className="pipeline-section__title">Financial Profile</div>
-                          {[['Monthly income', fmt(profile?.income||0)], ['Monthly debt', fmt(profile?.debt||0)], ['DTI ratio', profile?.dtiRatio != null ? `${profile.dtiRatio}%` : '—'], ['Max qualifying bond', fmt(profile?.maxBond||0)], ['Employment', (profile?.employmentType||'').replace(/_/g,' ').replace(/\b\w/g,ch=>ch.toUpperCase())||'—']].map(([l,v]) => (
-                            <div key={l} className="pipeline-row"><span>{l}</span><strong>{v}</strong></div>
-                          ))}
-                        </div>
-                        <div className="pipeline-section">
-                          <div className="pipeline-section__title">Risk Score</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
-                            <div className="pipeline-score-circle" style={{ background: gradeColor }}>{rs?.score||'—'}</div>
-                            <div><div style={{ fontWeight: 700, fontSize: '1.125rem' }}>Grade {rs?.grade||'—'}</div><div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>out of 100</div></div>
-                          </div>
-                          {rs?.factors?.map(f => (
-                            <div key={f.name} style={{ marginBottom: 8 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 3 }}><span style={{ color: 'var(--text-secondary)' }}>{f.name}</span><span style={{ fontWeight: 600 }}>{f.score}/100</span></div>
-                              <div style={{ background: 'var(--border-color)', borderRadius: 4, height: 5 }}><div style={{ background: gradeColor, width: `${f.score}%`, height: '100%', borderRadius: 4, transition: 'width 0.5s' }} /></div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="pipeline-section">
-                          <div className="pipeline-section__title">Documents</div>
-                          {['identity','income','bank_statement','bond_statement','residence'].map(cat => {
-                            const doc = (app.documents||[]).find(d=>(d.category||'').toLowerCase()===cat)||(profile?.documents||[]).find(d=>(d.category||'').toLowerCase()===cat);
-                            const labels = { identity:'SA ID / Passport', income:'Payslips (3 months)', bank_statement:'Bank statements', bond_statement:'Bond statement', residence:'Proof of residence' };
-                            return <div key={cat} className={`pipeline-doc-item ${doc?'pipeline-doc-item--done':''}`}><span>{doc?'✓':'○'}</span><span>{labels[cat]}</span></div>;
-                          })}
-                        </div>
-                        {profile?.loans?.length > 0 && (
-                          <div className="pipeline-section">
-                            <div className="pipeline-section__title">Current Bond</div>
-                            {[['Bank',profile.loans[0].bank],['Balance',fmt(profile.loans[0].amount)],['Rate',fmtPct(profile.loans[0].rate)],['Term',`${profile.loans[0].term} years`],['Monthly saving',app.monthlySaving?fmt(app.monthlySaving):'—']].map(([l,v]) => (
-                              <div key={l} className="pipeline-row"><span>{l}</span><strong>{v||'—'}</strong></div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="pipeline-actions">
-                        <div className="pipeline-actions__status">
-                          <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Status:</span>
-                          {['submitted','under_review','approved','in_progress','completed','rejected'].map(s => (
-                            <button key={s} className={`pipeline-status-btn ${app.status===s?'active':''}`} onClick={() => updateStatus(entry, s)} disabled={statusUpdating===pipelineId}>{s.replace(/_/g,' ')}</button>
-                          ))}
-                        </div>
-                        {type === 'swap' && (() => {
-                          const of = offerForms[pipelineId] || {};
-                          return (
-                            <div className="pipeline-actions__section">
-                              <div className="pipeline-section__title">Record Bank Offer</div>
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 8 }}>
-                                <div><label className="pipeline-label">Bank</label><select value={of.bank||''} onChange={e=>setOfferForms(f=>({...f,[pipelineId]:{...f[pipelineId],bank:e.target.value}}))} className="pipeline-input"><option value="">Select</option>{['ABSA','FNB','Nedbank','Standard Bank','Capitec','Investec','SA Home Loans'].map(b=><option key={b} value={b}>{b}</option>)}</select></div>
-                                <div><label className="pipeline-label">Rate (%)</label><input type="number" step="0.05" value={of.rate||''} onChange={e=>setOfferForms(f=>({...f,[pipelineId]:{...f[pipelineId],rate:e.target.value}}))} className="pipeline-input" placeholder="10.5" /></div>
-                                <div><label className="pipeline-label">Monthly (R)</label><input type="number" value={of.monthlyPayment||''} onChange={e=>setOfferForms(f=>({...f,[pipelineId]:{...f[pipelineId],monthlyPayment:e.target.value}}))} className="pipeline-input" placeholder="12500" /></div>
-                              </div>
-                              <Button variant="lime" size="sm" onClick={() => recordOffer(entry)}>Record offer + notify</Button>
-                              {(app.offers||[]).length > 0 && <div style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{(app.offers||[]).map(o=>`${o.bank} ${o.rate}%`).join(', ')}</div>}
-                            </div>
-                          );
-                        })()}
-                        {type === 'swap' && ['in_progress','completed','approved'].includes(app.status) && (() => {
-                          const sf = stageForms[pipelineId] || {};
-                          return (
-                            <div className="pipeline-actions__section">
-                              <div className="pipeline-section__title">Conveyancing Stage</div>
-                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                                <div><label className="pipeline-label">Stage</label><select value={sf.stage||app.conveyancingStage||''} onChange={e=>setStageForms(f=>({...f,[pipelineId]:{...f[pipelineId],stage:e.target.value}}))} className="pipeline-input" style={{ minWidth: 200 }}><option value="">Select stage</option>{CONVEYANCING_STAGES.map(s=><option key={s} value={s}>{s.replace(/_/g,' ')}</option>)}</select></div>
-                                <div style={{ flex: 1, minWidth: 180 }}><label className="pipeline-label">Note</label><input type="text" value={sf.note||''} onChange={e=>setStageForms(f=>({...f,[pipelineId]:{...f[pipelineId],note:e.target.value}}))} className="pipeline-input" style={{ width: '100%' }} placeholder="Optional note" /></div>
-                                <Button variant="forest" size="sm" onClick={() => { if (sf.stage) updateStage(entry, sf.stage, sf.note); }}>Update + notify</Button>
-                              </div>
-                              {app.conveyancingStage && <div style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>Current: <strong>{app.conveyancingStage.replace(/_/g,' ')}</strong></div>}
-                            </div>
-                          );
-                        })()}
-                        {!entry.brokerSentAt ? (
-                          <div className="pipeline-actions__broker">
-                            <div className="pipeline-section__title">Send to Mortgage Broker</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                              <div><label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Broker name</label><input type="text" placeholder="John Smith" value={bf.brokerName||''} onChange={e=>setBrokerForm(f=>({...f,[pipelineId]:{...f[pipelineId],brokerName:e.target.value}}))} className="pipeline-input" /></div>
-                              <div><label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Broker email</label><input type="email" placeholder="broker@example.com" value={bf.brokerEmail||''} onChange={e=>setBrokerForm(f=>({...f,[pipelineId]:{...f[pipelineId],brokerEmail:e.target.value}}))} className="pipeline-input" /></div>
-                            </div>
-                            <div style={{ marginBottom: 12 }}><label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>Notes</label><textarea placeholder="Context for broker…" value={bf.notes||''} onChange={e=>setBrokerForm(f=>({...f,[pipelineId]:{...f[pipelineId],notes:e.target.value}}))} className="pipeline-input pipeline-textarea" rows={2} /></div>
-                            <div style={{ display: 'flex', gap: 12 }}>
-                              <Button variant="lime" size="sm" loading={sending===pipelineId} onClick={() => sendToBroker(entry)}>Send to broker + notify client</Button>
-                              <a href={admin.profilePdfUrl(type, app.id)} target="_blank" rel="noreferrer" className="btn btn--ghost btn--sm">Download PDF</a>
-                            </div>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', gap: 12 }}>
-                            <a href={admin.profilePdfUrl(type, app.id)} target="_blank" rel="noreferrer" className="btn btn--ghost btn--sm">Download PDF</a>
-                            <Button variant="outline" size="sm" onClick={() => setPipeline(p => p.map(e2 => e2.pipelineId === pipelineId ? { ...e2, brokerSentAt: null, brokerSentTo: null } : e2))}>Resend</Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </CardBody>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════
 //  BUYER PIPELINE TAB (unchanged)
@@ -4233,6 +3253,32 @@ function IntakeCard({ app, onChange, showToast }) {
       )}
     </div>
     </>
+  );
+}
+
+// Unified Deals module — hosts the four deal pipelines (Broker Queue, Switch
+// Apps, Submissions, Bond Desk) as sub-tabs under one nav item, replacing four
+// separate nav entries. Reuses the existing components unchanged.
+function DealsTab({ swapApps, setSwapApps, submissions, setSubmissions, showToast, setTab, initialSub }) {
+  const [sub, setSub] = useState(initialSub || 'pipeline');
+  const SUBS = [
+    ['pipeline',     'Broker Queue'],
+    ['applications', 'Switch Apps'],
+    ['submissions',  'Submissions'],
+    ['bond-desk',    'Bond Desk'],
+  ];
+  return (
+    <div className="fade-in">
+      <div className="cust-toolbar" style={{ gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {SUBS.map(([id, label]) => (
+          <button key={id} className={`cust-filter-chip ${sub === id ? 'active' : ''}`} onClick={() => setSub(id)}>{label}</button>
+        ))}
+      </div>
+      {sub === 'pipeline'     && <ApplicationsTab showToast={showToast} onJump={(r) => setSub(r.type === 'swap' ? 'applications' : 'submissions')} />}
+      {sub === 'applications' && <SwapsKanban swapApps={swapApps} setSwapApps={setSwapApps} showToast={showToast} />}
+      {sub === 'submissions'  && <BankSubmissionsTab submissions={submissions} setSubmissions={setSubmissions} showToast={showToast} />}
+      {sub === 'bond-desk'    && <BondDeskTab showToast={showToast} />}
+    </div>
   );
 }
 
@@ -4980,9 +4026,30 @@ function StaffTab({ showToast }) {
   const [pendingInvites, setPending]  = useState([]);
   const [loading, setLoading]         = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole]   = useState('admin');
   const [inviting, setInviting]       = useState(false);
   const [resetId, setResetId]         = useState(null);
   const [newPassword, setNewPassword] = useState('');
+
+  // Access-level presentation. superadmin is fixed (the owner account);
+  // admin = full access; investor = read-only curated views.
+  const ROLE_META = {
+    superadmin: { label: 'Super Admin', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+    admin:      { label: 'Admin',       color: 'var(--forest)', bg: 'rgba(45,90,61,0.12)' },
+    investor:   { label: 'Investor',    color: '#4a7fa5', bg: 'rgba(74,127,165,0.12)' },
+  };
+  const RolePill = ({ level }) => {
+    const m = ROLE_META[level] || ROLE_META.admin;
+    return <span style={{ fontSize: '0.7rem', fontWeight: 700, color: m.color, background: m.bg, padding: '2px 9px', borderRadius: 12, whiteSpace: 'nowrap' }}>{m.label}</span>;
+  };
+
+  async function changeRole(id, accessLevel) {
+    try {
+      await admin.setStaffRole(id, accessLevel);
+      setStaff(s => s.map(m => m.id === id ? { ...m, accessLevel } : m));
+      showToast(`Role updated to ${ROLE_META[accessLevel]?.label || accessLevel}`, 'success');
+    } catch (err) { showToast(err.message || 'Could not change role', 'error'); }
+  }
 
   useEffect(() => {
     admin.staff()
@@ -4995,8 +4062,8 @@ function StaffTab({ showToast }) {
     if (!inviteEmail.trim()) { showToast('Enter an email address', 'error'); return; }
     setInviting(true);
     try {
-      const res = await admin.inviteStaff(inviteEmail.trim());
-      setPending(p => [...p, { id: Date.now(), email: inviteEmail.trim(), expiresAt: res.expiresAt, createdAt: new Date().toISOString() }]);
+      const res = await admin.inviteStaff(inviteEmail.trim(), inviteRole);
+      setPending(p => [...p, { id: Date.now(), email: inviteEmail.trim(), accessLevel: inviteRole, expiresAt: res.expiresAt, createdAt: new Date().toISOString() }]);
       setInviteEmail('');
       showToast(`Invite sent to ${inviteEmail.trim()}`, 'success');
     } catch (err) { showToast(err.message || 'Could not send invite', 'error'); }
@@ -5040,7 +4107,7 @@ function StaffTab({ showToast }) {
             Enter their work email. They'll receive a link to create their own account and password.
             The link expires after 72 hours.
           </p>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <Input
               label="Work email address"
               id="sf-invite-email"
@@ -5049,8 +4116,16 @@ function StaffTab({ showToast }) {
               onChange={e => setInviteEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendInvite()}
               placeholder="e.g. oliver@bondly.co.za"
-              style={{ flex: 1 }}
+              style={{ flex: 1, minWidth: 200 }}
             />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label htmlFor="sf-invite-role" style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Access level</label>
+              <select id="sf-invite-role" value={inviteRole} onChange={e => setInviteRole(e.target.value)}
+                style={{ padding: '9px 12px', fontSize: '0.875rem', border: '1.5px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                <option value="admin">Admin — full access</option>
+                <option value="investor">Investor — read-only</option>
+              </select>
+            </div>
             <Button variant="forest" onClick={sendInvite} loading={inviting} disabled={!inviteEmail.trim()}>
               Send invite
             </Button>
@@ -5075,6 +4150,7 @@ function StaffTab({ showToast }) {
                         Invited {fmtDate(i.createdAt)} · expires {fmtDate(i.expiresAt)}
                       </div>
                     </div>
+                    <RolePill level={i.accessLevel || 'admin'} />
                     <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 600, background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: 12 }}>Pending</span>
                     {i.token && (
                       <Button variant="ghost" size="sm" style={{ color: 'var(--color-error)' }} onClick={() => cancelInvite(i.token, i.email)}>Cancel</Button>
@@ -5105,11 +4181,23 @@ function StaffTab({ showToast }) {
                     {m.name?.[0]?.toUpperCase() || '?'}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.name}</div>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {m.name}
+                      <RolePill level={m.accessLevel} />
+                    </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{m.email}</div>
                     {m.createdAt && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: 2 }}>Joined {fmtDate(m.createdAt)}</div>}
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  {m.isSuperAdmin ? (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic', flexShrink: 0 }}>Owner — locked</span>
+                  ) : (
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0, alignItems: 'center' }}>
+                    <select value={m.accessLevel === 'superadmin' ? 'admin' : m.accessLevel} onChange={e => changeRole(m.id, e.target.value)}
+                      title="Change access level"
+                      style={{ padding: '5px 8px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-page)', color: 'var(--text-primary)' }}>
+                      <option value="admin">Admin</option>
+                      <option value="investor">Investor</option>
+                    </select>
                     {resetId === m.id ? (
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         <input
@@ -5127,6 +4215,7 @@ function StaffTab({ showToast }) {
                       </>
                     )}
                   </div>
+                  )}
                 </div>
               ))}
             </div>

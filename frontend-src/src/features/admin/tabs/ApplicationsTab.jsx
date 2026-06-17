@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../components/AdminTable.jsx';
-import { admin } from '../../../lib/api.js';
+import { admin, adminApi } from '../../../lib/api.js';
 import { fmt } from '@bondly/ui/lib/format.js';
 
 /**
@@ -112,8 +112,8 @@ export default function ApplicationsTab({ showToast, onJump }) {
       render: r => (
         <span style={{
           padding: '2px 10px', borderRadius: 999,
-          background: r.type === 'swap' ? 'rgba(74,127,165,0.15)' : 'rgba(30,58,95,0.15)',
-          color:      r.type === 'swap' ? '#1e3a5f' : '#152d4a',
+          background: r.type === 'swap' ? 'rgba(74,127,165,0.15)' : 'rgba(74,158,107,0.15)',
+          color:      r.type === 'swap' ? '#1e3a5f' : '#16502d',
           fontSize: '0.75rem', fontWeight: 700,
         }}>{r.type === 'swap' ? 'Switch' : 'Origination'}</span>
       ),
@@ -171,18 +171,18 @@ export default function ApplicationsTab({ showToast, onJump }) {
       label: 'Pack',
       width: 140,
       render: r => {
-        const tok = encodeURIComponent(localStorage.getItem('bondly_token') || '');
         return (
           <span style={{ display: 'inline-flex', gap: 6 }} onClick={e => e.stopPropagation()}>
-            <a href={`/api/admin/applications/${r.id}/broker-pdf?token=${tok}`}
-               target="_blank" rel="noopener noreferrer"
-               style={{ padding: '4px 8px', background: 'rgba(30,58,95,0.12)', color: 'var(--forest)', borderRadius: 6, fontSize: '0.6875rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            <button type="button"
+               onClick={() => adminApi.download(`/api/admin/applications/${r.id}/broker-pdf`, `bondly-application-${r.id}.pdf`).catch(() => {})}
+               style={{ padding: '4px 8px', background: 'rgba(74,158,107,0.12)', color: 'var(--forest)', borderRadius: 6, fontSize: '0.6875rem', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
               PDF
-            </a>
-            <a href={`/api/admin/applications/${r.id}/broker-pack.zip?token=${tok}`}
-               style={{ padding: '4px 8px', background: 'rgba(74,127,165,0.12)', color: '#1e3a5f', borderRadius: 6, fontSize: '0.6875rem', fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            </button>
+            <button type="button"
+               onClick={() => adminApi.download(`/api/admin/applications/${r.id}/broker-pack.zip`, `bondly-pack-${r.id}.zip`).catch(() => {})}
+               style={{ padding: '4px 8px', background: 'rgba(74,127,165,0.12)', color: '#1e3a5f', borderRadius: 6, fontSize: '0.6875rem', fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
               ZIP
-            </a>
+            </button>
           </span>
         );
       },

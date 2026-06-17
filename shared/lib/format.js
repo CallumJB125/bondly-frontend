@@ -41,6 +41,12 @@ export function fmtDate(dateStr) {
   return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+export function daysAgo(iso) {
+  if (!iso) return '—';
+  const d = Math.floor((Date.now() - new Date(iso)) / 86400000);
+  return d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d}d ago`;
+}
+
 export function fmtMonthYear(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);

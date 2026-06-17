@@ -54,8 +54,9 @@
 
 .fl-summary__stat {
   background: var(--surface-raised, #f8f8f8);
+  border: 1px solid var(--border, #e0e0e0);
   border-radius: 8px;
-  padding: 15px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -75,8 +76,9 @@
 
 .fl-section {
   background: var(--surface, #fff);
-  border-radius: 8px;
-  padding: 22px;
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 10px;
+  padding: 20px;
   margin-bottom: 20px;
 }
 
