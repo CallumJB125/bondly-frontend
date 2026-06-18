@@ -368,6 +368,12 @@ export async function pollParseJob(jobId, { onProgress } = {}) {
         if (!j.success) throw new Error(j.error || 'Analysis failed');
         if (j.data.status === 'done')   return j.data.result;
         if (j.data.status === 'failed') throw new Error(j.data.error || 'Statement analysis failed — please try again');
+        if (j.data.status === 'review') {
+          const reviewErr = new Error('STATEMENT_NEEDS_REVIEW');
+          reviewErr.isReview = true;
+          reviewErr.reviewReasons = (j.data.review_reasons || j.data.review_reason) ? [].concat(j.data.review_reason || j.data.review_reasons) : [];
+          throw reviewErr;
+        }
         // status === 'processing' — surface progress message and keep polling
         if (j.data.progress && onProgress) onProgress(j.data.progress);
       } catch (e) {
@@ -385,6 +391,12 @@ export async function pollParseJob(jobId, { onProgress } = {}) {
       const j = await r.json();
       if (j?.success && j.data?.status === 'done')   return j.data.result;
       if (j?.success && j.data?.status === 'failed') throw new Error(j.data.error || 'Statement analysis failed — please try again');
+      if (j?.success && j.data?.status === 'review') {
+        const reviewErr = new Error('STATEMENT_NEEDS_REVIEW');
+        reviewErr.isReview = true;
+        reviewErr.reviewReasons = (j.data.review_reasons || j.data.review_reason) ? [].concat(j.data.review_reason || j.data.review_reasons) : [];
+        throw reviewErr;
+      }
     } catch (e) {
       if (e.message && !e.message.startsWith('Failed to fetch') && !e.message.startsWith('NetworkError') && !e.message.startsWith('Load failed')) throw e;
     }
@@ -728,3 +740,4 @@ export const getIntelligenceAccounts  = (params) => {
 };
 export const getIntelligenceAccount = (userId) => apiFetch(`/api/intelligence/account/${encodeURIComponent(userId)}`);
 export const getIntelligenceAlerts  = (resolved = false) => apiFetch(`/api/intelligence/alerts?resolved=${resolved}`);
+export const resolveIntelligenceAlert = (alertId) => apiFetch(`/api/intelligence/alerts/${encodeURIComponent(alertId)}/resolve`, { method: 'PUT' });
