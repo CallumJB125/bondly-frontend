@@ -154,6 +154,9 @@ export default function OriginationLanding() {
     trackAction('whatsapp_clicked', { source });
   }, []);
 
+  // Landing page funnel entry — fires once on mount
+  useEffect(() => { trackAction('origination_funnel_entered', {}); }, []);
+
   // calculator_completed — once per session when an estimate first appears
   useEffect(() => {
     if (maxBond > 0 && !completedRef.current) {
@@ -357,12 +360,12 @@ export default function OriginationLanding() {
       <section className="orig-steps-band" id="how-it-works">
         <div className="orig-wrap">
           <div className="orig-sec-eyebrow">How it works</div>
-          <h2 className="orig-h2">From statement to approval in two steps</h2>
+          <h2 className="orig-h2">From income to offer in two steps</h2>
           <div className="orig-steps">
             <Reveal className="orig-step">
               <div className="orig-step__num">1</div>
-              <h3>Upload your bank statement</h3>
-              <p>Drag in your latest PDF. Bondly reads your income, debts and spending in 90 seconds — salary credits and recurring debts detected automatically. No manual forms.</p>
+              <h3>Enter your income — get an instant estimate</h3>
+              <p>Type your monthly salary and existing debt. Bondly calculates your qualifying bond and monthly repayment in seconds — no documents, no sign-up, no credit check. Want a more accurate result? Optionally upload your bank statement after.</p>
             </Reveal>
             <Reveal className="orig-step" delay={90}>
               <div className="orig-step__num">2</div>
