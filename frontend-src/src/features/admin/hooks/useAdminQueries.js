@@ -84,6 +84,16 @@ export function useAnalyticsOverview(days = 30, options = {}) {
   });
 }
 
+// Daily trend series (signups, sessions, revenue). apiFetch unwraps to { days, series }.
+export function useAnalyticsTrends(days = 30, options = {}) {
+  return useQuery({
+    queryKey: ['analytics', 'trends', days],
+    queryFn: () => adminAnalytics.trends(days).then(d => d?.series || []),
+    staleTime: 60_000,
+    ...options,
+  });
+}
+
 export function useAnalyticsFunnels(days = 30, options = {}) {
   return useQuery({
     queryKey: ['analytics', 'funnels', days],

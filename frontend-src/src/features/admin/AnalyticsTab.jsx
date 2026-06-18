@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAnalytics } from '../../lib/api.js';
 import { fmt } from '@bondly/ui/lib/format.js';
-import { useAdminStats, useAdminCommissions, useAdminLeads } from './hooks/useAdminQueries.js';
+import { useAdminStats, useAdminCommissions, useAdminLeads, useAnalyticsTrends } from './hooks/useAdminQueries.js';
 import './AnalyticsTab.css';
 
 const SUBTABS = [
@@ -108,6 +108,46 @@ function BusinessKpiStrip() {
   );
 }
 
+// ── Trend sparklines ────────────────────────────────────────────────────────────
+function Sparkline({ values, color = '#3b82f6', height = 40 }) {
+  const max = Math.max(...values, 1);
+  const w = 100, h = height;
+  const n = values.length;
+  const pts = values.map((v, i) => `${n > 1 ? (i / (n - 1)) * w : 0},${(h - (v / max) * h).toFixed(2)}`).join(' ');
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ width: '100%', height, display: 'block', marginTop: 8 }}>
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={color} opacity="0.12" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrendsSection({ days }) {
+  const { data: series = [], isLoading } = useAnalyticsTrends(days);
+  const sum = (k) => series.reduce((a, b) => a + (b[k] || 0), 0);
+  const charts = [
+    { key: 'signups',  label: 'New signups', color: '#16a34a', value: sum('signups') },
+    { key: 'sessions', label: 'Sessions',    color: '#3b82f6', value: sum('sessions') },
+    { key: 'revenue',  label: 'Revenue banked', color: '#8b5cf6', value: fmt(sum('revenue')) },
+  ];
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div className="at-card-head" style={{ marginBottom: 10 }}>Trends — last {days} days</div>
+      {isLoading ? <Spinner /> : (
+        <div className="at-kpi-grid">
+          {charts.map(c => (
+            <div key={c.key} className="at-kpi">
+              <div className="at-kpi-label">{c.label}</div>
+              <div className="at-kpi-value" style={{ color: c.color }}>{c.value}</div>
+              <Sparkline values={series.map(s => s[c.key] || 0)} color={c.color} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Overview ──────────────────────────────────────────────────────────────────
 function OverviewPanel({ days }) {
   const [data, setData] = useState(null);
@@ -124,6 +164,7 @@ function OverviewPanel({ days }) {
   return (
     <div>
       <BusinessKpiStrip />
+      <TrendsSection days={days} />
       {loading ? <Spinner /> : !data ? (
         <p className="at-empty">No engagement data yet — analytics events will appear here once users start browsing.</p>
       ) : (

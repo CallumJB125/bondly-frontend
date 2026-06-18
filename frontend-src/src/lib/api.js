@@ -663,6 +663,7 @@ export const finances = {
 // ── Behavioural Analytics (admin) ─────────────────────────
 export const adminAnalytics = {
   overview:        (days = 30)         => apiFetch(`/api/admin/analytics/overview?days=${days}`),
+  trends:          (days = 30)         => apiFetch(`/api/admin/analytics/trends?days=${days}`),
   funnels:         (days = 30)         => apiFetch(`/api/admin/analytics/funnels?days=${days}`),
   funnel:          (id, days = 30)     => apiFetch(`/api/admin/analytics/funnels?funnelId=${id}&days=${days}`),
   sessions:        (params = {})       => {
