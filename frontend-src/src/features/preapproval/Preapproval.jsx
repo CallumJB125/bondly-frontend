@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { InlineFeedback } from '@bondly/ui/components/FeedbackButton.jsx';
 import { trackFormField, track, trackAction } from '@bondly/ui/lib/session.js';
-import { track as aTrack, getVariant, recordConversion } from '@bondly/ui/lib/analytics.js';
+import { track as aTrack } from '@bondly/ui/lib/analytics.js';
 import { Link, useNavigate } from 'react-router-dom';
 import { Smartphone, Briefcase, BarChart2, Target, CheckCircle } from 'lucide-react';
 import { applications, leads, parseStatementForPreapproval, qualifyManual, profile as profileApi } from '../../lib/api.js';
@@ -180,7 +180,6 @@ export default function Preapproval() {
   const [uploadStage, setUploadStage] = useState(0);
   const [isOcrScan, setIsOcrScan]   = useState(false);
   const [parseError, setParseError] = useState(null);
-  const [reviewPending, setReviewPending] = useState(false);
   const [analysis, setAnalysis]     = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [qualifying, setQualifying] = useState(false);
@@ -231,10 +230,7 @@ export default function Preapproval() {
   const navigate  = useNavigate();
 
   // Track funnel entry once on mount
-  useEffect(() => {
-    track('preapproval_started', 'preapproval');
-    getVariant('preapproval_flow').catch(() => {});
-  }, []);
+  useEffect(() => { track('preapproval_started', 'preapproval'); }, []);
 
   // Step timing — fires whenever step changes
   useEffect(() => {
@@ -469,11 +465,6 @@ export default function Preapproval() {
       setStep(2);
     } catch (err) {
       trackAction('statement_upload_failed', { error: String(err.message).slice(0, 80), step: 1 });
-      if (err.isReview) {
-        // Terminal review state — stop polling, show human-review notice (not an error).
-        setReviewPending(true);
-        return;
-      }
       // Long bank-specific messages (IMAGE_PDF) are shown inline — short generic errors use toast
       const msg = err.message || 'Could not read statement — please try a different file';
       if (msg.length > 120) {
@@ -725,26 +716,7 @@ export default function Preapproval() {
           256-bit encrypted · Analysed by AI · Stored securely in South Africa
         </p>
 
-        {reviewPending && (
-          <div className="pa-review-notice fade-in" role="status" aria-live="polite">
-            <div className="pa-review-notice__icon">🔍</div>
-            <div className="pa-review-notice__body">
-              <strong className="pa-review-notice__title">Your statement is being reviewed</strong>
-              <p className="pa-review-notice__msg">
-                Our team is reviewing your statement and will be in touch shortly. You can also continue by entering your income manually below.
-              </p>
-              <button
-                type="button"
-                className="pa-skip-stmt"
-                onClick={() => { setReviewPending(false); setStep(2); setSkippedSteps(prev => new Set([...prev, 1])); }}
-              >
-                Continue manually instead →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {!reviewPending && parseError && (
+        {parseError && (
           <div className="pa-parse-error fade-in" role="alert">
             <div className="pa-parse-error__icon">⚠️</div>
             <div className="pa-parse-error__body">
@@ -1411,7 +1383,6 @@ export default function Preapproval() {
         await leads.submit(payload);
       }
       trackAction('preapproval_submitted', { isLoggedIn, income: inc });
-      recordConversion('preapproval_flow').catch(() => {}); // A-C2
       setStep('done');
     } catch (err) {
       trackAction('preapproval_submit_failed', { error: String(err.message).slice(0, 80) });

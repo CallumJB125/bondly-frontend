@@ -4,7 +4,6 @@ import {
   getIntelligenceAccounts,
   getIntelligenceAccount,
   getIntelligenceAlerts,
-  resolveIntelligenceAlert,
 } from '../../lib/api.js';
 import './Intelligence.css';
 
@@ -219,29 +218,34 @@ function DrillDown({ userId, onClose }) {
                 )}
               </div>
 
-              {/* Right: SHAP reasons — FI-F7: suppressed from synthetic/pilot model */}
+              {/* Right: SHAP reasons */}
               <div>
                 <div className="intel__chart-label">Risk drivers (SHAP)</div>
-                {/* FI-F7: Do not surface adverse-action SHAP reasons from synthetic pilot model.
-                    When a production-certified model is available, remove this suppression block. */}
-                <div style={{
-                  background: '#161b22',
-                  border: '1px solid #30363d',
-                  borderRadius: 6,
-                  padding: '10px 14px',
-                  fontSize: '0.76rem',
-                  color: '#7d8590',
-                  lineHeight: 1.5,
-                }}>
-                  <strong style={{ color: '#d29922' }}>Simulation-trained pilot</strong>
-                  {' — '}SHAP feature attributions are not shown because this model was trained on synthetic data.
-                  Adverse-action reasons must not be derived from a non-production model.
-                  {shapReasons.length > 0 && (
-                    <span style={{ display: 'block', marginTop: 4, color: '#484f58' }}>
-                      ({shapReasons.length} SHAP factor{shapReasons.length !== 1 ? 's' : ''} available — suppressed pending production model certification)
-                    </span>
-                  )}
-                </div>
+                {shapReasons.length === 0 ? (
+                  <div style={{ color: '#7d8590', fontSize: '0.78rem' }}>No SHAP data on latest snapshot.</div>
+                ) : (
+                  <div className="intel__shap-grid">
+                    {shapReasons.slice(0, 6).map((r, i) => {
+                      const isRisk = (r.value ?? r.shap_value ?? 0) > 0;
+                      return (
+                        <div key={i} className="intel__shap-card">
+                          <span className="intel__shap-icon">{isRisk ? '⚠' : '✓'}</span>
+                          <div>
+                            <div className="intel__shap-text">{shapLabel(r.feature || r.key || `Factor ${i+1}`)}</div>
+                            {r.value_display != null && (
+                              <div className="intel__shap-sub">Value: {r.value_display}</div>
+                            )}
+                            {(r.shap_value ?? r.value) != null && (
+                              <div className="intel__shap-sub" style={{ color: isRisk ? '#da3633' : '#238636' }}>
+                                Impact: {isRisk ? '+' : ''}{Number(r.shap_value ?? r.value).toFixed(3)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Latest snapshot stats */}
                 {snapshots.length > 0 && (
@@ -559,16 +563,9 @@ function AlertsTab() {
   async function markResolved(alertId) {
     setResolving(r => ({ ...r, [alertId]: true }));
     try {
-      // Optimistic update — mark locally immediately
+      // Optimistic update — mark locally until next load
       setAlerts(prev => prev.map(a =>
         a.id === alertId ? { ...a, resolved: true } : a
-      ));
-      // FI-F8: persist to backend so it survives reload
-      await resolveIntelligenceAlert(alertId);
-    } catch (e) {
-      // Roll back optimistic update on failure
-      setAlerts(prev => prev.map(a =>
-        a.id === alertId ? { ...a, resolved: false } : a
       ));
     } finally {
       setResolving(r => { const n = { ...r }; delete n[alertId]; return n; });
@@ -660,43 +657,8 @@ const TABS = [
   { id: 'alerts',    label: 'Alerts'    },
 ];
 
-// FI-F7 / G2: Provenance banner — shown at the top of the terminal to make
-// clear this is a simulation-trained pilot model, not a production-certified system.
-function ProvenanceBanner({ provenance }) {
-  if (!provenance) return null;
-  return (
-    <div style={{
-      background: '#161b22',
-      border: '1px solid #d29922',
-      borderRadius: 8,
-      padding: '10px 16px',
-      marginBottom: 16,
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 10,
-    }}>
-      <span style={{ color: '#d29922', fontSize: '1rem', flexShrink: 0 }}>⚠</span>
-      <div style={{ fontSize: '0.78rem', color: '#c9d1d9', lineHeight: 1.5 }}>
-        <strong style={{ color: '#d29922' }}>Simulation-trained pilot</strong>
-        {' — '}model trained on synthetic/demo data.
-        {provenance.auc != null && <> AUC: <strong>{provenance.auc}</strong>.</>}
-        {provenance.calibration != null && <> Calibration: <strong>{provenance.calibration}</strong>.</>}
-        {' '}Risk scores are <strong>relative indicators only</strong>. Do not use for adverse-action decisions without a certified production model.
-      </div>
-    </div>
-  );
-}
-
 export default function Intelligence() {
   const [tab, setTab] = useState('portfolio');
-  const [provenance, setProvenance] = useState(null);
-
-  // FI-F7: load provenance metadata from portfolio endpoint on mount
-  useEffect(() => {
-    getIntelligencePortfolio()
-      .then(d => { if (d?.modelProvenance) setProvenance(d.modelProvenance); })
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="intel">
@@ -706,12 +668,11 @@ export default function Intelligence() {
           <div>
             <span className="intel__badge">Risk Intelligence Terminal</span>
             <h2 className="intel__title">Portfolio Risk Monitor</h2>
-            {/* G2: relabel from "real-time" / "live" to "simulation-trained pilot" */}
-            <p className="intel__subtitle">Simulation-trained pilot — portfolio risk monitoring for your Bondly customer portfolio</p>
+            <p className="intel__subtitle">Real-time default risk monitoring for your Bondly customer portfolio</p>
           </div>
           <div className="intel__last-updated">
-            {/* G2: replace "Live feed" dot with "Simulation-trained pilot" label */}
-            <span style={{ fontSize: '0.72rem', color: '#d29922', fontWeight: 600 }}>Simulation-trained pilot</span>
+            <div className="intel__live-dot" />
+            Live feed
           </div>
         </div>
 
@@ -733,8 +694,6 @@ export default function Intelligence() {
 
       {/* Body */}
       <div className="intel__body" role="tabpanel">
-        {/* FI-F7: provenance banner always visible */}
-        <ProvenanceBanner provenance={provenance} />
         {tab === 'portfolio' && <PortfolioTab />}
         {tab === 'accounts'  && <AccountsTab  />}
         {tab === 'alerts'    && <AlertsTab    />}
