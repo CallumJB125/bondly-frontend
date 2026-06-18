@@ -42,13 +42,15 @@ function shouldMask(el) {
 }
 
 // ── Element fingerprint (tagName#id.classes, ≤60 chars) ──────────────────────
+// A-M6: do NOT include innerText/value — they may contain PII (names, amounts, IDs).
+// Use only structural identifiers: tag, id, classes, aria-label (truncated).
 function fingerprint(el) {
   if (!el || el === document.body) return 'body';
-  const tag  = el.tagName?.toLowerCase() || '';
-  const id   = el.id ? `#${el.id}` : '';
-  const cls  = [...(el.classList || [])].slice(0, 3).map(c => `.${c}`).join('');
-  const txt  = (el.innerText || el.value || el.placeholder || '').slice(0, 20);
-  return `${tag}${id}${cls}${txt ? '[' + txt + ']' : ''}`.slice(0, 60);
+  const tag   = el.tagName?.toLowerCase() || '';
+  const id    = el.id ? `#${el.id}` : '';
+  const cls   = [...(el.classList || [])].slice(0, 3).map(c => `.${c}`).join('');
+  const aria  = (el.getAttribute?.('aria-label') || '').slice(0, 20);
+  return `${tag}${id}${cls}${aria ? '[' + aria + ']' : ''}`.slice(0, 60);
 }
 
 // ── Anonymous ID (persists across sessions for funnel correlation) ────────────
@@ -113,6 +115,20 @@ export function identify(userId) {
       body: JSON.stringify({ id: sid, userId, anonId: getAnonId() }),
     }).catch(() => {});
   }
+}
+
+// A-C2: record a conversion for an experiment after a success event.
+// Call this after any conversion action (e.g. form submit, purchase).
+export async function recordConversion(experimentId) {
+  try {
+    const anonId = getAnonId();
+    await fetch(`/api/analytics/experiment/${experimentId}/convert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
+      body: JSON.stringify({ anonId }),
+    });
+    track('experiment_expose', { experimentId, event: 'converted' });
+  } catch {}
 }
 
 export async function getVariant(experimentId) {
@@ -251,15 +267,27 @@ function handleClick(e) {
     return;
   }
 
-  // Dead click detection — if no navigation or feature_used event fires within 500ms
-  _pendingClick = { fp, ts: now };
-  setTimeout(() => {
-    if (_pendingClick && _pendingClick.fp === fp) {
-      // No meaningful follow-up event — dead click
-      track('dead_click', { target: fp, x: e.clientX, y: e.clientY, vw, vh });
-    }
-    _pendingClick = null;
-  }, 500);
+  // Dead click detection — A-H4: skip intentional non-nav interactive elements.
+  // Inputs, buttons with type=submit/button/reset, selects, textareas, and anchors with href
+  // are intentional — don't flag as dead clicks.
+  const isInteractive = (
+    ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) ||
+    (el.tagName === 'BUTTON' && ['submit', 'button', 'reset'].includes((el.type || '').toLowerCase())) ||
+    (el.tagName === 'A' && el.getAttribute('href')) ||
+    el.getAttribute?.('role') === 'button' ||
+    el.getAttribute?.('role') === 'menuitem' ||
+    el.getAttribute?.('role') === 'tab'
+  );
+  if (!isInteractive) {
+    _pendingClick = { fp, ts: now };
+    setTimeout(() => {
+      if (_pendingClick && _pendingClick.fp === fp) {
+        // No meaningful follow-up event — dead click
+        track('dead_click', { target: fp, x: e.clientX, y: e.clientY, vw, vh });
+      }
+      _pendingClick = null;
+    }, 500);
+  }
 
   // Regular click
   track('click', {
@@ -289,20 +317,43 @@ function handleScroll() {
 }
 
 // ── Form field tracking ───────────────────────────────────────────────────────
-const _formState = {};   // formName → { fields: Set, page }
+// A-H4: _formState tracks which forms have pending fields.
+//        clearFormState(formName) must be called on successful submit to prevent abandon.
+//        detectFormAbandons() only fires on route/page leave — not on every blur.
+const _formState = {};   // formName → { fields: Set, page, submitted: bool }
+
+export function clearFormState(formName) {
+  // Call this on successful form submit to prevent a false abandon event.
+  if (formName) {
+    delete _formState[formName];
+  } else {
+    // Clear all forms (e.g. on navigation to new route)
+    for (const k of Object.keys(_formState)) delete _formState[k];
+  }
+}
+
 function handleFormBlur(e) {
   const el = e.target;
   if (!el || !['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return;
   if (shouldMask(el)) return; // Never track financial/PII fields
   const formName = el.form?.name || el.form?.id || el.closest('form')?.id || 'unknown';
-  if (!_formState[formName]) _formState[formName] = { fields: new Set(), page: window.location.pathname };
+  if (!_formState[formName]) _formState[formName] = { fields: new Set(), page: window.location.pathname, submitted: false };
   _formState[formName].fields.add(el.name || el.id || el.placeholder?.slice(0, 20) || 'field');
   track('form_field', { formName, field: el.name || el.id || 'field', page: window.location.pathname });
 }
 
+function handleFormSubmit(e) {
+  // Mark the form as successfully submitted so detectFormAbandons skips it.
+  const form = e.target;
+  if (!form) return;
+  const formName = form.name || form.id || 'unknown';
+  if (_formState[formName]) _formState[formName].submitted = true;
+}
+
 function detectFormAbandons() {
+  // Only fire for forms that have fields entered but were NOT submitted.
   for (const [formName, state] of Object.entries(_formState)) {
-    if (state.fields.size > 0) {
+    if (state.fields.size > 0 && !state.submitted) {
       track('form_abandon', {
         formName,
         fieldsEntered: state.fields.size,
@@ -310,6 +361,8 @@ function detectFormAbandons() {
       });
     }
   }
+  // Clear state after reporting — prevents double-fire on visibilitychange + pagehide
+  for (const k of Object.keys(_formState)) delete _formState[k];
 }
 
 // ── API performance monkey-patch ──────────────────────────────────────────────
@@ -389,6 +442,7 @@ export function initAnalytics() {
   document.addEventListener('keydown',   handleKeydown,   { passive: true });
   document.addEventListener('mousemove', handleMouseMove, { passive: true });
   document.addEventListener('focusout',  handleFormBlur,  { passive: true });
+  document.addEventListener('submit',    handleFormSubmit, { passive: true });
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
@@ -416,6 +470,7 @@ export function initAnalytics() {
     document.removeEventListener('keydown', handleKeydown);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('focusout', handleFormBlur);
+    document.removeEventListener('submit', handleFormSubmit);
     _initialized = false;
   };
 }

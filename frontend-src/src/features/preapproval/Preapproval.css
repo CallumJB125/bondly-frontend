@@ -232,6 +232,26 @@
   text-decoration: underline;
 }
 
+/* FI/A-H4: human-review notice (statement queued for manual review, not an error) */
+.pa-review-notice {
+  display: flex;
+  gap: var(--space-3);
+  background: rgba(200,168,75,0.08);
+  border: 1px solid rgba(200,168,75,0.28);
+  border-radius: 8px;
+  padding: calc(var(--space-4) * 1.1);
+  margin-top: var(--space-3);
+}
+.pa-review-notice__icon { font-size: 1.25rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.pa-review-notice__body { flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
+.pa-review-notice__title { font-size: 0.9rem; color: var(--text-primary); }
+.pa-review-notice__msg {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 .pa-upload-why {
   font-size: 0.875rem;
   color: var(--text-secondary);
