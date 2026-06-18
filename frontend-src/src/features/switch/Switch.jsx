@@ -4,8 +4,9 @@ import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
 import { publicAlerts, parseStatementForPreapproval } from '../../lib/api.js';
-import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, START_APPLICATION } from '@bondly/ui/lib/constants.js';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import { useApplicationDraft } from '@bondly/ui/lib/applicationDraft.jsx';
 import './Switch.css';
 
 const PRIME = PRIME_RATE;
@@ -98,7 +99,7 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
               else { navigate('/register?intent=switch'); }
             }}
           >
-            Apply for a free review →
+            {START_APPLICATION} →
           </button>
           {onSeeOffers && (
             <button
@@ -419,6 +420,7 @@ export default function Switch({ demo = false }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { primeRate: livePrime } = useRateSettings();
+  const appDraft = useApplicationDraft();
 
   // Call getInitialForm exactly once via ref so sessionStorage is only consumed once
   const initialFormRef = useRef(null);
@@ -507,8 +509,20 @@ export default function Switch({ demo = false }) {
     if (!user) {
       setMode('contact');
     } else {
-      setMode('confirm');
-      setProceeded(true);
+      // Write hook state into the shared draft context so ApplyTab can pre-fill.
+      // currentBalance holds the derived outstanding bond (NOT deposit — this is a refinance).
+      appDraft.set({
+        currentBalance: Math.round(deriveBalance(monthlyInput, currentRate, termYears)),
+        currentBank:    form.bank    || null,
+        currentRate:    currentRate  || null,
+        currentMonthly: monthlyInput || null,
+        monthsRemaining: Math.round((parseFloat(form.term) || 20) * 12) || null,
+        purpose:        'Refinance',
+        income:         null,
+        debt:           null,
+        source:         'switch',
+      });
+      navigate('/dashboard', { state: { tab: 'apply' } });
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Clock, Building2, TrendingDown, ChevronRight } from 'lucide-react';
 import { myApplication, financialFitness } from '../../lib/api.js';
 import ApplicationDocumentsUpload from './ApplicationDocumentsUpload.jsx';
@@ -6,9 +6,12 @@ import { useToast } from '@bondly/ui/components/Toast.jsx';
 import { calcMaxBond, calcMonthly } from '@bondly/ui/lib/finance.js';
 import { usePrimeRate } from '@bondly/ui/lib/usePrimeRate.js';
 import { fmt } from '@bondly/ui/lib/format.js';
+import { track as aTrack } from '@bondly/ui/lib/analytics.js';
 import Button from '@bondly/ui/components/Button.jsx';
 import Card, { CardHeader, CardBody } from '@bondly/ui/components/Card.jsx';
 import Input, { Select } from '@bondly/ui/components/Input.jsx';
+import StepProgress from '@bondly/ui/components/StepProgress.jsx';
+import { useApplicationDraft } from '@bondly/ui/lib/applicationDraft.jsx';
 
 function calcTransferDuty(price) {
   let duty = 0;
@@ -169,13 +172,15 @@ function _readPersistedForm() {
 function _readPersistedStep() {
   try {
     const v = parseInt(sessionStorage.getItem(APPLY_STEP_KEY) || '1', 10);
-    return Number.isFinite(v) && v >= 1 && v <= 4 ? v : 1;
+    return Number.isFinite(v) && v >= 1 && v <= 5 ? v : 1;
   } catch { return 1; }
 }
 
 export default function ApplyTab({ loans, onRefresh }) {
   const primeRate = usePrimeRate();
+  const draft = useApplicationDraft();
   const [step, setStep]               = useState(_readPersistedStep);
+  const stepEnteredAt = useRef(Date.now());
   const [form, setForm]               = useState(() => _readPersistedForm() || ({
     income: '', expenses: '', debt: '', deposit: '',
     propertyPrice: '', propertyType: 'House', propertyStatus: 'Existing',
@@ -195,11 +200,46 @@ export default function ApplyTab({ loans, onRefresh }) {
   useEffect(() => {
     try { sessionStorage.setItem(APPLY_STEP_KEY, String(step)); } catch {/* ok */}
   }, [step]);
+
+  // Pre-fill from application draft context (set by Switch.jsx handoff).
+  // Runs once on mount; _readPersistedStep already loaded step from sessionStorage,
+  // so only apply the draft when source is 'switch' and no persisted step is ahead.
+  useEffect(() => {
+    if (draft.source !== 'switch') return;
+    setForm(f => ({
+      ...f,
+      purpose:        'Refinance',
+      income:         draft.income   != null ? String(draft.income)   : f.income,
+      debt:           draft.debt     != null ? String(draft.debt)      : f.debt,
+      // Do NOT write deposit — this is a refinance, not a purchase.
+      currentBalance: draft.currentBalance != null ? String(Math.round(draft.currentBalance)) : f.currentBalance,
+      currentBank:    draft.currentBank    != null ? draft.currentBank    : f.currentBank,
+      currentRate:    draft.currentRate    != null ? String(draft.currentRate)    : f.currentRate,
+    }));
+    // Mark budget stage complete by advancing to step 2 if currently at step 1.
+    setStep(s => s === 1 ? 2 : s);
+    // Clear the draft so a subsequent cold-start doesn't re-apply it.
+    draft.set({ source: null });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [loading, setLoading]         = useState(false);
   const [submittedBond, setSubmittedBond] = useState(null);
   const [appStatus, setAppStatus]     = useState(null);
   const [appLoading, setAppLoading]   = useState(true);
   const [prefillSource, setPrefillSource] = useState(null); // 'snapshot' | null
+  const prefillSourceRef = useRef(null);
+  // Keep ref in sync so step-enter effect always reads the latest value without
+  // needing prefillSource in its dependency array (which would re-fire on prefill).
+  useEffect(() => { prefillSourceRef.current = prefillSource; }, [prefillSource]);
+
+  // Funnel step-enter tracking — mirrors the pattern in Preapproval.jsx
+  useEffect(() => {
+    const prev = stepEnteredAt.current;
+    stepEnteredAt.current = Date.now();
+    // entry_source: 'snapshot' when pre-filled from statement analysis, else 'cold_start'
+    const entry_source = prefillSourceRef.current === 'snapshot' ? 'snapshot' : 'cold_start';
+    aTrack('apply_step_enter', { step, prevDurationMs: Date.now() - prev, entry_source });
+  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
   const showToast = useToast();
 
   // Check for existing active application on mount; pre-fill income from latest snapshot
@@ -278,7 +318,7 @@ export default function ApplyTab({ loans, onRefresh }) {
       const swapBalance = parseFloat(form.currentBalance) || 0;
       const bondAmount = Math.round(isSwap ? swapBalance : (prop ? Math.max(prop - dep, 0) : maxBond));
       const appRes = await myApplication.start({
-        requestedAmount: Math.round(isSwap ? swapBalance : maxBond),
+        requestedAmount: Math.round(isSwap ? swapBalance : (maxBond || bondAmount)),
         type: isSwap ? 'swap' : 'origination',
         income: inc, expenses: exp, debt: dbt, deposit: dep,
         employment: form.employment,
@@ -308,6 +348,11 @@ export default function ApplyTab({ loans, onRefresh }) {
       });
       setAppStatus(appRes.application);
       setSubmittedBond(maxBond);
+      aTrack('apply_submitted', {
+        entry_source: prefillSourceRef.current === 'snapshot' ? 'snapshot' : 'cold_start',
+        requestedAmount: Math.round(isSwap ? swapBalance : (maxBond || bondAmount)),
+        purpose: form.purpose,
+      });
       showToast('Application submitted! We are going to market for you.', 'success');
       setStep(5);
       // Clear the persisted draft — the application is now live, not a draft.
@@ -401,16 +446,8 @@ export default function ApplyTab({ loans, onRefresh }) {
     );
   }
 
-  const Progress = () => (
-    <div className="apply-progress">
-      {['Your budget', 'The property', 'Your situation', 'Submit'].map((label, i) => (
-        <div key={label} className={`apply-progress__step ${step > i + 1 ? 'completed' : step === i + 1 ? 'active' : ''}`}>
-          <div className="apply-progress__dot">{step > i + 1 ? '✓' : i + 1}</div>
-          <span>{label}</span>
-        </div>
-      ))}
-    </div>
-  );
+  const APPLY_STEPS = ['Your budget', 'Current bond', 'Your situation', 'Documents', 'Submit'];
+  const Progress = () => <StepProgress steps={APPLY_STEPS} current={step} />;
 
   return (
     <div className="fade-in">
@@ -444,6 +481,13 @@ export default function ApplyTab({ loans, onRefresh }) {
                 <Input label="Monthly debt payments (R)" id="paDbt" type="number" value={form.debt} onChange={set('debt')} placeholder="car, personal loans" />
               </div>
 
+              {!form.income && (
+                <div className="apply-bond-estimate fade-in" style={{ opacity: 0.7 }}>
+                  <div className="apply-bond-estimate__inner">
+                    <div className="apply-bond-estimate__label" style={{ color: 'var(--text-secondary)' }}>Add your income above to see how much you could borrow</div>
+                  </div>
+                </div>
+              )}
               {maxBond > 0 && (
                 <div className="apply-bond-estimate fade-in">
                   <div className="apply-bond-estimate__inner">
@@ -478,7 +522,7 @@ export default function ApplyTab({ loans, onRefresh }) {
                   )}
                 </div>
               )}
-              <Button variant="lime" full onClick={() => setStep(2)} disabled={!form.income}>Next: Property →</Button>
+              <Button variant="lime" full onClick={() => setStep(2)}>Next: Property →</Button>
             </div>
           </CardBody>
         </Card>
