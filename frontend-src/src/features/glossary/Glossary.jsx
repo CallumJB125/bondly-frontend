@@ -7,25 +7,21 @@ const TERMS = [
     id: 'bond-originator',
     term: 'Bond Originator',
     definition: 'A licensed financial intermediary (registered under FAIS) that submits home loan applications to multiple banks on a borrower\'s behalf and negotiates rates. They earn a referral fee from the bank, so the service is free to you. Bondly is not a bond originator — we are a comparison platform that helps you understand your options and prepare before you apply directly.',
-    related: [{ label: 'Is Bondly free?', to: '/faq#is-bondly-free' }],
   },
   {
     id: 'bond-registration',
     term: 'Bond Registration',
     definition: 'The legal process of registering a new mortgage bond at the Deeds Office. This is done by the bank\'s appointed attorney and gives the bank a legal security interest in your property. Bond registration costs are a once-off fee paid at the time of purchase or switch — they typically range from R15,000 to R40,000 depending on the bond size.',
-    related: [{ label: 'What are switching costs?', to: '/faq#switching-costs' }],
   },
   {
     id: 'cancellation-notice',
     term: 'Bond Cancellation Notice',
     definition: 'When switching home loan providers, the National Credit Act (NCA) requires you to give your current bank 90 days\' notice of cancellation. Failure to give this notice results in a penalty equal to 3 months\' interest. Bondly provides the cancellation notice template and guidance so you can send it the moment you decide to proceed.',
-    related: [{ label: 'What does switching cost?', to: '/faq#switching-costs' }],
   },
   {
     id: 'conveyancer',
     term: 'Conveyancer',
     definition: 'A specialist attorney admitted to practice conveyancing, responsible for the legal transfer of ownership of property from one party to another. They lodge the transfer documents at the Deeds Office, collect transfer duty on behalf of SARS, and ensure the title deed is registered in the buyer\'s name. There are typically two conveyancers in a property transaction: the transfer attorney (appointed by the seller) and the bond attorney (appointed by the bank).',
-    related: [{ label: 'What does a conveyancer do?', to: '/faq#what-is-conveyancer' }],
   },
   {
     id: 'deeds-office',
@@ -42,13 +38,11 @@ const TERMS = [
     id: 'equity',
     term: 'Equity',
     definition: 'The difference between your property\'s current market value and the outstanding balance on your home loan. If your property is worth R2,000,000 and you owe R900,000 on your bond, your equity is R1,100,000. Equity grows as you pay down your bond and as property values increase. You can access equity when switching banks (equity release) to fund renovations or investments.',
-    related: [{ label: 'Can I access equity when I switch?', to: '/faq#equity-release' }],
   },
   {
     id: 'fixed-rate',
     term: 'Fixed Interest Rate',
     definition: 'A home loan interest rate that is locked at a set percentage for a fixed period (typically 1–3 years), regardless of what the prime rate does. Fixed rates are usually 1–2% higher than variable rates because the bank absorbs the risk of rate changes. After the fixed period, the rate reverts to a linked (variable) rate. Fixed rates suit borrowers who need repayment certainty, but cost more in a rate-cutting environment.',
-    related: [{ label: 'Linked rate vs fixed rate', to: '/faq#linked-vs-fixed' }],
   },
   {
     id: 'fsca',
@@ -59,13 +53,11 @@ const TERMS = [
     id: 'linked-rate',
     term: 'Linked (Variable) Rate',
     definition: 'A home loan interest rate that moves up and down in line with the prime lending rate, which is itself tied to the SARB repo rate. Most South African home loans are on a linked rate. When the Reserve Bank cuts rates, your repayment automatically drops — no action needed. When rates rise, your repayment increases. Linked rates are typically expressed as prime + x% or prime − x%.',
-    related: [{ label: 'Linked vs fixed rate', to: '/faq#linked-vs-fixed' }],
   },
   {
     id: 'ltv',
     term: 'LTV — Loan-to-Value Ratio',
     definition: 'The ratio of your home loan amount to the appraised value (or purchase price) of the property, expressed as a percentage. If you borrow R900,000 on a R1,000,000 property, your LTV is 90%. A lower LTV means less risk for the bank, which usually results in a better interest rate. Most SA banks lend up to 100% LTV for qualifying first-time buyers and up to 80% LTV for investment properties.',
-    related: [{ label: 'How much deposit do I need?', to: '/faq#deposit-needed' }],
   },
   {
     id: 'nca',
@@ -77,19 +69,16 @@ const TERMS = [
     id: 'otp',
     term: 'OTP — Offer to Purchase',
     definition: 'A legally binding written agreement between a buyer and seller setting out the terms of a property sale — purchase price, occupation date, suspensive conditions (e.g. subject to bond approval), and any inclusions or exclusions. Once both parties sign the OTP, it becomes a binding contract. The buyer typically has 30–60 days to satisfy the bond approval condition before the sale lapses.',
-    related: [{ label: 'What is an OTP?', to: '/faq#what-is-otp' }],
   },
   {
     id: 'popia',
     term: 'POPIA — Protection of Personal Information Act',
     definition: 'South Africa\'s data privacy law (Act 4 of 2013), which came into full effect in July 2021. POPIA regulates how organisations collect, store, process, and share personal information. It gives individuals the right to access their data, correct it, object to processing, and request deletion. South Africa\'s equivalent of Europe\'s GDPR.',
-    related: [{ label: 'What does POPIA mean for me?', to: '/faq#popia' }],
   },
   {
     id: 'pre-approval',
     term: 'Pre-Approval',
     definition: 'A formal written commitment from a bank confirming how much they will lend you, based on a full assessment of your credit record, income, and expenses. A pre-approval letter is valid for 90 days and is taken seriously by sellers and estate agents as proof of buying ability. It requires a hard credit inquiry. Distinct from pre-qualification, which is a quick estimate with no formal assessment.',
-    related: [{ label: 'Pre-qualification vs pre-approval', to: '/faq#prequal-vs-preapproval' }],
   },
   {
     id: 'pre-qualification',
@@ -101,13 +90,12 @@ const TERMS = [
     id: 'prime-rate',
     term: 'Prime Lending Rate',
     definition: 'The benchmark interest rate used by South African banks for home loans and other lending products, currently 11.25% (early 2026). The prime rate is set by the major banks and is always 3.5 percentage points above the South African Reserve Bank (SARB) repo rate. Most home loans are priced at prime + or prime − a margin (e.g. prime − 0.5% = 10.75%). When the SARB changes the repo rate at its Monetary Policy Committee (MPC) meetings, prime moves by the same amount.',
-    related: [{ label: 'How prime affects your bond', to: '/faq#prime-rate-question' }, { label: 'Rate calculator', to: '/tools' }],
+    related: [{ label: 'Rate calculator', to: '/tools' }],
   },
   {
     id: 'transfer-duty',
     term: 'Transfer Duty',
     definition: 'A government tax paid by the buyer to SARS when purchasing property above R1,100,000 (2024/25 threshold — properties below this are exempt). The rate is progressive, scaling from 3% on the portion between R1.1M and R1.512M, up to 13% above R2.297M. Transfer duty must be paid before a property transfer can be registered at the Deeds Office. It is distinct from bond registration costs and conveyancing fees.',
-    related: [{ label: 'What is transfer duty?', to: '/faq#transfer-duty' }],
   },
 ];
 
@@ -135,7 +123,7 @@ export default function Glossary() {
       <div className="container container--narrow">
 
         <div className="glossary-header">
-          <Link to="/faq" className="btn btn--ghost btn--sm">← Back to FAQ</Link>
+          <Link to="/home" className="btn btn--ghost btn--sm">← Back to Home</Link>
           <h1 className="glossary-title">Home Loan Glossary</h1>
           <p className="glossary-subtitle">Plain-English definitions for every term you'll encounter on your home loan journey.</p>
         </div>
@@ -171,7 +159,7 @@ export default function Glossary() {
         <div className="glossary-cta">
           <p>Have a question that's not covered here?</p>
           <div className="glossary-cta__actions">
-            <Link to="/faq" className="btn btn--ghost btn--sm">Back to FAQ</Link>
+            <Link to="/home" className="btn btn--ghost btn--sm">Back to Home</Link>
             <a href="mailto:hello@bondly.co.za" className="btn btn--lime btn--sm">Email us →</a>
           </div>
         </div>

@@ -558,6 +558,11 @@ export default function Optimize() {
             <span className="opt-dot" />
             <span>POPIA compliant</span>
           </div>
+          {!fromPreapproval && !isLoggedIn && (
+            <p className="opt-header__account-note">
+              Heads up: previewing your numbers is free, but <strong>saving your full plan and tracking progress needs a free Bondly account.</strong>
+            </p>
+          )}
         </div>
 
         {/* Upload zone — shown when no result yet */}

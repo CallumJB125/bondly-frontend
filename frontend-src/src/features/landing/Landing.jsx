@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { calcSwapSavings } from '@bondly/ui/lib/finance.js';
+import { calcSwapSavings, calcSavingsRange } from '@bondly/ui/lib/finance.js';
 import { fmt } from '@bondly/ui/lib/format.js';
 import { track, trackAction } from '@bondly/ui/lib/session.js';
-import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, DEFAULT_RATE_SPREAD } from '@bondly/ui/lib/constants.js';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import { publicStats } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import GetAnOfferButton from './GetAnOfferButton.jsx';
+import LandingNav from './LandingNav.jsx';
 import './Landing.css';
 
 // Env-aware sister-product URL (Bondly Home / origination), mirroring the
@@ -77,49 +79,6 @@ function Announce() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// NAV — 4 links, 1 CTA, cross-sell demoted
-// ─────────────────────────────────────────────────────────────
-function LandingNav() {
-  const { user } = useAuth();
-  const location = useLocation();
-  // "How it works" anchors in-page when we're already on the landing surface.
-  const howHref = location.pathname === '/home' || location.pathname === '/'
-    ? '#how-it-works'
-    : '/home#how-it-works';
-  return (
-    <nav className="ls-nav">
-      <div className="ls-wrap ls-nav__inner">
-        <Link className="ls-logo" to="/">
-          <span className="ls-logo__mark" aria-hidden="true">⌂</span>Bondly
-        </Link>
-        <div className="ls-nav__links">
-          <a href={howHref}>How it works</a>
-          <Link to="/calculators">Calculators</Link>
-          <Link to="/blog">Guides</Link>
-          <Link to="/faq">FAQ</Link>
-        </div>
-        <div className="ls-nav__right">
-          <a
-            className="ls-crosssell"
-            href={ORIGINATION_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackAction('crosssell_clicked', { source: 'nav' })}
-          >
-            Buying instead? <b>Bondly Home ↗</b>
-          </a>
-          {user ? (
-            <Link className="ls-btn ls-btn--primary" to="/dashboard">Dashboard</Link>
-          ) : (
-            <Link className="ls-btn ls-btn--primary" to="/switch">See my offers</Link>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
 // BANK STRIP — "We negotiate with" trust row of bank logos.
 // Logos are normalised to uniform white via CSS filter; per-logo
 // heights keep them optically balanced (icons read taller than
@@ -157,8 +116,14 @@ function BankStrip() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// HERO + live SAVINGS CHECK calculator
+// HERO + SAVINGS CHECK calculator (press-to-reveal)
 // ─────────────────────────────────────────────────────────────
+const CALC_CAPTIONS = ['Checking all 7 banks…', 'Matching people like you…', 'Crunching your numbers…'];
+
+// Custom easing — refined ease-out (steep start, long silky settle). Shared by
+// the calculator reveal and the FAQ dropdown so motion feels of a piece.
+const EASE_SILK = [0.22, 1, 0.36, 1];
+
 function Hero() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -174,8 +139,13 @@ function Hero() {
   const [rate, setRate]       = useState(qRate);
   const [term, setTerm]       = useState(qTerm);
 
-  // Fire calculator_completed only once per session.
-  const calcCompletedRef = useRef(false);
+  // Reveal state machine: the savings figure is no longer shown live. The user
+  // enters their bond, presses "Calculate my savings", a brief spinner runs,
+  // then the range is revealed and the CTA morphs to "See my official offer".
+  const [revealState, setRevealState] = useState('idle'); // 'idle' | 'calculating' | 'revealed'
+  const reduceMotion = useReducedMotion();
+  const revealTimerRef = useRef(0);
+  const revealedRef = useRef(false); // fire savings_revealed once per session
 
   const bal = parseFloat(String(balance).replace(/[^\d.]/g, '')) || 0;
   const rt  = parseFloat(rate) || 0;
@@ -190,28 +160,54 @@ function Hero() {
   const termPct = Math.min(100, Math.max(0, ((trm - TERM_MIN) / (TERM_MAX - TERM_MIN)) * 100));
 
   const safeBal  = bal  > 0 ? bal  : 1_200_000;
-  const safeRate = rt   > livePrime ? rt   : livePrime + 1.25;
+  const safeRate = rt   > livePrime ? rt   : livePrime + DEFAULT_RATE_SPREAD;
   const safeTerm = trm  > 0 ? trm  : 18;
 
   const result = calcSwapSavings(safeBal, safeRate, livePrime, safeTerm * 12);
   const monthlySaving = inputsValid ? Math.max(0, Math.round(result.monthlySaving)) : 0;
-  const totalSaving   = inputsValid ? Math.max(0, Math.round(result.totalSaving)) : 0;
+  const { low, high } = calcSavingsRange(monthlySaving);
+  const revealed = revealState === 'revealed';
 
-  // Tick the displayed figures up/down whenever the inputs change.
-  const animMonthly = useCountUp(monthlySaving);
-  const animTotal   = useCountUp(totalSaving);
+  // Animate the low anchor up from 0 on reveal; show nothing until revealed.
+  const animLow = useCountUp(revealed ? low : 0);
 
+  // Reset the reveal whenever inputs change — a stale number must never
+  // contradict the bond the user is now describing.
   useEffect(() => {
-    if (monthlySaving > 0 && !calcCompletedRef.current) {
-      calcCompletedRef.current = true;
-      trackAction('calculator_completed', { saving: monthlySaving });
+    setRevealState((s) => (s === 'idle' ? s : 'idle'));
+    if (revealTimerRef.current) { clearTimeout(revealTimerRef.current); revealTimerRef.current = 0; }
+  }, [balance, rate, term]);
+
+  useEffect(() => () => { if (revealTimerRef.current) clearTimeout(revealTimerRef.current); }, []);
+
+  function doReveal() {
+    setRevealState('revealed');
+    if (!revealedRef.current) {
+      revealedRef.current = true;
+      trackAction('savings_revealed', { low, high, saving: monthlySaving });
     }
-  }, [monthlySaving]);
+  }
+
+  function onCalculate() {
+    if (!inputsValid || revealState === 'calculating') return;
+    trackAction('hero_calc_started', { balance: bal, rate: rt, term: trm });
+    if (reduceMotion) { doReveal(); return; } // skip the artificial delay for reduced-motion / SR users
+    setRevealState('calculating');
+    revealTimerRef.current = setTimeout(doReveal, 1800);
+  }
 
   const onField = (setter, field) => (e) => {
     setter(e.target.value);
     trackAction('calculator_interacted', { field });
   };
+
+  // Rotating caption shown under the spinner while "calculating".
+  const [calcStep, setCalcStep] = useState(0);
+  useEffect(() => {
+    if (revealState !== 'calculating') { setCalcStep(0); return; }
+    const iv = setInterval(() => setCalcStep((i) => (i + 1) % CALC_CAPTIONS.length), 600);
+    return () => clearInterval(iv);
+  }, [revealState]);
 
   // Outstanding balance: store raw digits, display with space thousands separators.
   const fmtBalance = (raw) => {
@@ -226,14 +222,18 @@ function Hero() {
   };
 
   const goToSwitch = (source) => {
-    trackAction('hero_calc_cta_clicked', { balance: bal, rate: rt, term: trm, location: source });
+    trackAction('hero_reveal_cta_clicked', { balance: bal, rate: rt, term: trm, location: source });
     try {
-      sessionStorage.setItem('bondly_hero_switch', JSON.stringify({ balance: bal, rate: rt, termYears: trm }));
+      // Carry the EXACT prime used for this reveal so /switch reproduces the
+      // same range — even if the live prime resolves to a different value
+      // between the two screens (closes the async-prime drift).
+      sessionStorage.setItem('bondly_hero_switch', JSON.stringify({ balance: bal, rate: rt, termYears: trm, prime: livePrime }));
     } catch (_) {}
     const params = new URLSearchParams();
     if (bal > 0) params.set('balance', String(Math.round(bal)));
     if (rt > 0)  params.set('rate', String(rt));
     if (trm > 0) params.set('term', String(trm));
+    if (livePrime > 0) params.set('prime', String(livePrime));
     const qs = params.toString();
     navigate(qs ? `/switch?${qs}` : '/switch');
   };
@@ -357,17 +357,57 @@ function Hero() {
                 Rates above 25% are unusual — double-check your entry.
               </p>
             )}
-            <div className="ls-result" style={{ opacity: inputsValid ? 1 : 0.4, pointerEvents: inputsValid ? 'auto' : 'none' }}>
-              <small>{inputsValid ? 'YOU COULD SAVE' : 'ENTER DETAILS TO SEE'}</small>
-              <div className="ls-serif ls-result__big" aria-live="polite">
-                {inputsValid ? <>{fmt(animMonthly)}<sub>/month</sub></> : <span style={{ fontSize: '2rem' }}>—</span>}
-              </div>
-              {inputsValid && <p>≈ {fmt(animTotal)} over your remaining term · estimate at prime</p>}
-            </div>
+            {/* The result panel stays hidden until the user presses
+                "Calculate my savings", then expands to run the bank-checking
+                sequence and reveal the figure. */}
+            <AnimatePresence initial={false}>
+              {revealState !== 'idle' && (
+                <motion.div
+                  key="result"
+                  initial={{ height: 0, opacity: 0, marginTop: 0, marginBottom: 0 }}
+                  animate={{ height: 'auto', opacity: 1, marginTop: 20, marginBottom: 18 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0, marginBottom: 0 }}
+                  transition={{
+                    height:       reduceMotion ? { duration: 0 } : { duration: 0.5, ease: EASE_SILK },
+                    marginTop:    reduceMotion ? { duration: 0 } : { duration: 0.5, ease: EASE_SILK },
+                    marginBottom: reduceMotion ? { duration: 0 } : { duration: 0.5, ease: EASE_SILK },
+                    opacity:      reduceMotion ? { duration: 0 } : { duration: 0.4, ease: EASE_SILK, delay: 0.08 },
+                  }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div className="ls-result" aria-live="polite">
+                    {revealState === 'calculating' ? (
+                      <div className="ls-result__calc">
+                        <div className="spinner ls-result__spinner" aria-hidden="true" />
+                        <span className="ls-result__calc-cap">{CALC_CAPTIONS[calcStep]}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <small>BASED ON PEOPLE LIKE YOU WE'VE HELPED SAVE</small>
+                        <div className="ls-serif ls-result__big">
+                          from {fmt(animLow)}<sub>/month</sub>
+                        </div>
+                        <p>We confirm your exact number on the next step · estimate at prime</p>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <button className="ls-btn ls-btn--primary ls-calc__cta" onClick={() => goToSwitch('hero_calc')}>
-              Calculate my savings
-            </button>
+            {revealed ? (
+              <button className="ls-btn ls-btn--primary ls-calc__cta" onClick={() => goToSwitch('hero_calc')}>
+                See my official offer →
+              </button>
+            ) : (
+              <button
+                className="ls-btn ls-btn--primary ls-calc__cta"
+                onClick={onCalculate}
+                disabled={!inputsValid || revealState === 'calculating'}
+              >
+                {revealState === 'calculating' ? 'Calculating…' : 'Calculate my savings'}
+              </button>
+            )}
             <p className="ls-calc__foot">Less than 2 minutes · Bank-level security · No personal info needed</p>
           </div>
         </aside>
@@ -459,7 +499,7 @@ function CaseStudy() {
   return (
     <section className="ls-wrap ls-case-wrap">
       <div className="ls-sec-eyebrow">Case study</div>
-      <h2 className="ls-serif ls-h2">What a switch actually looks like</h2>
+      <h2 className="ls-serif ls-h2">What a bondly switch actually looks like</h2>
       <div className="ls-case">
         <div className="ls-case__left">
           <blockquote className="ls-serif">
@@ -486,14 +526,16 @@ function CaseStudy() {
 // ─────────────────────────────────────────────────────────────
 // BANKS + SAVER STATS — "no matter which bank you're with"
 // ─────────────────────────────────────────────────────────────
+// 2×3 logo grid — full-colour brand marks on white cards. Per-logo
+// heights keep wordmarks and icon-marks optically balanced. Assets
+// live in /public/banks.
 const SAVER_BANKS = [
-  { abbr: 'SB',  name: 'Standard Bank' },
-  { abbr: 'a',   name: 'Absa' },
-  { abbr: 'N',   name: 'Nedbank' },
-  { abbr: 'FNB', name: 'FNB' },
-  { abbr: 'Iv',  name: 'Investec' },
-  { abbr: 'RMB', name: 'RMB Private Bank' },
-  { abbr: 'SA',  name: 'SA Home Loans' },
+  { src: '/banks/absa.png',               name: 'Absa',          h: 26 },
+  { src: '/banks/fnb-color.png',          name: 'FNB',           h: 40 },
+  { src: '/banks/nedbank.png',            name: 'Nedbank',       h: 22 },
+  { src: '/banks/standardbank-color.png', name: 'Standard Bank', h: 30 },
+  { src: '/banks/capitec-color.png',      name: 'Capitec',       h: 24 },
+  { src: '/banks/investec.png',           name: 'Investec',      h: 26 },
 ];
 
 const SAVER_STATS = [
@@ -518,8 +560,14 @@ function BanksSaver() {
           <div className="ls-banks__logos">
             {SAVER_BANKS.map((b) => (
               <div key={b.name} className="ls-banks__chip">
-                <span className="ls-banks__mono" aria-hidden="true">{b.abbr}</span>
-                <span className="ls-banks__name">{b.name}</span>
+                <img
+                  className="ls-banks__logo"
+                  src={b.src}
+                  alt={b.name}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ height: `${b.h}px` }}
+                />
               </div>
             ))}
           </div>
@@ -589,6 +637,7 @@ const FAQ_ITEMS = [
 
 function FAQ() {
   const [open, setOpen] = useState(null);
+  const reduce = useReducedMotion();
 
   const toggle = (i) => {
     setOpen((prev) => {
@@ -627,14 +676,35 @@ function FAQ() {
                     </svg>
                   </span>
                 </button>
-                <div
-                  id={`faq-panel-${i}`}
-                  className="ls-faq__panel"
-                  role="region"
-                  hidden={!isOpen}
-                >
-                  <p>{item.a}</p>
-                </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="panel"
+                      initial={{ height: 0 }}
+                      animate={{ height: 'auto' }}
+                      exit={{ height: 0 }}
+                      transition={{
+                        height: reduce ? { duration: 0 } : { duration: 0.42, ease: EASE_SILK },
+                      }}
+                      style={{ overflow: 'hidden' }}
+                    >
+                      <motion.div
+                        id={`faq-panel-${i}`}
+                        className="ls-faq__panel"
+                        role="region"
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{
+                          opacity: reduce ? { duration: 0 } : { duration: 0.32, ease: EASE_SILK, delay: isOpen ? 0.06 : 0 },
+                          y: reduce ? { duration: 0 } : { duration: 0.42, ease: EASE_SILK },
+                        }}
+                      >
+                        <p>{item.a}</p>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}

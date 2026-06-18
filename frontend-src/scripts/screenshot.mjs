@@ -73,9 +73,12 @@ async function run() {
         await page.setViewport(VIEWPORTS[name]);
         const url = `${baseUrl}${route.startsWith('/') ? route : `/${route}`}`;
         try {
-          await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-          // let fonts/animations settle
-          await new Promise((r) => setTimeout(r, 600));
+          // Use domcontentloaded (not networkidle2): the app keeps long-lived
+          // requests open (prime-rate/stats polling, analytics, HMR socket) so
+          // the network may never go idle — networkidle2 then times out even
+          // though the page rendered fine. Settle longer for fonts/animations.
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+          await new Promise((r) => setTimeout(r, 1500));
           const file = path.join(outDir, `${slug(route)}-${name}.png`);
           await page.screenshot({ path: file, fullPage });
           saved.push(file);

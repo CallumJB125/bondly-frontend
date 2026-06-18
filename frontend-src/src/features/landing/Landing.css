@@ -6,7 +6,10 @@
    All classes namespaced `ls-` to avoid colliding with globals.
    ============================================================ */
 
-.ls-page {
+/* Custom props live at :root (all uniquely `--ls-` prefixed, so no collision)
+   so the shared LandingNav can resolve them when rendered outside `.ls-page`
+   — e.g. on the /switch route. */
+:root {
   --ls-navy: #1e3a5f;       /* primary action (was violet) */
   --ls-navy-deep: #0e1b2e;  /* dark band (was deep-plum) */
   --ls-navy-100: #e8eef5;   /* soft fill */
@@ -20,7 +23,9 @@
   --ls-muted: #5a5a5a;
   --ls-radius: 4px;
   --ls-subtext: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
 
+.ls-page {
   font-family: var(--font-sans, 'Neue Haas Grotesk Text', 'Inter', system-ui, sans-serif);
   color: #111111;
   background: #ffffff;
@@ -61,6 +66,10 @@
   position: sticky;
   top: 0;
   z-index: 50;
+  /* Self-contained font so the nav looks identical when rendered outside
+     `.ls-page` (e.g. on the /switch route). */
+  font-family: var(--font-sans, 'Neue Haas Grotesk Text', 'Inter', system-ui, sans-serif);
+  color: #111111;
 }
 .ls-nav__inner {
   display: flex;
@@ -530,7 +539,9 @@
   background: var(--bg-subtle);
   border-radius: 14px;
   padding: 26px 30px;
-  margin: 20px 0 18px;
+  /* Margin lives on the motion wrapper so it can animate in/out with the
+     height when the panel expands. */
+  margin: 0;
   text-align: center;
 }
 .ls-result small {
@@ -558,7 +569,36 @@
 }
 .ls-result p { font-size: 12.5px; color: var(--ls-muted); }
 
+/* Reveal states — keep a stable height so the card doesn't jump between
+   idle → calculating → revealed. */
+.ls-result {
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ls-result__calc {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.ls-result__spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(15, 23, 42, 0.18);
+  border-top-color: var(--ls-navy);
+}
+.ls-result__calc-cap {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ls-navy);
+  letter-spacing: .01em;
+}
+
 .ls-calc__cta { width: 100%; justify-content: center; padding: 15px; font-size: 15.5px; }
+.ls-calc__cta:disabled { opacity: 0.5; cursor: not-allowed; }
 .ls-calc__foot {
   font-size: 12px;
   color: var(--ls-muted);
@@ -712,39 +752,35 @@
   margin: 0 0 32px;
 }
 .ls-banks__logos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
   max-width: 32rem;
 }
 .ls-banks__chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  min-height: 84px;
   background: #fff;
   border: 1px solid #e3e9f1;
-  border-radius: 10px;
-  padding: 8px 16px 8px 9px;
+  border-radius: 14px;
+  padding: 18px 24px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
-.ls-banks__mono {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: var(--ls-navy-deep);
-  color: var(--ls-gold);
-  font-family: var(--font-display, 'Neue Haas Grotesk Display', sans-serif);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+.ls-banks__logo {
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
-.ls-banks__name {
-  font-family: var(--ls-subtext);
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--ls-heading);
+@media (max-width: 480px) {
+  .ls-banks__logos {
+    gap: 12px;
+  }
+  .ls-banks__chip {
+    min-height: 68px;
+    padding: 14px 16px;
+  }
 }
 
 /* stat panel — navy bento, staggered glass tiles */
@@ -931,7 +967,7 @@
   border: 1px solid #c5cede;
   border-radius: 50%;
   color: var(--ls-navy);
-  transition: transform 0.25s ease, border-color 0.2s ease;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.2s ease;
 }
 .ls-faq__icon svg { width: 16px; height: 16px; }
 .ls-faq__item.is-open .ls-faq__icon {

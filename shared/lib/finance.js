@@ -134,6 +134,95 @@ export function calcSwapSavings(balance, currentRate, newRate, termRemaining) {
   return { currentMonthly, newMonthly, monthlySaving, totalSaving };
 }
 
+// ── Savings range ─────────────────────────────────────────
+// A single point estimate built from three rough slider inputs reads as false
+// precision (and subtly disagrees across screens). Present a symmetric ±10%
+// band instead, snapped to clean R50 steps so Landing and /switch always print
+// the same bounds for the same inputs. The Landing reveal shows a low-anchored
+// "from R{low}/month" (never over-promises); the /switch detail view shows the
+// full "R{low}–R{high}" band.
+export function calcSavingsRange(point) {
+  const p = Number(point);
+  if (!Number.isFinite(p) || p <= 0) return { low: 0, high: 0, point: 0 };
+  const snap = (v) => Math.max(0, Math.round(v / 50) * 50);
+  return { low: snap(p * 0.90), high: snap(p * 1.10), point: Math.round(p) };
+}
+
+// ── Months to clear a balance at a fixed monthly payment ──────
+// How long `balance` takes to repay at `ratePercent` while paying a fixed
+// `monthlyPayment`. Returns null if the payment can't cover the monthly
+// interest (the balance would never amortise).
+export function calcMonthsToPayoff(balance, ratePercent, monthlyPayment) {
+  if (!(balance > 0) || !(monthlyPayment > 0)) return 0;
+  const r = ratePercent / 100 / 12;
+  if (r === 0) return Math.ceil(balance / monthlyPayment);
+  if (monthlyPayment <= balance * r) return null; // never pays off
+  return Math.ceil(-Math.log(1 - (balance * r) / monthlyPayment) / Math.log(1 + r));
+}
+
+// ── The two ways a lower rate helps a homeowner ───────────────
+// Derived purely from the homeowner's own inputs + the new (lower) rate:
+//   Path A — keep the same remaining term, pay LESS each month.
+//   Path B — keep paying the SAME amount you pay today; the bond clears SOONER.
+export function calcSwitchOutcomes(balance, currentRate, newRate, termYears) {
+  const termMonths     = Math.max(1, Math.round(termYears * 12));
+  const currentPayment = calcMonthly(balance, currentRate, termYears);
+  const newPayment     = calcMonthly(balance, newRate, termYears);
+
+  // Path A — lower the monthly payment, term unchanged
+  const monthlySaving  = Math.max(0, currentPayment - newPayment);
+  const annualSaving   = monthlySaving * 12;
+  const lifetimeSaving = monthlySaving * termMonths;
+
+  // Path B — keep paying currentPayment at the lower rate → finish early
+  const payoffMonths    = calcMonthsToPayoff(balance, newRate, currentPayment);
+  const monthsSaved     = payoffMonths == null ? 0 : Math.max(0, termMonths - payoffMonths);
+  const currentInterest = currentPayment * termMonths - balance;
+  const fasterInterest  = payoffMonths == null ? currentInterest : currentPayment * payoffMonths - balance;
+  const interestSaved   = Math.max(0, currentInterest - fasterInterest);
+
+  return {
+    termMonths, currentPayment, newPayment,
+    monthlySaving, annualSaving, lifetimeSaving,
+    payoffMonths, monthsSaved, interestSaved,
+    currentInterest, fasterInterest,
+  };
+}
+
+// ── Bondly Switch Score ───────────────────────────────────────
+// A trust-first score built ONLY from the homeowner's own inputs — never from
+// the projected saving. (The saving is itself a function of these same inputs,
+// so feeding it back in would double-count and make a worse current deal look
+// like a "better" score.) It measures how much room there is for Bondly to
+// improve the bond, scaled by how valuable that room is:
+//   • Rate headroom — how far the current rate sits above Bondly's achievable
+//     best rate (≈ prime). A competitive rate scores ~0 here; an unrealistically
+//     high rate is CAPPED at +2% so a bloated input can't run the score away.
+//   • Years remaining — more term left = more months to benefit.
+//   • Bond size — a bigger balance turns the same rate gap into more real money.
+export function calcSwitchScore({ currentRate, prime, balance, termYears, bestRate }) {
+  const target  = bestRate != null ? bestRate : prime;
+  const rateGap = Math.max(0, currentRate - target);
+
+  const fillRate    = Math.min(1, rateGap / 2.0);                    // +2% over target maxes it
+  const fillTerm    = Math.min(1, Math.max(0, termYears) / 20);      // 20+ yrs maxes it
+  const fillBalance = Math.min(1, Math.max(0, balance) / 1_500_000); // R1.5m+ maxes it
+
+  const ratePts    = 60 * fillRate;
+  const termPts    = 25 * fillTerm;
+  const balancePts = 15 * fillBalance;
+  const score = Math.min(97, Math.round(ratePts + termPts + balancePts));
+
+  return {
+    score, rateGap, target,
+    components: [
+      { key: 'rate',    label: 'Rate headroom',   points: Math.round(ratePts),    max: 60, fill: fillRate },
+      { key: 'term',    label: 'Years remaining', points: Math.round(termPts),    max: 25, fill: fillTerm },
+      { key: 'balance', label: 'Bond size',       points: Math.round(balancePts), max: 15, fill: fillBalance },
+    ],
+  };
+}
+
 // ── Refinance Decision Engine ─────────────────────────────
 // Returns: { recommendation, reason, breakEvenMonths, annualSaving, bestBank, bestRate }
 // recommendation: 'SWITCH_NOW' | 'SWITCH_SOON' | 'WAIT' | 'NO_BENEFIT'

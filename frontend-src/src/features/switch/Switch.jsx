@@ -1,29 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fmt, fmtPct } from '@bondly/ui/lib/format.js';
+import { fmt, fmtRange, fmtShort } from '@bondly/ui/lib/format.js';
+import { calcSavingsRange, calcSwitchOutcomes, calcSwitchScore } from '@bondly/ui/lib/finance.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
 import { publicAlerts, parseStatementForPreapproval } from '../../lib/api.js';
-import { PRIME_RATE } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, DEFAULT_RATE_SPREAD } from '@bondly/ui/lib/constants.js';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
+import { trackAction } from '@bondly/ui/lib/session.js';
+import LandingNav from '../landing/LandingNav.jsx';
 import './Switch.css';
 
 const PRIME = PRIME_RATE;
 const BANKS = ['ABSA', 'FNB', 'Nedbank', 'Standard Bank', 'Capitec', 'Investec', 'SA Home Loans'];
 
-// Simulated bank offers based on income/bond/credit profile
-function computeOffers(income, balance, currentRate, termYears = 20) {
-  const spreads = [0.0, 0.25, 0.35, 0.5, 0.75, 1.0, 1.5];
-  const n = Math.max(1, Math.round(termYears * 12));
-  const currentPayment = balance * (currentRate / 100 / 12) / (1 - Math.pow(1 + currentRate / 100 / 12, -n));
-  return BANKS.map((bank, i) => {
-    const spread = spreads[i];
-    const rate = PRIME + spread;
-    const monthlyPayment = balance * (rate / 100 / 12) / (1 - Math.pow(1 + rate / 100 / 12, -n));
-    const monthlySaving = currentPayment - monthlyPayment;
-    return { bank, rate, spread, monthlyPayment: Math.round(monthlyPayment), monthlySaving: Math.round(monthlySaving) };
-  }).sort((a, b) => a.rate - b.rate);
-}
+// Income bands shown on the lightweight qualify step (no exact rands at first
+// touch). Each maps to a representative midpoint sent as monthlyIncome so the
+// existing /api/leads contract (which expects a number) still validates.
+const INCOME_BANDS = [
+  { value: 'under_20k', label: 'Under R20 000', mid: 15000 },
+  { value: '20_35k',    label: 'R20 000 – R35 000', mid: 27500 },
+  { value: '35_50k',    label: 'R35 000 – R50 000', mid: 42500 },
+  { value: '50_75k',    label: 'R50 000 – R75 000', mid: 62500 },
+  { value: '75k_plus',  label: 'R75 000+', mid: 90000 },
+];
 
 // ── Reading animation ─────────────────────────────────────────────────────────
 function StatementReadingReveal({ onComplete, hasFile = false }) {
@@ -147,44 +147,56 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
   );
 }
 
-function SwitchVerdict({ income, balance, currentRate, termYears = 20, onProceed, onSeeOffers }) {
-  const offers = computeOffers(income, balance, currentRate, termYears);
-  const best   = offers[0];
-  const saving  = best.monthlySaving;
-  const annualSaving = saving * 12;
-  const termMonths   = Math.max(1, Math.round(termYears * 12));
-  const termSaving   = saving * termMonths;
-  const currentPayment = balance * (currentRate / 100 / 12) / (1 - Math.pow(1 + currentRate / 100 / 12, -termMonths));
+function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLockIn, onSeeOffers }) {
+  const [scoreOpen, setScoreOpen] = useState(false);
+  const navigate = useNavigate();
 
-  // "Debt-free sooner" — if you keep paying the same monthly amount you pay today
-  // but at the lower rate, the loan amortises faster.
-  const newMonthlyRate = best.rate / 100 / 12;
-  let monthsFaster = 0;
-  if (newMonthlyRate > 0 && currentPayment > balance * newMonthlyRate) {
-    const newTerm = Math.log(currentPayment / (currentPayment - balance * newMonthlyRate))
-                  / Math.log(1 + newMonthlyRate);
-    monthsFaster = Math.max(0, Math.round(termMonths - newTerm));
-  }
-  const yearsFaster   = Math.floor(monthsFaster / 12);
-  const remMonths     = monthsFaster % 12;
-  const fasterLabel   = monthsFaster < 1
+  // Bondly's sharp-end achievable rate = prime (best mainstream spread). Using
+  // prime keeps this estimate identical to the Landing reveal, which also
+  // computes the saving against the live prime rate.
+  const bestRate = livePrime;
+  const out = calcSwitchOutcomes(balance, currentRate, bestRate, termYears);
+  const saving = Math.round(out.monthlySaving);
+
+  // Rand figures render as ±10% bands (snapped to R50) — the same
+  // false-precision-avoiding treatment used on the Landing reveal.
+  const range         = calcSavingsRange(out.monthlySaving);
+  const annualRange   = calcSavingsRange(out.annualSaving);
+  const termRange     = calcSavingsRange(out.lifetimeSaving);
+  const interestRange = calcSavingsRange(out.interestSaved);
+
+  // Path B — "debt-free sooner" label
+  const monthsFaster = out.monthsSaved;
+  const yearsFaster  = Math.floor(monthsFaster / 12);
+  const remMonths    = monthsFaster % 12;
+  const fasterLabel  = monthsFaster < 1
     ? '—'
     : monthsFaster < 12
-      ? `${monthsFaster} months`
+      ? `${monthsFaster} month${monthsFaster === 1 ? '' : 's'}`
       : remMonths === 0
-        ? `${yearsFaster} years`
+        ? `${yearsFaster} year${yearsFaster === 1 ? '' : 's'}`
         : `${yearsFaster}yr ${remMonths}mo`;
+  const payoffYears = ((out.payoffMonths || out.termMonths) / 12);
 
-  const navigate = useNavigate();
+  const rateGap = Math.max(0, currentRate - livePrime);
+  const { score, components } = calcSwitchScore({ currentRate, prime: livePrime, balance, termYears, bestRate });
+
+  // Plain-language value shown beside each score component
+  const componentValue = (key) => {
+    if (key === 'rate')    return rateGap > 0 ? `+${rateGap.toFixed(2)}% vs prime` : 'at prime';
+    if (key === 'term')    return `${termYears} yr${termYears === 1 ? '' : 's'} left`;
+    if (key === 'balance') return `${fmtShort(balance)} owing`;
+    return '';
+  };
 
   return (
     <div className="switch-verdict fade-in">
       <div className="switch-verdict__header">
         {saving > 0 ? (
           <>
-            <div className="switch-verdict__pill switch-verdict__pill--green">You could save</div>
-            <div className="switch-verdict__headline">{fmt(saving)}<span>/mo</span></div>
-            <div className="switch-verdict__sub">if you let Bondly handle your switch</div>
+            <div className="switch-verdict__pill switch-verdict__pill--green">Based on people like you we've helped save</div>
+            <div className="switch-verdict__headline switch-verdict__headline--range">{fmtRange(range.low, range.high)}<span>/mo</span></div>
+            <div className="switch-verdict__sub">estimated range if you let Bondly handle your switch</div>
           </>
         ) : (
           <>
@@ -197,60 +209,155 @@ function SwitchVerdict({ income, balance, currentRate, termYears = 20, onProceed
 
       {saving <= 0 && (
         <GoodRateBlock
-          onProceed={onProceed}
+          onProceed={onLockIn}
           onSeeOffers={onSeeOffers}
         />
       )}
 
-      {saving > 0 && (() => {
-        // Candidacy score — proxy for how strong a switch candidate this profile is
-        const scorePct = Math.min(95, Math.round(50 + (saving / Math.max(1, Math.round(currentPayment))) * 300));
-        return (
-          <>
-            {/* Bondly candidacy score */}
-            <div className="switch-score">
-              <div className="switch-score__label">Bondly switch score</div>
-              <div className="switch-score__bar-wrap">
-                <div className="switch-score__bar" style={{ width: `${scorePct}%` }} />
-              </div>
-              <div className="switch-score__val">{scorePct} / 100</div>
-              <div className="switch-score__caption">
-                {scorePct >= 80
-                  ? 'Strong candidate — Bondly is very likely to improve your deal.'
-                  : scorePct >= 65
-                  ? 'Good candidate — there is meaningful room to improve your outcome.'
-                  : 'Moderate candidate — Bondly will check if a better deal is available.'}
-              </div>
+      {saving > 0 && (
+        <>
+          {/* ① Bondly Switch Score — built from the user's own inputs, not the saving */}
+          <div className="switch-score">
+            <div className="switch-score__head">
+              <div className="switch-score__label">Bondly Switch Score</div>
+              <div className="switch-score__val">{score}<span>/100</span></div>
             </div>
 
-            {/* Saving summary — no rates shown */}
-            <div className="switch-story">
-              <div className="switch-story__list">
-                <div className="switch-story__line">
-                  <span>Estimated monthly saving</span>
-                  <strong>{fmt(saving)}</strong>
-                </div>
-                <div className="switch-story__line">
-                  <span>Saved per year</span>
-                  <strong>{fmt(annualSaving)}</strong>
-                </div>
-                <div className="switch-story__line">
-                  <span>Saved across your {termYears}-year bond</span>
-                  <strong>{fmt(termSaving)}</strong>
-                </div>
-              </div>
+            {/* Stacked bar — each segment's width is the points that factor adds */}
+            <div className="switch-score__stack" role="img" aria-label={`Switch score ${score} out of 100`}>
+              {components.map(c => (c.points > 0 ? (
+                <span
+                  key={c.key}
+                  className={`switch-score__seg switch-score__seg--${c.key}`}
+                  style={{ width: `${c.points}%` }}
+                />
+              ) : null))}
             </div>
 
-            {/* Debt-free hero */}
-            {monthsFaster > 0 && (
-              <div className="switch-debtfree">
-                <div className="switch-debtfree__lede">Or — keep your current repayment the same and Bondly negotiates you a better deal, and you're</div>
-                <div className="switch-debtfree__big">debt-free {fasterLabel} sooner</div>
+            <div className="switch-score__caption">
+              {score >= 70
+                ? 'Strong candidate — there is real room for Bondly to improve your deal.'
+                : score >= 45
+                ? 'Good candidate — a switch is likely to move your numbers meaningfully.'
+                : 'Worth a check — the gap is smaller, but Bondly will confirm if a better deal exists.'}
+            </div>
+
+            {/* Breakdown — exactly how the score adds up, from their own figures */}
+            <div className="switch-score__components">
+              {components.map(c => (
+                <div className="switch-score__component" key={c.key}>
+                  <span className={`switch-score__component-key switch-score__seg--${c.key}`} aria-hidden="true" />
+                  <span className="switch-score__component-label">{c.label}</span>
+                  <span className="switch-score__component-track">
+                    <span className={`switch-score__component-fill switch-score__seg--${c.key}`} style={{ width: `${Math.round(c.fill * 100)}%` }} />
+                  </span>
+                  <span className="switch-score__component-meta">{componentValue(c.key)}</span>
+                  <span className="switch-score__component-pts">+{c.points}</span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="switch-score__disclose"
+              aria-expanded={scoreOpen}
+              onClick={() => setScoreOpen(o => !o)}
+            >
+              How this score is calculated & how to improve it
+              <span className="switch-score__disclose-icon" aria-hidden="true">{scoreOpen ? '–' : '+'}</span>
+            </button>
+            {scoreOpen && (
+              <div className="switch-score__disclose-body">
+                <p>Your score is built only from the details you gave us — never from the saving itself. Three things move it:</p>
+                <ul>
+                  <li><strong>Rate headroom (up to 60):</strong> how far your {currentRate.toFixed(2)}% sits above the ~{livePrime.toFixed(2)}% prime rate Bondly targets. The bigger the gap, the more there is to claw back — anything beyond +2% is already maxed.</li>
+                  <li><strong>Years remaining (up to 25):</strong> the longer you have left, the more months a lower rate works in your favour.</li>
+                  <li><strong>Bond size (up to 15):</strong> the same rate gap is worth more rand on a bigger balance.</li>
+                </ul>
+                <p><strong>To firm up your number:</strong> a clean statement and confirmed income usually let banks offer their sharpest rate — you can add your statement in the next step.</p>
               </div>
             )}
-          </>
-        );
-      })()}
+          </div>
+
+          {/* ② Your bond today — the facts, so they understand where they stand */}
+          <div className="switch-facts">
+            <div className="switch-facts__title">Your bond today</div>
+            <div className="switch-facts__grid">
+              <div className="switch-facts__item">
+                <span className="switch-facts__cap">Outstanding balance</span>
+                <span className="switch-facts__val">{fmt(balance)}</span>
+              </div>
+              <div className="switch-facts__item">
+                <span className="switch-facts__cap">Your interest rate</span>
+                <span className="switch-facts__val">{currentRate.toFixed(2)}%</span>
+                <span className={`switch-facts__tag ${rateGap > 0 ? 'switch-facts__tag--warn' : 'switch-facts__tag--ok'}`}>
+                  {rateGap > 0 ? `${rateGap.toFixed(2)}% above prime` : 'at / below prime'}
+                </span>
+              </div>
+              <div className="switch-facts__item">
+                <span className="switch-facts__cap">Monthly repayment</span>
+                <span className="switch-facts__val">≈ {fmt(out.currentPayment)}</span>
+              </div>
+              <div className="switch-facts__item">
+                <span className="switch-facts__cap">Years remaining</span>
+                <span className="switch-facts__val">{termYears} {termYears === 1 ? 'year' : 'years'}</span>
+              </div>
+            </div>
+            <div className="switch-facts__note">
+              Bondly targets a rate around prime ({livePrime.toFixed(2)}%). Here's what that does to your bond two different ways:
+            </div>
+          </div>
+
+          {/* ③ Two ways the same switch can work for you */}
+          <div className="switch-paths">
+            <div className="switch-paths__grid">
+              {/* Path A — pay less each month */}
+              <div className="switch-path switch-path--pay">
+                <div className="switch-path__cap">Option 1 · Lower your monthly payment</div>
+                <div className="switch-path__big">{fmtRange(range.low, range.high)}<small>/mo back in your pocket</small></div>
+                <div className="switch-path__rows">
+                  <div className="switch-path__row">
+                    <span>New repayment</span>
+                    <strong>≈ {fmt(out.newPayment)} <em>from {fmt(out.currentPayment)}</em></strong>
+                  </div>
+                  <div className="switch-path__row">
+                    <span>Saved per year</span>
+                    <strong>{fmtRange(annualRange.low, annualRange.high)}</strong>
+                  </div>
+                  <div className="switch-path__row">
+                    <span>Saved over {termYears} years</span>
+                    <strong>{fmtRange(termRange.low, termRange.high)}</strong>
+                  </div>
+                </div>
+                <div className="switch-path__foot">Same {termYears}-year term — you simply pay less each month.</div>
+              </div>
+
+              {/* Path B — finish sooner */}
+              {monthsFaster > 0 && (
+                <div className="switch-path switch-path--sooner">
+                  <div className="switch-path__cap">Option 2 · Finish your bond sooner</div>
+                  <div className="switch-path__big">{fasterLabel}<small>debt-free sooner</small></div>
+                  <div className="switch-path__rows">
+                    <div className="switch-path__row">
+                      <span>You keep paying</span>
+                      <strong>≈ {fmt(out.currentPayment)} <em>/mo, same as today</em></strong>
+                    </div>
+                    <div className="switch-path__row">
+                      <span>Interest you avoid</span>
+                      <strong>{fmtRange(interestRange.low, interestRange.high)}</strong>
+                    </div>
+                    <div className="switch-path__row">
+                      <span>Bond cleared in</span>
+                      <strong>{payoffYears.toFixed(1)} yrs <em>vs {termYears}</em></strong>
+                    </div>
+                  </div>
+                  <div className="switch-path__foot">Same payment, lower rate — more of every rand kills the balance.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="switch-verdict__disclaimer">
         Estimate only — actual savings depend on your full credit and income profile. Bondly will confirm your outcome after reviewing your file. No credit check at this stage.
@@ -260,32 +367,25 @@ function SwitchVerdict({ income, balance, currentRate, termYears = 20, onProceed
         <div className="switch-verdict__cta-area">
           <button
             className="btn btn--lime switch-verdict__cta"
-            onClick={onSeeOffers}
+            onClick={onLockIn}
           >
-            Let Bondly negotiate for me →
+            Lock in my estimate →
           </button>
-          <div className="switch-verdict__cta-note">Upload your bank statement · No obligation · Free to homeowners</div>
-          <button
-            type="button"
-            className="switch-verdict__cta-secondary"
-            onClick={onProceed}
-          >
-            Skip upload — just apply →
-          </button>
+          <div className="switch-verdict__cta-note">Takes 20 seconds · email or phone only · no credit check</div>
         </div>
       )}
 
-      {/* Financial helper funnel */}
+      {/* Financial helper — clearly secondary side-door, account requirement disclosed up front */}
       <div className="switch-verdict__optimize">
-        <div className="switch-verdict__optimize-label">Want to strengthen your application first?</div>
+        <div className="switch-verdict__optimize-label">Not ready to proceed? Strengthen your profile first</div>
         <div className="switch-verdict__optimize-desc">
-          Bondly's financial helper analyses your full spending picture — showing you exactly what banks flag and how to improve your profile before applying.
+          Our free financial helper analyses your spending and shows exactly what banks flag before you apply. <strong>This needs a free Bondly account.</strong>
         </div>
         <button
           className="switch-verdict__optimize-btn"
           onClick={() => navigate('/optimize')}
         >
-          See my full financial picture →
+          Strengthen my profile (free account) →
         </button>
       </div>
     </div>
@@ -328,9 +428,9 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
 
       <div className="switch-statement__card">
         <div className="switch-statement__icon">📄</div>
-        <h2 className="switch-statement__title">Get real, confirmed offers</h2>
+        <h2 className="switch-statement__title">Want firmer, confirmed numbers?</h2>
         <p className="switch-statement__body">
-          Upload your latest bank statement (PDF) and we'll get you real, confirmed offers from the banks — not just an estimate.
+          Optional — add your latest bank statement (PDF) and banks can confirm an exact offer instead of an estimate. You can skip this and a consultant will follow up either way.
         </p>
         <div className="switch-statement__trust">
           <span>No credit check</span>
@@ -405,15 +505,7 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
 }
 
 // ── Main Switch page ──────────────────────────────────────────────────────────
-const DEMO_VALUES = { monthly: '10500', rate: String(PRIME + 1.75), term: '20', bank: 'ABSA' };
-
-// Derive outstanding balance from monthly payment, annual rate (%), term (years)
-function deriveBalance(monthly, ratePct, termYears) {
-  const r = (ratePct / 100) / 12;
-  const n = Math.max(1, Math.round(termYears * 12));
-  if (!isFinite(monthly) || monthly <= 0 || !isFinite(r) || r <= 0) return 0;
-  return monthly * (1 - Math.pow(1 + r, -n)) / r;
-}
+const DEMO_VALUES = { balance: '1200000', rate: String(PRIME + 1.75), term: '20', bank: 'ABSA' };
 
 export default function Switch({ demo = false }) {
   const navigate = useNavigate();
@@ -424,45 +516,40 @@ export default function Switch({ demo = false }) {
   const initialFormRef = useRef(null);
   if (initialFormRef.current === null) {
     initialFormRef.current = (() => {
-      if (demo) return DEMO_VALUES;
-      const base = { monthly: '', rate: String(PRIME + 1.0), term: '20', bank: '' };
+      if (demo) return { ...DEMO_VALUES, prime: '' };
+      const base = { balance: '', rate: String(PRIME + DEFAULT_RATE_SPREAD), term: '20', bank: '', prime: '' };
       try {
         const stored = sessionStorage.getItem('bondly_hero_switch');
         if (stored) {
-          const { balance, rate, termYears } = JSON.parse(stored);
+          // The Landing/Hook calculators capture the OUTSTANDING BALANCE directly,
+          // so we carry it straight through — no lossy monthly→balance round-trip.
+          // `prime` is the exact rate the Landing reveal used; reuse it so the
+          // range here reproduces the figure the user already saw.
+          const { balance, rate, termYears, prime } = JSON.parse(stored);
           sessionStorage.removeItem('bondly_hero_switch');
-          const r = (parseFloat(rate) / 100) / 12;
-          const n = Math.max(1, Math.round((parseFloat(termYears) || 20) * 12));
-          const monthly = balance > 0 && r > 0
-            ? Math.round(balance * r / (1 - Math.pow(1 + r, -n)))
-            : 0;
           return {
-            monthly: monthly > 0 ? String(monthly) : base.monthly,
+            balance: balance > 0 ? String(Math.round(balance)) : base.balance,
             rate: rate != null ? String(rate) : base.rate,
             term: termYears != null ? String(termYears) : base.term,
             bank: base.bank,
+            prime: prime != null ? String(prime) : '',
           };
         }
       } catch {}
-      // URL query params fallback: ?balance=1200000&rate=11.75&term=20
+      // URL query params fallback: ?balance=1200000&rate=11.75&term=20&prime=11.25
       try {
         const params = new URLSearchParams(window.location.search);
         const balance = parseFloat(params.get('balance') || '0');
         const rate = params.get('rate');
         const termYears = params.get('term');
+        const prime = params.get('prime');
         if (balance > 0 || rate || termYears) {
-          const resolvedRate = parseFloat(rate) || PRIME + 1.0;
-          const resolvedTerm = parseFloat(termYears) || 20;
-          const r = (resolvedRate / 100) / 12;
-          const n = Math.max(1, Math.round(resolvedTerm * 12));
-          const monthly = balance > 0 && r > 0
-            ? Math.round(balance * r / (1 - Math.pow(1 + r, -n)))
-            : 0;
           return {
-            monthly: monthly > 0 ? String(monthly) : base.monthly,
+            balance: balance > 0 ? String(Math.round(balance)) : base.balance,
             rate: rate ? String(rate) : base.rate,
             term: termYears ? String(termYears) : base.term,
             bank: base.bank,
+            prime: prime ? String(prime) : '',
           };
         }
       } catch {}
@@ -472,23 +559,35 @@ export default function Switch({ demo = false }) {
   const initialForm = initialFormRef.current;
 
   // Auto-show estimate when user arrives with carried-over numbers
-  const prefilled = !demo && parseFloat(initialForm.monthly) > 0 && !!initialForm.rate;
+  const prefilled = !demo && parseFloat(initialForm.balance) > 0 && !!initialForm.rate;
   const initialMode = demo ? 'verdict' : prefilled ? 'verdict' : 'form';
 
-  // 'form' | 'reading' | 'verdict' | 'statement' | 'reading-statement' | 'contact' | 'confirm'
+  // Progressive ladder modes:
+  // 'form' | 'reading' | 'verdict' | 'lockin' | 'qualify' | 'statement'
+  //   | 'reading-statement' | 'formal' | 'confirm'
   const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState(initialForm);
   const [proceeded, setProceeded] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null); // file waiting after contact capture
+  const [pendingFile, setPendingFile] = useState(null); // optional statement file for accelerator
   const [submitTried, setSubmitTried] = useState(false);
+
+  // Stable id stitching every staged lead POST for this visitor (lock-in →
+  // qualify → formal) so the backend can merge them into one lead later
+  // without a frontend change. Demo never posts.
+  const correlationRef = useRef(null);
+  if (correlationRef.current === null) {
+    correlationRef.current = (() => {
+      try { return crypto.randomUUID(); } catch { return `lead_${Date.now()}_${Math.round(Math.random() * 1e9)}`; }
+    })();
+  }
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
 
   function handleSubmit(e) {
     e.preventDefault();
     setSubmitTried(true);
-    const monthlyEmpty = !form.monthly || (parseFloat(form.monthly.replace(/\s/g, '')) || 0) <= 0;
-    if (monthlyEmpty || rateOutOfRange || monthlyTooHigh || monthlyNegative) return;
+    const balanceEmpty = !form.balance || (parseFloat(String(form.balance).replace(/\s/g, '')) || 0) <= 0;
+    if (balanceEmpty || rateOutOfRange || balanceTooHigh || balanceNegative) return;
     setMode('reading');
   }
 
@@ -497,48 +596,69 @@ export default function Switch({ demo = false }) {
     setMode('verdict');
   }
 
-  // Statement parse path: statement → reading-statement → confirm
+  // Statement parse path: statement → reading-statement → formal
   function handleStatementReadingDone() {
-    setMode('confirm');
-    setProceeded(true);
+    setMode('formal');
   }
 
-  function handleProceed() {
-    if (!user) {
-      setMode('contact');
-    } else {
-      setMode('confirm');
-      setProceeded(true);
-    }
+  // Primary ladder entry from the verdict. Logged-in users already have an
+  // email on file, so skip the lock-in rung and go straight to qualify.
+  function handleLockIn() {
+    trackAction('switch_verdict_lockin_clicked');
+    setMode(user ? 'qualify' : 'lockin');
   }
 
+  // Optional accelerator — jump straight to the statement step.
   function handleSeeOffers() {
     setMode('statement');
   }
 
-  // Called when StatementUpload has a file and initiates parse animation
+  // Called when StatementUpload has a file: lead is already captured at
+  // lock-in, so go straight to the reading animation (no second lead POST).
   function handleStatementSubmit(file) {
+    trackAction('switch_statement_added');
     setPendingFile(file);
-    if (!user) {
-      setMode('contact'); // capture lead first, then animate
-    } else {
-      setMode('reading-statement');
-    }
+    setMode('reading-statement');
   }
 
-  const monthlyInput = Math.max(0, Math.min(parseFloat(form.monthly) || 0, 1_000_000));
-  const currentRate  = parseFloat(form.rate) || PRIME + 1.0;
+  // Outstanding balance is the single source of truth — captured directly by the
+  // Landing/Hook calculators and entered directly here. No monthly→balance
+  // round-trip (the monthly repayment is a DERIVED, displayed figure instead).
+  const balanceInput = Math.max(0, Math.min(parseFloat(form.balance) || 0, 50_000_000));
+  const currentRate  = parseFloat(form.rate) || PRIME + DEFAULT_RATE_SPREAD;
   const termYears    = parseFloat(form.term) || 20;
-  const monthlyTooHigh = (parseFloat(form.monthly) || 0) > 1_000_000;
-  const monthlyNegative = form.monthly !== '' && (parseFloat(form.monthly) || 0) <= 0;
+  // Prefer the prime carried from the Landing reveal; fall back to live prime
+  // for direct /switch entry. Guarantees the range matches what the user saw.
+  const estimatePrime = parseFloat(form.prime) || livePrime;
+  const balanceTooHigh = (parseFloat(form.balance) || 0) > 50_000_000;
+  const balanceNegative = form.balance !== '' && (parseFloat(form.balance) || 0) <= 0;
   const rateOutOfRange = currentRate <= 0 || currentRate > 30;
-  const balance      = monthlyInput > 0
-    ? deriveBalance(monthlyInput, currentRate, termYears)
-    : 1_200_000;
-  const income       = 0;
+  const balance      = balanceInput > 0 ? balanceInput : 1_200_000;
+
+  // Staged lead capture. Each rung enriches the same lead via correlationId.
+  // Demo never posts. Fire-and-forget — an advisor follows up regardless.
+  async function postLead(extra) {
+    if (demo) return;
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          correlationId: correlationRef.current,
+          purpose: 'switch',
+          currentBank: form.bank,
+          currentBalance: balance,
+          currentRate,
+          currentTerm: termYears,
+          ...extra,
+        }),
+      });
+    } catch (_) {/* fail silently — advisor will follow up */}
+  }
 
   return (
     <div className="switch-page">
+      <LandingNav />
       {/* Hero */}
       <section className="switch-hero">
         <div className="container switch-hero__inner">
@@ -557,9 +677,9 @@ export default function Switch({ demo = false }) {
 
           {mode === 'form' && (
             <form className="switch-form" onSubmit={handleSubmit}>
-              <div className="switch-form__heading">What do you pay the bank each month?</div>
+              <div className="switch-form__heading">How much is left on your home loan?</div>
               <div className="switch-form__intro">
-                Type the rand amount from your home loan debit order — the one that leaves your account each month.
+                Enter your outstanding balance and rate — we'll show you exactly where your bond stands today and the two ways a switch could change it.
               </div>
 
               <button
@@ -578,15 +698,15 @@ export default function Switch({ demo = false }) {
               <div className="switch-form__fields">
                 <div>
                   <CurrencyInput
-                    label="Your monthly debit order (home loan)"
-                    placeholder="e.g. 10 500"
-                    value={form.monthly}
-                    onChange={set('monthly')}
+                    label="Outstanding balance on your bond"
+                    placeholder="e.g. 1 200 000"
+                    value={form.balance}
+                    onChange={set('balance')}
                   />
-                  <p className="switch-form__field-hint">The rand amount that leaves your account each month. Check your bank app — it usually shows as "Home Loan" or your bank's name.</p>
-                  {submitTried && !form.monthly && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Please enter your monthly home loan payment.</p>}
-                  {monthlyTooHigh && <p style={{ color: '#b45309', background: '#fef3c7', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>That seems high — double-check you haven't added extra zeros.</p>}
-                  {monthlyNegative && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Monthly payment must be a positive amount.</p>}
+                  <p className="switch-form__field-hint">Roughly what you still owe — check your latest home-loan statement or banking app. An estimate is fine.</p>
+                  {submitTried && !form.balance && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Please enter your outstanding balance.</p>}
+                  {balanceTooHigh && <p style={{ color: '#b45309', background: '#fef3c7', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>That seems high — double-check you haven't added extra zeros.</p>}
+                  {balanceNegative && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Balance must be a positive amount.</p>}
                 </div>
                 <div>
                   <label className="switch-form__label">
@@ -635,9 +755,9 @@ export default function Switch({ demo = false }) {
                 </label>
               </div>
 
-              {form.monthly && parseFloat(form.monthly) > 0 && (
+              {form.balance && parseFloat(form.balance) > 0 && (
                 <div className="switch-form__ready-nudge">
-                  ✓ Amount captured — hit the button below to see what you could save
+                  ✓ Balance captured — hit the button below to see your full breakdown
                 </div>
               )}
               <div className="switch-form__reassurance">
@@ -675,41 +795,56 @@ export default function Switch({ demo = false }) {
         </div>
       </section>
 
-      {/* Verdict / Statement / Confirm */}
-      {(mode === 'verdict' || mode === 'statement' || mode === 'confirm' || mode === 'contact') && (
+      {/* Verdict / ladder steps / Confirm */}
+      {(mode === 'verdict' || mode === 'lockin' || mode === 'qualify' || mode === 'statement' || mode === 'formal' || mode === 'confirm') && (
         <section className="switch-verdict-section">
           <div className="container">
             {mode === 'verdict' && (
               <SwitchVerdict
-                income={income}
                 balance={balance}
                 currentRate={currentRate}
                 termYears={termYears}
-                onProceed={handleProceed}
+                livePrime={estimatePrime}
+                onLockIn={handleLockIn}
                 onSeeOffers={handleSeeOffers}
+              />
+            )}
+            {mode === 'lockin' && (
+              <LockInStep
+                defaultEmail={user?.email || ''}
+                onSubmit={async ({ email, phone }) => {
+                  trackAction('switch_lockin_submitted');
+                  await postLead({ email, phone, source: 'switch_lockin', stage: 'lead' });
+                  setMode('qualify');
+                }}
+              />
+            )}
+            {mode === 'qualify' && (
+              <QualifyStep
+                onSubmit={async ({ incomeBand, monthlyIncome, employment }) => {
+                  trackAction('switch_qualify_submitted', { incomeBand });
+                  await postLead({ incomeBand, monthlyIncome, employment, source: 'switch_qualify', stage: 'qualified' });
+                  setMode('statement');
+                }}
+                onSkip={() => { setMode('confirm'); setProceeded(true); }}
               />
             )}
             {mode === 'statement' && (
               <StatementUpload
                 onProceed={handleStatementSubmit}
-                onBack={() => setMode('verdict')}
-                onSkip={handleProceed}
+                onBack={() => setMode('qualify')}
+                onSkip={() => { setMode('confirm'); setProceeded(true); }}
               />
             )}
-            {mode === 'contact' && (
-              <SwitchContact
-                balance={balance}
-                currentRate={currentRate}
-                bank={form.bank}
-                term={termYears}
-                onDone={() => {
-                  if (pendingFile) {
-                    setMode('reading-statement');
-                  } else {
-                    setMode('confirm');
-                    setProceeded(true);
-                  }
+            {mode === 'formal' && (
+              <FormalDetailsStep
+                onSubmit={async (details) => {
+                  trackAction('switch_formal_submitted');
+                  await postLead({ ...details, source: 'switch_formal', stage: 'submission_ready' });
+                  setMode('confirm');
+                  setProceeded(true);
                 }}
+                onSkip={() => { setMode('confirm'); setProceeded(true); }}
               />
             )}
             {mode === 'confirm' && <SwitchConfirm balance={balance} currentRate={currentRate} />}
@@ -743,70 +878,75 @@ export default function Switch({ demo = false }) {
   );
 }
 
-// ── Contact capture (unauthenticated users) ───────────────────────────────────
-function SwitchContact({ balance, currentRate, bank, term, onDone }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', propertyAddress: '', income: '', employmentType: '', maritalStatus: '', marriageType: '', idNumber: '' });
-  const [status, setStatus] = useState('idle'); // idle | sending | done | error
-  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+// ── Ladder step A: Lock in (email/phone only) ─────────────────────────────────
+function LockInStep({ defaultEmail = '', onSubmit }) {
+  const [email, setEmail] = useState(defaultEmail);
+  const [phone, setPhone] = useState('');
+  const [status, setStatus] = useState('idle');
+  const canSubmit = !!email || !!phone;
 
-  async function handleSubmit(e) {
+  async function submit(e) {
     e.preventDefault();
+    if (!canSubmit || status === 'sending') return;
     setStatus('sending');
-    try {
-      await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          propertyAddress: form.propertyAddress || null,
-          employment: form.employmentType,
-          monthlyIncome: form.income ? parseFloat(form.income.replace(/[^0-9.]/g, '')) : undefined,
-          idNumber: form.idNumber ? form.idNumber.replace(/\s/g, '') : null,
-          maritalStatus: form.maritalStatus || null,
-          source: 'switch_form',
-          purpose: 'switch',
-          currentBank: bank,
-          currentBalance: balance,
-          currentRate,
-          currentTerm: term,
-        }),
-      });
-    } catch (_) {/* fail silently — advisor will follow up */}
-    setStatus('done');
-    onDone();
+    await onSubmit({ email, phone });
   }
 
   return (
-    <div className="switch-contact fade-in">
-      <h2 className="switch-contact__title">Where should we send your results?</h2>
-      <p className="switch-contact__sub">Enter your details and a Bondly consultant will be in touch within 48 hours with real offers from all 7 banks — no credit check, no obligation.</p>
+    <div className="switch-contact switch-step fade-in">
+      <div className="switch-step__rung">Step 1 of 3 · Lock in your estimate</div>
+      <h2 className="switch-contact__title">Lock in your estimate</h2>
+      <p className="switch-contact__sub">Just an email or phone number to save your estimate and let a Bondly consultant follow up. No credit check, no obligation.</p>
       <p className="switch-contact__reassurance">Your details are only shared with banks that submit you an offer.</p>
-      <form className="switch-contact__form" onSubmit={handleSubmit}>
-        <label className="switch-form__label">
-          Your name
-          <input className="switch-form__input" type="text" placeholder="e.g. Sarah Dlamini" value={form.name} onChange={set('name')} autoFocus />
-        </label>
+      <form className="switch-contact__form" onSubmit={submit}>
         <label className="switch-form__label">
           Email address
-          <input className="switch-form__input" type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} required={!form.phone} />
+          <input className="switch-form__input" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required={!phone} autoFocus />
         </label>
         <label className="switch-form__label">
           Phone number
-          <input className="switch-form__input" type="tel" placeholder="e.g. 082 555 1234" value={form.phone} onChange={set('phone')} required={!form.email} />
+          <input className="switch-form__input" type="tel" placeholder="e.g. 082 555 1234" value={phone} onChange={e => setPhone(e.target.value)} required={!email} />
         </label>
+        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending' || !canSubmit}>
+          {status === 'sending' ? 'Saving…' : 'Lock in my estimate →'}
+        </button>
+        <p className="switch-form__note">No credit check · No obligation · POPIA compliant</p>
+      </form>
+    </div>
+  );
+}
+
+// ── Ladder step B: Light qualify (income band + employment) ───────────────────
+function QualifyStep({ onSubmit, onSkip }) {
+  const [incomeBand, setIncomeBand] = useState('');
+  const [employment, setEmployment] = useState('');
+  const [status, setStatus] = useState('idle');
+  const canSubmit = !!incomeBand && !!employment;
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!canSubmit || status === 'sending') return;
+    setStatus('sending');
+    const band = INCOME_BANDS.find(b => b.value === incomeBand);
+    await onSubmit({ incomeBand, monthlyIncome: band?.mid, employment });
+  }
+
+  return (
+    <div className="switch-contact switch-step fade-in">
+      <div className="switch-step__rung">Step 2 of 3 · A couple of quick questions</div>
+      <h2 className="switch-contact__title">Help us match the right banks</h2>
+      <p className="switch-contact__sub">Two quick questions so we approach the lenders most likely to approve you. No exact figures needed yet.</p>
+      <form className="switch-contact__form" onSubmit={submit}>
         <label className="switch-form__label">
-          Property address <span className="switch-form__optional">(optional — helps us approach banks faster)</span>
-          <input className="switch-form__input" type="text" placeholder="e.g. 14 Main Road, Cape Town" value={form.propertyAddress} onChange={set('propertyAddress')} />
-        </label>
-        <label className="switch-form__label">
-          Monthly gross income (before tax)
-          <input className="switch-form__input" type="text" inputMode="numeric" placeholder="e.g. 45 000" value={form.income} onChange={set('income')} />
+          Monthly income (before tax)
+          <select className="switch-form__input" value={incomeBand} onChange={e => setIncomeBand(e.target.value)} required autoFocus>
+            <option value="">Select a range…</option>
+            {INCOME_BANDS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
+          </select>
         </label>
         <label className="switch-form__label">
           Employment type
-          <select className="switch-form__input" value={form.employmentType} onChange={set('employmentType')}>
+          <select className="switch-form__input" value={employment} onChange={e => setEmployment(e.target.value)} required>
             <option value="">Select…</option>
             <option value="salaried">Salaried</option>
             <option value="self_employed">Self-employed</option>
@@ -814,29 +954,61 @@ function SwitchContact({ balance, currentRate, bank, term, onDone }) {
             <option value="retired">Retired</option>
           </select>
         </label>
+        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending' || !canSubmit}>
+          {status === 'sending' ? 'Saving…' : 'Continue →'}
+        </button>
+        <button type="button" className="switch-step__skip" onClick={onSkip}>Skip for now →</button>
+        <p className="switch-form__note">No credit check · No obligation · POPIA compliant</p>
+      </form>
+    </div>
+  );
+}
+
+// ── Ladder step D: Formal details (only at final bank submission) ─────────────
+function FormalDetailsStep({ onSubmit, onSkip }) {
+  const [form, setForm] = useState({ name: '', idNumber: '', income: '', propertyAddress: '' });
+  const [status, setStatus] = useState('idle');
+  const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  async function submit(e) {
+    e.preventDefault();
+    if (status === 'sending') return;
+    setStatus('sending');
+    await onSubmit({
+      name: form.name || undefined,
+      idNumber: form.idNumber ? form.idNumber.replace(/\s/g, '') : null,
+      monthlyIncome: form.income ? parseFloat(form.income.replace(/[^0-9.]/g, '')) : undefined,
+      propertyAddress: form.propertyAddress || null,
+    });
+  }
+
+  return (
+    <div className="switch-contact switch-step fade-in">
+      <div className="switch-step__rung">Final step · Ready to submit to banks</div>
+      <h2 className="switch-contact__title">Final details before we submit</h2>
+      <p className="switch-contact__sub">Banks legally need these to make you a formal offer. We only share them with lenders that come back with a deal.</p>
+      <form className="switch-contact__form" onSubmit={submit}>
         <label className="switch-form__label">
-          Marital status <span className="switch-form__optional">(optional)</span>
-          <select className="switch-form__input" value={form.maritalStatus} onChange={set('maritalStatus')}>
-            <option value="">Select…</option>
-            <option value="single">Single</option>
-            <option value="married_cop">Married (in community of property)</option>
-            <option value="married_anc">Married (ANC — out of community)</option>
-            <option value="divorced">Divorced</option>
-            <option value="widowed">Widowed</option>
-          </select>
+          Your full name
+          <input className="switch-form__input" type="text" placeholder="e.g. Sarah Dlamini" value={form.name} onChange={set('name')} autoFocus />
         </label>
         <label className="switch-form__label">
-          SA ID number <span className="switch-form__optional">(optional — required for formal bank submission)</span>
+          SA ID number
           <input className="switch-form__input" type="text" inputMode="numeric" placeholder="e.g. 8001015009087" maxLength={13} value={form.idNumber} onChange={set('idNumber')} />
         </label>
-        <button
-          type="submit"
-          className="btn btn--lime switch-form__submit"
-          disabled={status === 'sending' || (!form.email && !form.phone)}
-        >
-          {status === 'sending' ? 'Submitting…' : 'Get my offers →'}
+        <label className="switch-form__label">
+          Monthly gross income (before tax)
+          <input className="switch-form__input" type="text" inputMode="numeric" placeholder="e.g. 45 000" value={form.income} onChange={set('income')} />
+        </label>
+        <label className="switch-form__label">
+          Property address <span className="switch-form__optional">(helps us approach banks faster)</span>
+          <input className="switch-form__input" type="text" placeholder="e.g. 14 Main Road, Cape Town" value={form.propertyAddress} onChange={set('propertyAddress')} />
+        </label>
+        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending'}>
+          {status === 'sending' ? 'Submitting…' : 'Submit to banks →'}
         </button>
-        <p className="switch-form__note">No credit check · No obligation · POPIA compliant</p>
+        <button type="button" className="switch-step__skip" onClick={onSkip}>I'll send these later →</button>
+        <p className="switch-form__note">No credit check now · POPIA compliant · You confirm before anything is submitted</p>
       </form>
     </div>
   );

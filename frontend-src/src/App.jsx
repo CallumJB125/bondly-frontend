@@ -125,7 +125,6 @@ const Tools         = lazy(() => import('./features/tools/Tools.jsx'));
 const Optimize      = lazy(() => import('./features/optimize/Optimize.jsx'));
 const Profile       = lazy(() => import('./features/profile/Profile.jsx'));
 const Application   = lazy(() => import('./features/application/Application.jsx'));
-const FAQ           = lazy(() => import('./features/faq/FAQ.jsx'));
 const Glossary      = lazy(() => import('./features/glossary/Glossary.jsx'));
 const About         = lazy(() => import('./features/about/About.jsx'));
 const BlogIndex     = lazy(() => import('./features/blog/BlogIndex.jsx'));
@@ -148,6 +147,7 @@ const FirstTimeBuyer      = lazy(() => import('./features/firstTimeBuyer/FirstTi
 const Guarantee      = lazy(() => import('./features/guarantee/Guarantee.jsx'));
 const Letter         = lazy(() => import('./features/letter/Letter.jsx'));
 const Switch         = lazy(() => import('./features/switch/Switch.jsx'));
+const Contact        = lazy(() => import('./features/contact/Contact.jsx'));
 
 const BankLogin             = lazy(() => import('./features/bank/BankLogin.jsx'));
 const BankShell             = lazy(() => import('./features/bank/BankShell.jsx'));
@@ -212,7 +212,6 @@ const ROUTE_TITLES = {
   '/profile':            'My Profile | Bondly',
   '/application':        'My Application | Bondly',
   '/onboarding':         'Get Started | Bondly',
-  '/faq':                'Frequently Asked Questions | Bondly',
   '/glossary':           'Home Loan Glossary | Bondly',
   '/about':              'About Us | Bondly',
   '/blog':               'Home Loan Guides & Tips | Bondly',
@@ -228,6 +227,8 @@ const ROUTE_TITLES = {
   '/first-time-buyer-guide': 'First-time home buyer guide — no jargon | Bondly',
   '/guarantee':          'Best Rate Guarantee | Bondly',
   '/switch':             'Switch Your Bond — Compare 7 Banks | Bondly',
+  '/contact':            'Contact Bondly — Talk to a Real Human | Bondly',
+  '/test':               'Contact Bondly — Talk to a Real Human | Bondly',
   '/admin':              'Admin | Bondly',
   '/bank':               'Bond Desk | Bondly',
   '/bank/login':         'Sign in | Bond Desk',
@@ -459,7 +460,8 @@ function AppContent() {
           <Route path="/reset-password"  element={<ResetPw />} />
           {/* Pre-approval is a BUYING flow — it belongs on the origination product, not the switch site. */}
           <Route path="/preapproval"    element={<OriginRedirect path="/preapproval" />} />
-          <Route path="/faq"            element={<FAQ />} />
+          {/* FAQ page removed — homepage FAQ section is canonical. Redirect old URLs (incl. deep-links). */}
+          <Route path="/faq"            element={<Navigate to="/home#faq" replace />} />
           <Route path="/glossary"       element={<Glossary />} />
           <Route path="/about"          element={<About />} />
           <Route path="/blog"           element={<BlogIndex />} />
@@ -470,6 +472,8 @@ function AppContent() {
           <Route path="/get-a-quote"    element={<Navigate to="/preapproval" replace />} />
           <Route path="/switch"         element={<Switch />} />
           <Route path="/switch/demo"    element={<Switch demo />} />
+          <Route path="/contact"        element={<Contact />} />
+          <Route path="/test"           element={<Contact />} />
           <Route path="/guarantee"      element={<Guarantee />} />
           <Route path="/letter/:token"  element={<Letter />} />
 
@@ -490,7 +494,7 @@ function AppContent() {
           <Route path="/optimize"           element={<Optimize />} />
           <Route path="/optimizer"          element={<Navigate to="/optimize" replace />} />
           <Route path="/financial-optimizer" element={<Navigate to="/optimize" replace />} />
-          <Route path="/how-it-works"        element={<Navigate to="/faq" replace />} />
+          <Route path="/how-it-works"        element={<Navigate to="/home#how-it-works" replace />} />
           <Route path="/tools/financial-check" element={<Navigate to="/tools" replace />} />
           <Route path="/profile"     element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/application" element={<PrivateRoute><Application /></PrivateRoute>} />

@@ -20,6 +20,13 @@ export function fmt(n) {
   return 'R' + THIN + groupZA(n);
 }
 
+// Render a low–high rand range as "R 900–R 1 100". Uses an en-dash between the
+// two figures. If both bounds are equal, collapses to a single figure.
+export function fmtRange(low, high) {
+  if (low === high) return fmt(low);
+  return fmt(low) + '–' + fmt(high);
+}
+
 export function fmtShort(n) {
   if (n == null || isNaN(n)) n = 0;
   if (Math.abs(n) >= 1_000_000_000) return 'R' + THIN + (n / 1_000_000_000).toFixed(1) + 'bn';

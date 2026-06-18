@@ -18,7 +18,7 @@ export default function NotFound() {
             <Link to="/tools/repayment-calculator">Repayment Calculator</Link>
             <Link to="/optimize">Financial Check</Link>
             <Link to="/blog">Guides</Link>
-            <Link to="/faq">FAQ</Link>
+            <a href="/home#faq">FAQ</a>
           </div>
         </div>
       </div>

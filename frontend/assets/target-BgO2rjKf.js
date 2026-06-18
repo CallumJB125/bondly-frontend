@@ -1,0 +1,2 @@
+import{i as c}from"./index-DxjZpLVc.js";const e=[["path",{d:"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16",key:"jecpp"}],["rect",{width:"20",height:"14",x:"2",y:"6",rx:"2",key:"i6l2r4"}]],i=c("briefcase",e);const r=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["circle",{cx:"12",cy:"12",r:"6",key:"1vlfrh"}],["circle",{cx:"12",cy:"12",r:"2",key:"1c9p78"}]],a=c("target",r);export{i as B,a as T};
+//# sourceMappingURL=target-BgO2rjKf.js.map

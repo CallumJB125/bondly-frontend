@@ -1,6 +1,12 @@
 // ── SA Finance constants ──────────────────────────────────
 export const PRIME_RATE   = 11.25; // % — updated May 2026 (SARB cut 25bps)
 export const STRESS_RATE  = 13.25; // % — prime + 2% stress test (SA bank standard)
+
+// Default spread above prime assumed for a homeowner's CURRENT rate when they
+// haven't told us the exact figure. Single source of truth so the Landing
+// estimate and the /switch estimate never diverge on the "no rate entered"
+// fallback (previously Landing used +1.25 and Switch used +1.0 — a drift bug).
+export const DEFAULT_RATE_SPREAD = 1.0; // percentage points
 export const BANKS = ['ABSA', 'FNB', 'Nedbank', 'Standard Bank', 'Capitec', 'Investec', 'SA Home Loans'];
 
 // Bank spreads above prime (percentage points)

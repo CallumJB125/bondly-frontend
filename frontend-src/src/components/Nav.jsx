@@ -77,7 +77,9 @@ export default function Nav() {
     navigate('/dashboard', { state: { tab: t } });
   };
 
-  if (['/login', '/register', '/forgot-password', '/admin', '/hook', '/bank'].some(p => location.pathname.startsWith(p))) {
+  // /switch ships the shared LandingNav (same bar as the landing page), so
+  // suppress the global chrome here to avoid a double nav.
+  if (['/login', '/register', '/forgot-password', '/admin', '/hook', '/bank', '/switch'].some(p => location.pathname.startsWith(p))) {
     return null;
   }
   // The redesigned Landing (default at "/" and at "/home") ships its own
@@ -112,7 +114,7 @@ export default function Nav() {
                 <a href={ORIGINATION_URL} className="nav-path-cta nav-path-cta--buy nav-path-cta--sister" target="_blank" rel="noopener noreferrer" title="Bondly Home — sister product for buying a home">Buying? → Bondly Home ↗</a>
                 <span className="nav-secondary-links">
                   <a href={location.pathname === '/home' ? '#how-it-works' : '/home#how-it-works'}>How it works</a>
-                  <Link to="/faq">FAQ</Link>
+                  <a href={location.pathname === '/home' ? '#faq' : '/home#faq'}>FAQ</a>
                   <Link to="/tools">Calculators</Link>
                   <Link to="/blog">Guides</Link>
                 </span>

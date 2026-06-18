@@ -253,7 +253,7 @@ function Results({ data }) {
           <Link to="/preapproval" className="btn btn--lime">
             See if you qualify — free <ChevronRight size={15} style={{ verticalAlign: 'middle', marginLeft: 2 }} />
           </Link>
-          <Link to="/faq#switching-costs" className="btn btn--ghost">What does switching cost?</Link>
+          <a href="/home#faq" className="btn btn--ghost">What does switching cost?</a>
         </div>
       </div>
 
