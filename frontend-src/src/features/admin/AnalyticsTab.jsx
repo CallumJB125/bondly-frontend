@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { adminAnalytics } from '../../lib/api.js';
+import { fmt } from '@bondly/ui/lib/format.js';
+import { useAdminStats, useAdminCommissions, useAdminLeads } from './hooks/useAdminQueries.js';
 import './AnalyticsTab.css';
 
 const SUBTABS = [
@@ -61,6 +64,50 @@ function BarRow({ label, count, max, color, pct }) {
   );
 }
 
+// ── Business KPIs (cross-module) ────────────────────────────────────────────────
+// A drill-down summary that pulls revenue/pipeline/conversion from the same React
+// Query caches the Commissions/Leads/Customers tabs use, so it stays in sync. Each
+// card navigates to the underlying tab.
+function BizKpiCard({ label, value, sub, color, onClick }) {
+  return (
+    <button type="button" onClick={onClick} className="at-kpi at-kpi--clickable"
+      style={{ textAlign: 'left', border: '1px solid var(--border-color)', background: 'var(--bg-card)', cursor: 'pointer', font: 'inherit', width: '100%' }}>
+      <div className="at-kpi-label">{label}</div>
+      <div className="at-kpi-value" style={color ? { color } : {}}>{value}</div>
+      {sub && <div className="at-kpi-sub">{sub}</div>}
+      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--brand, #1e3a5f)', marginTop: 6 }}>View →</div>
+    </button>
+  );
+}
+
+function BusinessKpiStrip() {
+  const navigate = useNavigate();
+  const { data: stats = {} } = useAdminStats();
+  const { data: comm = { totals: {} } } = useAdminCommissions();
+  const { data: leadsData = {} } = useAdminLeads();
+
+  const revenue   = (comm.totals?.received || 0) + (comm.totals?.reconciled || 0);
+  const pipeline  = comm.totals?.pending || 0;
+  const convRate  = leadsData.totalAll ? Math.round(((leadsData.convertedCount || 0) / leadsData.totalAll) * 100) : 0;
+
+  const cards = [
+    { label: 'Revenue banked',    value: fmt(revenue),               sub: 'Commissions received + reconciled', color: '#16a34a', to: 'commissions' },
+    { label: 'Commission pipeline', value: fmt(pipeline),            sub: 'Pending commissions',               color: '#f59e0b', to: 'commissions' },
+    { label: 'Switchable balance', value: fmt(stats.switchableBal || 0), sub: `${stats.withBonds || 0} customers with bonds`, color: '#3b82f6', to: 'customers' },
+    { label: 'Lead conversion',   value: `${convRate}%`,             sub: `${leadsData.convertedCount || 0} of ${leadsData.totalAll || 0} leads`, color: '#6366f1', to: 'leads' },
+    { label: 'Applications',      value: stats.applied || 0,         sub: `${stats.completed || 0} completed`, color: '#8b5cf6', to: 'deals' },
+  ];
+
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <div className="at-card-head" style={{ marginBottom: 10 }}>Business — cross-module KPIs</div>
+      <div className="at-kpi-grid">
+        {cards.map(c => <BizKpiCard key={c.label} label={c.label} value={c.value} sub={c.sub} color={c.color} onClick={() => navigate('/admin/' + c.to)} />)}
+      </div>
+    </div>
+  );
+}
+
 // ── Overview ──────────────────────────────────────────────────────────────────
 function OverviewPanel({ days }) {
   const [data, setData] = useState(null);
@@ -71,14 +118,17 @@ function OverviewPanel({ days }) {
     adminAnalytics.overview(days).then(setData).catch(() => setData(null)).finally(() => setLoading(false));
   }, [days]);
 
-  if (loading) return <Spinner />;
-  if (!data) return <p className="at-empty">No data yet — analytics events will appear here once users start browsing.</p>;
-
-  const segEntries = Object.entries(data.segments || {}).sort((a, b) => b[1] - a[1]);
+  const segEntries = Object.entries(data?.segments || {}).sort((a, b) => b[1] - a[1]);
   const maxSeg = Math.max(...segEntries.map(([, n]) => n), 1);
 
   return (
     <div>
+      <BusinessKpiStrip />
+      {loading ? <Spinner /> : !data ? (
+        <p className="at-empty">No engagement data yet — analytics events will appear here once users start browsing.</p>
+      ) : (
+      <>
+      <div className="at-card-head" style={{ marginBottom: 10 }}>Engagement</div>
       <div className="at-kpi-grid">
         <KpiCard label="DAU"            value={data.dau}                 sub="Active users today" />
         <KpiCard label="WAU"            value={data.wau}                 sub="Last 7 days" />
@@ -119,6 +169,8 @@ function OverviewPanel({ days }) {
             {data.topFriction.type} on {data.topFriction.page || 'unknown'} — {data.topFriction.cnt} times
           </p>
         </div>
+      )}
+      </>
       )}
     </div>
   );
