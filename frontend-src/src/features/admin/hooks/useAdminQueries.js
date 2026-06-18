@@ -51,7 +51,7 @@ export function useAdminCommissions(options = {}) {
 export function useAdminStats(options = {}) {
   return useQuery({
     queryKey: ['admin', 'stats'],
-    queryFn: () => admin.stats().then(r => r.data || {}),
+    queryFn: () => admin.stats().then(d => d || {}),
     ...options,
   });
 }
