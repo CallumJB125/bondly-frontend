@@ -17,6 +17,7 @@ export default defineConfig({
     outDir: '../frontend',
     emptyOutDir: true,
     sourcemap: true,
+    cssCodeSplit: false,
   },
   server: {
     fs: { allow: [projectPath, sharedPath] },

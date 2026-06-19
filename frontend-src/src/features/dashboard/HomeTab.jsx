@@ -289,6 +289,68 @@ export default function HomeTab({ loans, user, onTabChange }) {
         </div>
       )}
 
+      {/* ── FI-F4: Assumptions & confidence panel ── */}
+      {health && (health.assumptions?.length > 0 || health.confidence != null || health.dataQuality) && (
+        <div className="home-section">
+          <details style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, padding: '10px 14px' }}>
+            <summary style={{ cursor: 'pointer', fontSize: '0.8rem', color: 'var(--color-text-muted)', fontWeight: 600, userSelect: 'none' }}>
+              How your score is calculated
+              {health.dataQuality && (
+                <span style={{
+                  marginLeft: 8,
+                  fontSize: '0.7rem',
+                  padding: '1px 6px',
+                  borderRadius: 4,
+                  background: health.dataQuality === 'high' ? '#16401f' : health.dataQuality === 'medium' ? '#3d2e00' : '#3d1010',
+                  color: health.dataQuality === 'high' ? '#22c55e' : health.dataQuality === 'medium' ? '#f59e0b' : '#ef4444',
+                }}>
+                  {health.dataQuality} data quality
+                </span>
+              )}
+            </summary>
+            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {/* FI-F4: savings shown as band, not exact figure */}
+              {income > 0 && (() => {
+                const s = savings;
+                const band = s >= 5000 ? 'R 5 000+' : s >= 2000 ? 'R 2 000 – 5 000' : s >= 500 ? 'R 500 – 2 000' : s > 0 ? 'Under R 500' : 'Negative / zero';
+                return (
+                  <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>
+                    <strong>Estimated monthly savings:</strong> {band} (band — not an exact figure; based on transaction analysis)
+                  </div>
+                );
+              })()}
+              {/* FI-F4: render hardcoded multiplier assumptions */}
+              {health.subScores && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {Object.entries(health.subScores).map(([k, v]) => v?.weight != null && (
+                    <div key={k}><strong>{v.label}:</strong> {v.weight}% weight → score {v.score ?? '—'}/100</div>
+                  ))}
+                </div>
+              )}
+              {/* FI-F4: render explicit assumptions array if present */}
+              {health.assumptions?.length > 0 && (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 4 }}>Assumptions</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {health.assumptions.map((a, i) => <li key={i}>{a}</li>)}
+                  </ul>
+                </div>
+              )}
+              {health.confidence != null && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  <strong>Model confidence:</strong> {Math.round(health.confidence * 100)}%
+                </div>
+              )}
+              {health.transactionCount != null && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+                  Based on {health.transactionCount} transaction{health.transactionCount !== 1 ? 's' : ''} analysed
+                </div>
+              )}
+            </div>
+          </details>
+        </div>
+      )}
+
       {/* ── Top insight ── */}
       {topInsight && (
         <div className="home-section">

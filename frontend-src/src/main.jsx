@@ -19,8 +19,17 @@ function isChunkError(err) {
   );
 }
 
-// Reload silently on stale Vite chunks (after every deploy)
-window.addEventListener('vite:preloadError', () => { window.location.reload(); });
+// Reload silently on stale Vite chunks (after every deploy).
+// Guard against an infinite reload loop: if a preload keeps failing (e.g. a CDN
+// serving issue for a freshly-deployed chunk), reload at most once per session.
+window.addEventListener('vite:preloadError', (e) => {
+  if (sessionStorage.getItem('vite-preload-reloaded')) {
+    if (e && e.preventDefault) e.preventDefault(); // stop default reload; fail gracefully instead of looping
+    return;
+  }
+  sessionStorage.setItem('vite-preload-reloaded', '1');
+  window.location.reload();
+});
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
