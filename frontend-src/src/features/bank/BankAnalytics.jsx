@@ -76,9 +76,17 @@ export default function BankAnalytics() {
           const highBand = bands.find(b => b.band && b.band.toString().startsWith('85'));
           const highRate = highBand?.winRate;
           if (best.band && best.winRate != null) {
-            return highRate != null
-              ? `Your strongest band is ${best.band} (${best.winRate}% win rate). High-quality (85+) deals close faster and default less — you win ${highRate}% of those, so prioritise them.`
-              : `Your strongest win rate is in the ${best.band} quality band (${best.winRate}%). High-quality deals close faster and default less — lean into these.`;
+            // High-quality (85+) files close faster and default less, so they're
+            // the ones to want. But only recommend "prioritise" when you're
+            // actually winning them — otherwise the honest read is that you're
+            // being outbid on the deals everyone wants (#22).
+            if (highRate != null && highRate >= 40) {
+              return `Your strongest band is ${best.band} (${best.winRate}% win rate). You win ${highRate}% of high-quality (85+) deals — they close faster and default less, so keep prioritising them.`;
+            }
+            if (highRate != null) {
+              return `You win only ${highRate}% of high-quality (85+) deals — the files everyone wants. They close faster and default less, so this likely means you're being outbid there. Sharpen pricing on 85+ files to capture more of them. (Your strongest band today is ${best.band} at ${best.winRate}%.)`;
+            }
+            return `Your strongest win rate is in the ${best.band} quality band (${best.winRate}%). High-quality deals close faster and default less — lean into these.`;
           }
           if (bands.length === 0 || bands.every(b => !b.won && !b.lost)) {
             return 'No bid data yet — place your first bids to see which quality bands you win most.';

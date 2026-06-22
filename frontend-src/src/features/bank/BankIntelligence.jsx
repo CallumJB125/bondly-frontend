@@ -2463,7 +2463,7 @@ export default function BankIntelligence() {
             {[
               { label: 'Avg Distress Index',   value: avgFdi,                           prev: avgFdiDelta,  flip: true, spark: sparkAvgFdi,  tone: riskColor(avgFdi) },
               { label: 'High Distress Suburbs', value: highPct + '%',                   prev: highPctDelta, flip: true, spark: sparkHighPct, tone: C.high },
-              { label: 'Population at risk',    value: (meta?.distressPct ?? '—') + '%', prev: null,        flip: true, spark: null,         tone: C.text },
+              { label: 'Population at risk',    value: (meta?.distressPct ?? '—') + '%', prev: null,        flip: true, spark: null,         tone: C.text, sub: `share of the ${meta?.totalUsers ? meta.totalUsers.toLocaleString('en-ZA') + ' ' : ''}monitored borrowers, distress-weighted` },
             ].map((m, i, arr) => (
               <div key={m.label} style={{ padding: '12px 18px', borderTop: `1px solid ${C.border}` }}>
                 <div style={{ fontFamily: MONO, fontSize: '0.68rem', color: C.faint, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>{m.label}</div>
@@ -2472,6 +2472,7 @@ export default function BankIntelligence() {
                     <span style={{ fontFamily: DISP, fontSize: '1.8rem', fontWeight: 500, color: m.tone, lineHeight: 1, letterSpacing: -0.5 }}>{m.value}</span>
                     {m.prev != null && <DeltaTag val={m.prev} flip={m.flip} />}
                     {m.prev != null && <div style={{ fontFamily: MONO, fontSize: '0.62rem', color: C.faint, marginTop: 3 }}>vs prev period</div>}
+                    {m.sub && <div style={{ fontFamily: SANS, fontSize: '0.62rem', color: C.faint, marginTop: 3 }}>{m.sub}</div>}
                   </div>
                   {m.spark && m.spark.length > 1 && (
                     <Sparkline values={m.spark} color={m.tone} width={80} height={28} />
@@ -2536,7 +2537,10 @@ export default function BankIntelligence() {
                 Engine Accuracy
               </div>
               <div style={{ fontFamily: SANS, fontSize: '0.68rem', color: C.faint, marginBottom: 10, lineHeight: 1.4 }}>
-                F1 = harmonic mean of precision &amp; recall, approaching the 0.70 production benchmark for fraud detection.
+                F1 = harmonic mean of precision &amp; recall. Production benchmark for fraud detection is 0.70.
+                {accuracy.fraudF1 != null && accuracy.fraudF1 < 70 && (
+                  <span style={{ color: C.medium }}> Current F1 of {accuracy.fraudF1}% is below that benchmark — treat fraud flags as triage signals to review, not standalone decisions.</span>
+                )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[
