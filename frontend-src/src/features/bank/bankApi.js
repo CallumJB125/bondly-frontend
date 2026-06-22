@@ -98,6 +98,9 @@ export const bankApi = {
   // Bondly Intelligence — geo + sector analysis
   intelligence:   ()                       => bankFetch('/api/bank/intelligence'),
 
+  // Roadmap (SIMULATED) — book-level cross-bank intelligence preview
+  roadmapPortfolio: ()                     => bankFetch('/api/bank/roadmap/portfolio'),
+
   // ML Models — backtest results
   mlModels:       ()                       => bankFetch('/api/bank/ml-models'),
 

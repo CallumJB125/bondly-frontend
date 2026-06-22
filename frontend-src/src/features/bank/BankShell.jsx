@@ -139,6 +139,10 @@ export default function BankShell() {
           <NavLink to="/bank/analytics"    className={({isActive}) => isActive ? 'active' : ''}>Portfolio &amp; risk</NavLink>
           <NavLink to="/bank/intelligence" className={({isActive}) => isActive ? 'active' : ''}>Market intelligence</NavLink>
           <NavLink to="/bank/triage"       className={({isActive}) => isActive ? 'active' : ''}>Triage</NavLink>
+          <NavLink to="/bank/roadmap"      className={({isActive}) => isActive ? 'active' : ''}>
+            Retention radar
+            <span style={{ marginLeft: 6, fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#c4b5fd', border: '1px solid rgba(196,181,253,0.5)', borderRadius: 999, padding: '1px 5px' }}>Roadmap</span>
+          </NavLink>
 
           {(me?.role === 'bank_admin') && (
             <>
