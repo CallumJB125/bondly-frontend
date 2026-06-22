@@ -163,6 +163,7 @@ const BankAnalytics         = lazy(() => import('./features/bank/BankAnalytics.j
 const BankIntelligence      = lazy(() => import('./features/bank/BankIntelligence.jsx'));
 const BankSettings          = lazy(() => import('./features/bank/BankSettings.jsx'));
 const BankTriage            = lazy(() => import('./features/bank/BankTriage.jsx'));
+const BankRoadmap           = lazy(() => import('./features/bank/BankRoadmap.jsx'));
 
 // Redirect to the origination app (localhost:5174 in dev, real domain in prod)
 const ORIGINATION_BASE = import.meta.env.VITE_ORIGINATION_URL || 'http://localhost:5174';
@@ -522,6 +523,7 @@ function AppContent() {
             <Route path="deals/:cappId"           element={<BankDeals />} />
             <Route path="auto-bid"                element={<BankAutoBid />} />
             <Route path="triage"                  element={<BankTriage />} />
+            <Route path="roadmap"                 element={<BankRoadmap />} />
             <Route path="analytics"               element={<BankAnalytics />} />
             <Route path="intelligence"            element={<BankIntelligence />} />
             <Route path="settings"                element={<BankSettings />} />

@@ -322,6 +322,81 @@ export default function BankApplicationDetail() {
             <div className="bank-row"><span className="k">Bank statement coverage<Explain text="Number of months of bank statements on file. 3 months is the minimum; 6+ months gives a much more reliable picture of income patterns and spending habits." /></span><span className="v">{a.monthsOfStatements} month{a.monthsOfStatements === 1 ? '' : 's'}</span></div>
           </div>
 
+          {d?.roadmap && (
+            <div className="bank-section" style={{ border: '1px solid #c4b5fd', background: 'linear-gradient(180deg,#faf5ff,#fff)', borderRadius: 10 }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                Cross-bank intelligence
+                <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6d28d9', background: '#ede9fe', border: '1px solid #ddd6fe', borderRadius: 999, padding: '2px 8px' }}>Roadmap · simulated</span>
+              </h3>
+              <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: '#6b7280' }}>
+                Only Bondly sees this applicant's flows across <em>all</em> their banks (by consent). Preview of roadmap signals — not live.
+              </p>
+              <div className="bank-row">
+                <span className="k">True cross-bank DTI<Explain text="Debt-to-income recomputed across every bank the applicant uses — including obligations they did not declare and that the bureau has not yet reported." /></span>
+                <span className="v">
+                  {d.roadmap.crossBankAffordability.trueCrossBankDTI} %
+                  {d.roadmap.crossBankAffordability.trueCrossBankDTI > d.roadmap.crossBankAffordability.declaredDTI && (
+                    <span style={{ color: '#b91c1c', fontWeight: 600, marginLeft: 6 }}>▲ vs {d.roadmap.crossBankAffordability.declaredDTI}% declared</span>
+                  )}
+                </span>
+              </div>
+              {d.roadmap.crossBankAffordability.undisclosedDebtMonthly > 0 && (
+                <div className="bank-row">
+                  <span className="k">Undisclosed debt found</span>
+                  <span className="v" style={{ color: '#b91c1c' }}>
+                    {bankFmtR(d.roadmap.crossBankAffordability.undisclosedDebtMonthly)}/mo · {d.roadmap.crossBankAffordability.otherBankObligations.map(o => `${o.kind} (${o.bank})`).join(', ')}
+                  </span>
+                </div>
+              )}
+              <div className="bank-row">
+                <span className="k">Primary bank<Explain text="Where the applicant's salary actually lands and the bulk of their money moves. Predicts whether winning this bond also wins the banking relationship." /></span>
+                <span className="v">
+                  {d.roadmap.primacy.primaryBank} <span style={{ color: '#6b7280', fontWeight: 500 }}>({d.roadmap.primacy.shareOfWalletPct}% share-of-wallet)</span>
+                  {d.roadmap.primacy.salaryWithUs
+                    ? <span style={{ color: '#15803d', fontSize: '0.75rem', marginLeft: 6 }}>✓ salary already with you</span>
+                    : <span style={{ color: '#b45309', fontSize: '0.75rem', marginLeft: 6 }}>salary at a rival</span>}
+                </span>
+              </div>
+              {d.roadmap.primacy.relationshipUpliftLifetime > 0 && (
+                <div className="bank-row">
+                  <span className="k">Win-the-salary uplift</span>
+                  <span className="v" style={{ color: '#15803d' }}>+{bankFmtR(d.roadmap.primacy.relationshipUpliftLifetime)} lifetime relationship value</span>
+                </div>
+              )}
+              <div className="bank-row">
+                <span className="k">Switch propensity<Explain text="Likelihood this borrower refinances/switches soon, from cross-bank rate-sensitivity and salary-movement signals — the consent-based version of a bureau trigger lead." /></span>
+                <span className="v">
+                  {d.roadmap.switchPropensity.score}/100
+                  {d.roadmap.switchPropensity.flightSignals.length > 0 && (
+                    <span style={{ color: '#6b7280', fontWeight: 500, marginLeft: 6 }}>· {d.roadmap.switchPropensity.flightSignals.join(', ')}</span>
+                  )}
+                </span>
+              </div>
+              {d.roadmap.incomeVerification && (
+                <div className="bank-row">
+                  <span className="k">Cross-account income<Explain text="Income verified across every bank the applicant uses, not just the one statement on file — salary often lands at a different bank." /></span>
+                  <span className="v">
+                    Verified across {d.roadmap.incomeVerification.accountsSeen} account{d.roadmap.incomeVerification.accountsSeen === 1 ? '' : 's'} · {d.roadmap.incomeVerification.monthsCovered} months · {d.roadmap.incomeVerification.stability}
+                    {d.roadmap.incomeVerification.accountsSeen > 1 && d.monthsOfStatements === 1 && (
+                      <span style={{ color: '#15803d', fontSize: '0.75rem', marginLeft: 6 }}>✓ resolves the single-month file</span>
+                    )}
+                  </span>
+                </div>
+              )}
+              {d.roadmap.distressEarlyWarning.atRisk && (
+                <div className="bank-row">
+                  <span className="k">Distress early-warning<Explain text="Cross-bank distress fires when income stops at the salary bank and debit orders start failing at a different bank — detected before it becomes a bureau-reported arrear." /></span>
+                  <span className="v" style={{ color: '#b91c1c' }}>
+                    {d.roadmap.distressEarlyWarning.leadDaysVsBureau} days ahead of bureau
+                    {d.roadmap.distressEarlyWarning.signals.length > 0 && (
+                      <span style={{ color: '#6b7280', fontWeight: 500, marginLeft: 6 }}>· {d.roadmap.distressEarlyWarning.signals.join('; ')}</span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {a.swapContext && (
             <div className="bank-section">
               <h3>Current bond (switch)</h3>
