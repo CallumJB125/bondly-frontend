@@ -1,2 +1,0 @@
-import{j as t}from"./index-DGxk42NC.js";function m({children:n,variant:e="forest",size:l="md",full:o=!1,loading:s=!1,disabled:a=!1,type:r="button",onClick:b,className:f="",...u}){const i=["btn",`btn--${e}`,`btn--${l}`,o?"btn--full":"",s?"btn--loading":"",f].filter(Boolean).join(" ");return t.jsxs("button",{type:r,className:i,onClick:b,disabled:a||s,...u,children:[s?t.jsx("span",{className:"spinner"}):null,n]})}export{m as B};
-//# sourceMappingURL=Button-kucePvfS.js.map

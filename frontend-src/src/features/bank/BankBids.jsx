@@ -198,9 +198,11 @@ function BidRow({ b, onChanged }) {
         </div>
         <div className="rate">{bankFmtPct(b.rate)}</div>
         <div>{bankFmtR(b.monthly)}</div>
-        <div title={`Estimated NIM = ${bankFmtPct(b.rate)} − ${COST_OF_FUNDS_PCT}% baseline`}
+        <div title={marginBps != null && marginBps < 0
+            ? `Below cost-of-funds baseline — this bid prices under the ${COST_OF_FUNDS_PCT}% yardstick (negative estimated NIM)`
+            : `Estimated NIM = ${bankFmtPct(b.rate)} − ${COST_OF_FUNDS_PCT}% baseline`}
           style={{ fontWeight: 700, color: marginBps == null ? '#9ca3af' : marginBps < 0 ? '#991b1b' : '#166534' }}>
-          {marginBps == null ? '—' : `~${marginBps >= 0 ? '+' : ''}${marginBps} bps`}
+          {marginBps == null ? '—' : `${marginBps < 0 ? '⚠ ' : ''}~${marginBps >= 0 ? '+' : ''}${marginBps} bps`}
         </div>
         <div>
           <span className={'bid-status ' + b.status}>{b.status}</span>

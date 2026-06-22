@@ -238,8 +238,10 @@ export default function BankTriage() {
                 </div>
                 <div className="rate">{bankFmtPct(b.yourRate)}</div>
                 <div className="rate">{b.trueLowest != null ? bankFmtPct(b.trueLowest) : '—'}{b.isLowest && <span style={{ color: '#16a34a', fontSize: '0.65rem', marginLeft: 4 }}>✓</span>}</div>
-                <div style={{ color: colour, fontWeight: 700, textTransform: 'capitalize' }}>{b.winnability}</div>
-                <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: 3, fontStyle: 'italic' }}>{triageReason(b)}</div>
+                <div>
+                  <div style={{ color: colour, fontWeight: 700, textTransform: 'capitalize' }}>{b.winnability}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: 3, fontStyle: 'italic' }}>{triageReason(b)}</div>
+                </div>
                 <div style={{ color: '#15803d', fontWeight: 700 }}>{bankFmtR(b.estLifetimeMargin)}</div>
                 <div>
                   {b.submittedAt && (

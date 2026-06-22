@@ -79,13 +79,14 @@ function DealList() {
       / dealsWithRate.reduce((s, d) => s + d.requestedAmount, 0)
     : null;
 
-  const buckets = { '≤1yr': 0, '2yr': 0, '3–5yr': 0, '20yr+': 0 };
+  // Mortgage terms cluster around 20–30yr, so bucket by year band (#6).
+  const buckets = { '≤20yr': 0, '21–25yr': 0, '26–30yr': 0, '30yr+': 0 };
   deals.forEach(d => {
-    const mo = d.bid?.term || 240;
-    if (mo <= 12) buckets['≤1yr']++;
-    else if (mo <= 24) buckets['2yr']++;
-    else if (mo <= 60) buckets['3–5yr']++;
-    else buckets['20yr+']++;
+    const yrs = (d.bid?.term || 240) / 12;
+    if (yrs <= 20) buckets['≤20yr']++;
+    else if (yrs <= 25) buckets['21–25yr']++;
+    else if (yrs <= 30) buckets['26–30yr']++;
+    else buckets['30yr+']++;
   });
   const maxBucket = Math.max(...Object.values(buckets), 1);
 
