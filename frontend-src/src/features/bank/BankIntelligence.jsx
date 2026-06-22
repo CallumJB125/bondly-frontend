@@ -2730,7 +2730,7 @@ export default function BankIntelligence() {
           <span style={{ fontSize: '0.82em', color: C.gold }}>ⓘ</span>
           <span style={{ fontFamily: SANS, fontSize: '0.75rem', color: C.muted }}>
             Financial distress is a composite score based on spend ratio, credit reliance, failed debits, and income stability.
-            {accuracy && <span> · Categorisation accuracy: <strong style={{ color: C.text }}>{accuracy.categorisation}%</strong></span>}
+            {accuracy && accuracy.categorisation != null && <span> · Categorisation accuracy: <strong style={{ color: C.text }}>{accuracy.categorisation}%</strong></span>}
           </span>
         </div>
       </div>

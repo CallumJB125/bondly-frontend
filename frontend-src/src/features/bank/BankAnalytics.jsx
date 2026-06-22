@@ -21,7 +21,7 @@ export default function BankAnalytics() {
 
   return (
     <>
-      <h2>Analytics</h2>
+      <h2>Portfolio &amp; risk</h2>
       <p className="lede">How you're doing across the Bond Desk — what's working, what's not.</p>
 
       <div className="bank-kpis">

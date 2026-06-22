@@ -387,7 +387,7 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
               <span className="k">Debt-to-income<Explain text="Percentage of monthly income already committed to debt repayments. NCA guidelines flag anything above 40% as over-indebted. Below 30% is comfortable." /></span>
               <span className="v">{d?.dtiExact != null ? d.dtiExact + ' %' : '—'} <span style={{ color: '#6b7280', fontWeight: 500 }}>({a.dtiBand})</span></span>
             </div>
-            <div className="bank-row"><span className="k">Employment</span><span className="v">{a.employmentType || '—'}{a.employmentTenureYears ? ' · ' + a.employmentTenureYears + ' yrs tenure' : ''}</span></div>
+            <div className="bank-row"><span className="k">Employment</span><span className="v">{a.employmentType ? a.employmentType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'}{a.employmentTenureYears ? ' · ' + a.employmentTenureYears + ' yrs tenure' : ''}</span></div>
             <div className="bank-row"><span className="k">Bank statement coverage<Explain text="Number of months of bank statements on file. 3 months is the minimum; 6+ months gives a much more reliable picture of income patterns and spending habits." /></span><span className="v">{a.monthsOfStatements} month{a.monthsOfStatements === 1 ? '' : 's'}</span></div>
           </div>
 
@@ -523,7 +523,7 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
             <div className="bank-section">
               <h3>Co-applicant</h3>
               <div className="bank-row"><span className="k">Relationship</span><span className="v">{a.coApplicant.relationship || '—'}</span></div>
-              <div className="bank-row"><span className="k">Employment</span><span className="v">{a.coApplicant.employmentType || '—'}</span></div>
+              <div className="bank-row"><span className="k">Employment</span><span className="v">{a.coApplicant.employmentType ? a.coApplicant.employmentType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'}</span></div>
               <div className="bank-row"><span className="k">Income band</span><span className="v">{a.coApplicant.incomeBand || '—'}</span></div>
               <div className="bank-row"><span className="k">DTI band</span><span className="v">{a.coApplicant.dtiBand || '—'}</span></div>
               <div style={{ marginTop: 10, padding: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6 }}>
