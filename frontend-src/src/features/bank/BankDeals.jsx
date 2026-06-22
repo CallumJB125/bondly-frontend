@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { bankApi, bankFmtR, bankFmtPct, getBankToken } from './bankApi.js';
+import LineChart from '../../components/LineChart.jsx';
 
 export default function BankDeals() {
   const { cappId } = useParams();
@@ -8,10 +9,52 @@ export default function BankDeals() {
   return <DealList />;
 }
 
+// Advance a won deal one step through the conveyancing pipeline.
+// bankApi.js is out of scope for this change, so this calls the new
+// PATCH /api/bank/deals/:cappId/stage endpoint directly with the bank token.
+async function advanceDealStage(cappId, note) {
+  const token = getBankToken();
+  const r = await fetch(`/api/bank/deals/${encodeURIComponent(cappId)}/stage`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    body: JSON.stringify({ note: note || '' }),
+  });
+  const j = await r.json().catch(() => ({ success: false, error: 'Bad response' }));
+  if (!j.success) throw new Error(j.error || 'Could not advance stage');
+  return j.data.deal;
+}
+
 function DealList() {
   const [deals, setDeals] = useState(null);
   const [err, setErr]     = useState(null);
+  const [busyId, setBusyId] = useState(null);
   useEffect(() => { bankApi.deals().then(d => setDeals(d.deals)).catch(e => setErr(e.message)); }, []);
+
+  async function advance(deal, e) {
+    // The card is a <Link>; don't navigate when the banker clicks the control.
+    e.preventDefault();
+    e.stopPropagation();
+    const next = deal.nextStage;
+    if (!next || next.by !== 'bank') return;
+    if (busyId) return;
+    setBusyId(deal.cappId);
+    // Optimistic: mark the next stage done locally so N/7 ticks up immediately.
+    setDeals(prev => prev.map(d => d.cappId !== deal.cappId ? d : {
+      ...d,
+      stages: d.stages.map(s => s.id === next.id ? { ...s, done: true, at: new Date().toISOString(), by: 'bank' } : s),
+      nextStage: d.stages[d.stages.findIndex(s => s.id === next.id) + 1] || null,
+    }));
+    try {
+      const fresh = await advanceDealStage(deal.cappId);
+      setDeals(prev => prev.map(d => d.cappId === deal.cappId ? fresh : d));
+    } catch (err2) {
+      alert(err2.message);
+      // Roll back by refetching the authoritative list.
+      bankApi.deals().then(d => setDeals(d.deals)).catch(() => {});
+    } finally {
+      setBusyId(null);
+    }
+  }
   if (err) return <div className="bank-section" style={{ color: '#991b1b' }}>{err}</div>;
   if (!deals) return <div className="bank-section">Loading…</div>;
   if (deals.length === 0) return (
@@ -105,11 +148,63 @@ function DealList() {
               <div style={{ height: 6, background: '#f3f4f6', borderRadius: 99, overflow: 'hidden' }}>
                 <div style={{ width: pct + '%', height: '100%', background: pct === 100 ? '#16a34a' : '#c8a84b' }} />
               </div>
+              {next && next.by === 'bank' ? (
+                <button
+                  onClick={e => advance(d, e)}
+                  disabled={busyId === d.cappId}
+                  title={`Mark "${next.label}" complete`}
+                  style={{ marginTop: 8, width: '100%', padding: '6px 10px', background: busyId === d.cappId ? '#9ca3af' : '#0b1e2d', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.74rem', cursor: busyId === d.cappId ? 'default' : 'pointer' }}>
+                  {busyId === d.cappId ? 'Saving…' : `✓ ${next.label}`}
+                </button>
+              ) : !next ? (
+                <div style={{ marginTop: 8, fontSize: '0.72rem', color: '#15803d', fontWeight: 700 }}>✓ Complete</div>
+              ) : null}
             </div>
           </Link>
         );
       })}
     </>
+  );
+}
+
+// Anonymised per-borrower risk timeline (A4.1). Reuses the admin per-borrower
+// timeline logic via /api/bank/borrower/:userId/timeline (bankAuth, POPIA-scoped).
+// Honest: real snapshots only — empty state when there is no history; no
+// fabricated multi-month curve.
+function RiskTimeline({ userId }) {
+  const [tl, setTl] = useState(null);
+  const [err, setErr] = useState(null);
+  useEffect(() => { bankApi.borrowerTimeline(userId).then(setTl).catch(e => setErr(e.message)); }, [userId]);
+
+  if (err) return null;
+  if (!tl) return <div className="bank-section">Loading risk timeline…</div>;
+
+  const points = tl.timeline || [];
+  const TIER_COLOR = { green: '#16a34a', amber: '#c8a84b', red: '#dc2626', critical: '#7f1d1d' };
+  return (
+    <div className="bank-section">
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        Borrower risk timeline
+        <span title="Computed from real platform risk snapshots" style={{ fontFamily: 'monospace', fontSize: '0.62rem', color: '#16a34a', background: 'rgba(22,163,74,0.10)', border: '1px solid rgba(22,163,74,0.3)', padding: '2px 7px', borderRadius: 6 }}>Real</span>
+        {tl.currentTier && (
+          <span style={{ fontFamily: 'monospace', fontSize: '0.62rem', color: '#fff', background: TIER_COLOR[tl.currentTier] || '#6b7280', padding: '2px 7px', borderRadius: 6, textTransform: 'uppercase' }}>{tl.currentTier}</span>
+        )}
+      </h3>
+      {points.length < 2 ? (
+        <p style={{ color: '#6b7280', fontSize: '0.8rem' }}>
+          {points.length === 0 ? 'No risk snapshots on file yet for this borrower.' : 'Only one snapshot so far — a trend appears once more history accrues.'}
+        </p>
+      ) : (
+        <div style={{ background: '#0b1e2d', borderRadius: 10, padding: '12px 8px 4px' }}>
+          <LineChart
+            series={[{ values: points.map(p => Math.round((p.score ?? 0) * 100) / 100), color: '#c8a84b', label: 'Risk score' }]}
+            labels={points.map(p => (p.snapshotDate ? String(p.snapshotDate).slice(0, 10) : ''))}
+            height={140}
+            yLabel="Risk score"
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -203,6 +298,8 @@ function DealDetail({ cappId }) {
               })}
             </div>
           </div>
+
+          {deal.borrowerId && <RiskTimeline userId={deal.borrowerId} />}
 
           {deal.docs.length > 0 && (
             <div className="bank-section">
@@ -346,9 +443,11 @@ function ComplianceCard({ bureau, fica, onPullBureau, onRunFica, busy }) {
   return (
     <div className="bank-section">
       <h3>Compliance checks</h3>
-      <div style={{ fontSize: '0.74rem', color: '#6b7280', marginBottom: 10 }}>
-        Stubbed responses pending live bureau / FICA integrations. Real data swaps in when contracts land.
-      </div>
+      {(bureau?._isStub || fica?._isStub) && (
+        <div style={{ fontSize: '0.7rem', color: '#92400e', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 6, padding: '5px 9px', marginBottom: 10, fontWeight: 600 }}>
+          Demo — bureau / FICA integration pending
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div>
           {!bureau ? (
@@ -359,7 +458,7 @@ function ComplianceCard({ bureau, fica, onPullBureau, onRunFica, busy }) {
           ) : (
             <div style={{ padding: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 7, fontSize: '0.78rem' }}>
               <div style={{ fontWeight: 800, color: '#0f1a24', marginBottom: 4 }}>
-                Bureau score: {bureau.bureauScore} <span style={{ color: '#15803d', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em', marginLeft: 4 }}>{bureau.scoreBand}</span>
+                Bureau score: {bureau.bureauScore} <span style={{ color: /poor|bad|high.?risk/i.test(bureau.scoreBand) ? '#b91c1c' : /fair|average|medium/i.test(bureau.scoreBand) ? '#b45309' : '#15803d', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em', marginLeft: 4 }}>{bureau.scoreBand}</span>
               </div>
               <div style={{ color: '#374151' }}>
                 Accounts: {bureau.accounts.open} open / {bureau.accounts.total} total<br/>

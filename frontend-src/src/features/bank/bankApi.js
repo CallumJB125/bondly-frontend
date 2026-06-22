@@ -55,6 +55,8 @@ export const bankApi = {
     return bankFetch('/api/bank/applications' + (qs ? '?' + qs : ''));
   },
   application: (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref)),
+  decline:     (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/decline', { method: 'POST' }),
+  refer:       (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/refer',   { method: 'POST' }),
   submitBid:   (ref, body)   => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/bid', { method: 'POST', body: JSON.stringify(body) }),
   updateBid:   (bidId, body) => bankFetch('/api/bank/bids/' + encodeURIComponent(bidId), { method: 'PATCH', body: JSON.stringify(body) }),
   withdrawBid: (bidId)       => bankFetch('/api/bank/bids/' + encodeURIComponent(bidId), { method: 'DELETE' }),
@@ -97,6 +99,18 @@ export const bankApi = {
 
   // Bondly Intelligence — geo + sector analysis
   intelligence:   ()                       => bankFetch('/api/bank/intelligence'),
+
+  // Roadmap (SIMULATED) — book-level cross-bank intelligence preview
+  roadmapPortfolio: ()                     => bankFetch('/api/bank/roadmap/portfolio'),
+
+  // Risk-committee exposure overlay (this bank's book × geo distress; illustrative)
+  exposure:       ()                       => bankFetch('/api/bank/intelligence/exposure'),
+
+  // Market-wide winning-rate benchmarks (#31) — anonymised, all banks
+  marketBenchmark:()                       => bankFetch('/api/bank/market-benchmark'),
+
+  // Anonymised per-borrower risk timeline (real snapshots; empty if none)
+  borrowerTimeline:(userId)                => bankFetch('/api/bank/borrower/' + encodeURIComponent(userId) + '/timeline'),
 
   // ML Models — backtest results
   mlModels:       ()                       => bankFetch('/api/bank/ml-models'),

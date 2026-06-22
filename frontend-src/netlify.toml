@@ -7,9 +7,12 @@
 [build.environment]
   VITE_ORIGINATION_URL = "https://bondly-origination.netlify.app"
 
+# Demo API → isolated bondly_demo backend on the Pi (:3001), exposed via the
+# Cloudflare tunnel hostname demo-api.bondly.co.za. Keeps the demo off the
+# production bondly DB. (Was https://bondly.co.za/api — the prod backend/DB.)
 [[redirects]]
   from = "/api/*"
-  to = "https://bondly.co.za/api/:splat"
+  to = "https://demo-api.bondly.co.za/api/:splat"
   status = 200
   force = true
 

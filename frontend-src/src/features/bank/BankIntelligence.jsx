@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from 'react';
-import { LayoutGrid, MapPin, ShieldAlert, TrendingUp, Sparkles, ArrowUpRight, ArrowDownRight, ChevronRight, Circle, GitBranch, Lock, Flag, Eye, CheckCircle2, Settings } from 'lucide-react';
+import { LayoutGrid, MapPin, ShieldAlert, TrendingUp, Sparkles, ArrowUpRight, ArrowDownRight, ChevronRight, Circle, GitBranch, Lock, Flag, Eye, CheckCircle2, Settings, BarChart3 } from 'lucide-react';
 import { bankApi } from './bankApi.js';
+import LineChart from '../../components/LineChart.jsx';
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
@@ -391,6 +392,81 @@ function climateBadges(climate) {
   return badges;
 }
 
+// ── Provenance labelling (A5) ───────────────────────────────────────────────
+// real | illustrative | benchmark·non-SA — honest source tag for every tile.
+const PROV_STYLES = {
+  real:        { color: '#3fb950', bg: 'rgba(63,185,80,0.10)',  border: 'rgba(63,185,80,0.35)',  label: 'Real',                title: 'Computed from real platform data' },
+  illustrative:{ color: '#d29922', bg: 'rgba(210,153,34,0.10)', border: 'rgba(210,153,34,0.35)', label: 'Illustrative',         title: 'Synthetic sample — not live customer data' },
+  benchmark:   { color: '#58a6ff', bg: 'rgba(88,166,255,0.10)', border: 'rgba(88,166,255,0.35)', label: 'Benchmark · non-SA',   title: 'External benchmark — not South African data' },
+};
+function ProvenanceBadge({ kind = 'illustrative', style }) {
+  const s = PROV_STYLES[kind] || PROV_STYLES.illustrative;
+  return (
+    <span title={s.title} style={{ fontFamily: MONO, fontSize: 9.5, color: s.color, background: s.bg, border: `1px solid ${s.border}`, padding: '3px 8px', borderRadius: 6, whiteSpace: 'nowrap', ...style }}>
+      {s.label}
+    </span>
+  );
+}
+
+// ── Exposure overlay helpers (A3) ───────────────────────────────────────────
+const REC_STYLES = {
+  reduce: { color: '#f85149', label: 'REDUCE' },
+  review: { color: '#d29922', label: 'REVIEW' },
+  hold:   { color: '#8b949e', label: 'HOLD' },
+  grow:   { color: '#3fb950', label: 'GROW' },
+};
+function randShort(n) {
+  const v = Number(n) || 0;
+  if (v >= 1_000_000) return 'R ' + (v / 1_000_000).toFixed(1) + 'm';
+  if (v >= 1_000)     return 'R ' + Math.round(v / 1_000) + 'k';
+  return 'R ' + Math.round(v);
+}
+// Single hotspot chip: "R Xm · N bonds · {suburb} · distress {score} → {ACTION}".
+// Province-fallback areas are visibly marked so they're never read as suburb-precise.
+function ExposureChip({ area }) {
+  const rec = REC_STYLES[area.recommendation] || REC_STYLES.hold;
+  const isProv = area.distressSource === 'province';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 11px', background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${rec.color}`, borderRadius: 8, fontSize: '0.78rem' }}>
+      <span style={{ fontFamily: DISP, fontWeight: 600, color: C.text }}>{randShort(area.exposureRand)}</span>
+      <span style={{ color: C.faint }}>·</span>
+      <span style={{ color: C.muted }}>{area.bondCount} bond{area.bondCount === 1 ? '' : 's'}</span>
+      <span style={{ color: C.faint }}>·</span>
+      <span style={{ color: C.text, fontWeight: 600 }}>{area.suburb}</span>
+      <span style={{ color: C.faint }}>·</span>
+      <span style={{ color: riskColor(area.distress) }}>
+        distress {area.distress}{isProv && (
+          <span title="Province-level distress (no suburb match) — not suburb-precise" style={{ fontFamily: MONO, fontSize: 8.5, color: C.faint, marginLeft: 4, border: `1px solid ${C.border}`, borderRadius: 4, padding: '0 4px' }}>prov.</span>
+        )}
+      </span>
+      <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: rec.color }}>→ {rec.label}</span>
+    </div>
+  );
+}
+// Compact exposure-overlay panel reused by the Geo and Sector surfaces.
+function ExposureOverlay({ exposure, title = 'Your book exposure' }) {
+  if (!exposure || !exposure.areas?.length) return null;
+  return (
+    <div style={{ background: C.bg1, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 8 }}>
+        <div style={{ fontFamily: MONO, fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: C.gold, fontWeight: 500 }}>{title}</div>
+        <ProvenanceBadge kind={exposure.provenance === 'illustrative' ? 'illustrative' : 'real'} />
+      </div>
+      <div style={{ display: 'flex', gap: 14, marginBottom: 12, fontSize: '0.74rem', color: C.muted }}>
+        <span>Book <b style={{ color: C.text }}>{randShort(exposure.bookTotalRand)}</b></span>
+        <span>{exposure.bookBondCount} bonds</span>
+        <span>{exposure.suburbResolvedPct}% suburb-resolved</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {exposure.areas.map((a, i) => <ExposureChip key={a.suburb + i} area={a} />)}
+      </div>
+      <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 10, lineHeight: 1.5 }}>
+        Illustrative: synthetic demo book joined to the geo distress series. Shows how exposure computes on a real book — not a live bank tape. Bubble size = exposure; colour = distress.
+      </div>
+    </div>
+  );
+}
+
 // SVG approximate positions for SA metros (viewBox 0 0 420 500)
 const METRO_SVG = {
   'Cape Town':      { x: 108, y: 418 },
@@ -406,15 +482,35 @@ const METRO_SVG = {
 // Simplified SA outline path (approximate)
 const SA_PATH = 'M 108,418 C 90,400 72,370 78,340 C 84,310 96,290 108,270 C 96,255 88,240 92,218 C 96,196 112,185 130,178 C 148,170 168,168 188,162 C 208,156 224,148 244,142 C 264,136 284,134 304,138 C 324,142 338,154 348,168 C 358,182 360,200 356,218 C 360,230 368,242 370,258 C 372,274 364,288 354,298 C 364,312 372,328 368,344 C 364,360 350,372 334,380 C 318,388 298,390 278,390 C 260,396 244,404 228,410 C 212,416 190,420 172,422 C 152,424 130,424 108,418 Z';
 
-function GeoRiskMap({ heatmaps, monthlyPanels, periods, suburbPanel }) {
+function GeoRiskMap({ heatmaps, monthlyPanels, periods, suburbPanel, exposure }) {
   const [pick, setPick] = useState(null); // selected suburb point object
   const [metric, setMetric] = useState('distress');
   const [search, setSearch] = useState('');
 
+  // ── Geo distress animation (A4.2): step through the monthly panels ──────────
+  const panelCount = (monthlyPanels || []).length;
+  const [animIdx, setAnimIdx] = useState(null); // null = live/latest panel
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => {
+    if (!playing || panelCount < 2) return;
+    const id = setInterval(() => {
+      setAnimIdx(i => {
+        const next = (i == null ? 0 : i + 1);
+        if (next >= panelCount) { setPlaying(false); return panelCount - 1; }
+        return next;
+      });
+    }, 1100);
+    return () => clearInterval(id);
+  }, [playing, panelCount]);
+
   const areas = heatmaps?.areas || [];
 
+  // Animated panel overrides the live suburbPanel when stepping/playing.
+  const animPanel = (animIdx != null && monthlyPanels) ? monthlyPanels[animIdx] : null;
+  const animPrev  = (animIdx != null && monthlyPanels && animIdx > 0) ? monthlyPanels[animIdx - 1] : null;
+
   // Current period suburb points (from suburbPanel, same as Overview)
-  const points = suburbPanel || [];
+  const points = animPanel || suburbPanel || [];
 
   // Build area lookup by suburb name for enriching clicked point
   const areaLookup = {};
@@ -453,7 +549,7 @@ function GeoRiskMap({ heatmaps, monthlyPanels, periods, suburbPanel }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
             <div style={{ fontFamily: MONO, fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: C.gold, fontWeight: 500, marginBottom: 3 }}>Geographic Intelligence</div>
-            <h3 style={{ margin: 0, fontFamily: DISP, fontSize: '1.2rem', fontWeight: 500, color: C.text, letterSpacing: -0.3 }}>Suburb-level Risk Map</h3>
+            <h3 style={{ margin: 0, fontFamily: DISP, fontSize: '1.2rem', fontWeight: 500, color: C.text, letterSpacing: -0.3, display: 'flex', alignItems: 'center', gap: 10 }}>Suburb-level Risk Map <ProvenanceBadge kind="illustrative" /></h3>
           </div>
           <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 9, padding: 3 }}>
             {[['distress','Distress'],['fraud','Fraud Rate'],['credit','Credit']].map(([k,l]) => {
@@ -480,16 +576,38 @@ function GeoRiskMap({ heatmaps, monthlyPanels, periods, suburbPanel }) {
       {/* Map + drill-down side-by-side */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
         {/* Leaflet map */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <GeoMap
-            points={filteredPoints}
-            prevPoints={prevPanel}
-            center={[-29, 25]}
-            zoom={6}
-            heatMode
-            getIntensity={p => metric === 'fraud' ? (p.fraudRate ?? 0) / 15 : metric === 'credit' ? (p.creditReliance ?? 0) / 100 : (p.distressShare ?? p.fdi ?? 0) / 100}
-            onSelect={p => setPick(prev => prev?.suburb === p.suburb ? null : p)}
-          />
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <GeoMap
+              points={filteredPoints}
+              prevPoints={animPrev || prevPanel}
+              center={[-29, 25]}
+              zoom={6}
+              heatMode
+              getIntensity={p => metric === 'fraud' ? (p.fraudRate ?? 0) / 15 : metric === 'credit' ? (p.creditReliance ?? 0) / 100 : (p.distressShare ?? p.fdi ?? 0) / 100}
+              onSelect={p => setPick(prev => prev?.suburb === p.suburb ? null : p)}
+            />
+          </div>
+          {/* Geo distress animation (A4.2) — play through the monthly panels */}
+          {panelCount > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderTop: `1px solid ${C.border}` }}>
+              <button onClick={() => { if (!playing && (animIdx == null || animIdx >= panelCount - 1)) setAnimIdx(0); setPlaying(p => !p); }}
+                style={{ width: 30, height: 30, borderRadius: 7, border: `1px solid ${C.border}`, background: C.card, color: C.gold, cursor: 'pointer', fontSize: 13 }}>
+                {playing ? '❚❚' : '▶'}
+              </button>
+              <input type="range" min={0} max={panelCount - 1} value={animIdx == null ? panelCount - 1 : animIdx}
+                onChange={e => { setPlaying(false); setAnimIdx(Number(e.target.value)); }}
+                style={{ flex: 1, accentColor: C.gold, height: 4 }} />
+              <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, minWidth: 70, textAlign: 'right' }}>
+                {animIdx == null ? (periods?.[periods.length - 1] || 'latest') : (periods?.[animIdx] || `panel ${animIdx + 1}`)}
+              </span>
+              {animIdx != null && (
+                <button onClick={() => { setPlaying(false); setAnimIdx(null); }}
+                  style={{ background: 'transparent', border: 'none', color: C.faint, cursor: 'pointer', fontSize: 11 }}>live</button>
+              )}
+              <ProvenanceBadge kind="illustrative" />
+            </div>
+          )}
         </div>
 
         {/* Right panel: drill-down or ranked table */}
@@ -555,8 +673,13 @@ function GeoRiskMap({ heatmaps, monthlyPanels, periods, suburbPanel }) {
               )}
             </div>
           ) : (
-            /* Ranked suburb table */
+            /* Exposure overlay (A3) + ranked suburb table */
             <div style={{ padding: '16px 0' }}>
+              {exposure?.areas?.length > 0 && (
+                <div style={{ padding: '0 16px 16px' }}>
+                  <ExposureOverlay exposure={exposure} title="Your book exposure × distress" />
+                </div>
+              )}
               <div style={{ fontFamily: MONO, fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.faint, padding: '0 18px', marginBottom: 10 }}>Top suburbs by distress</div>
               {ranked.map((a, i) => {
                 const val = metric === 'fraud' ? a.fraudRate : metric === 'credit' ? a.creditReliance : a.distressShare;
@@ -601,7 +724,7 @@ function cellBg(val, min, max) {
   return `rgba(${r},${g},${b},0.18)`;
 }
 
-function SectorHeatmap({ heatmaps }) {
+function SectorHeatmap({ heatmaps, exposure }) {
   const [ncrData, setNcrData] = useState(null);
 
   useEffect(() => {
@@ -645,12 +768,19 @@ function SectorHeatmap({ heatmaps }) {
 
   return (
     <div style={{ padding: '20px 28px' }}>
-      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1.1rem', fontWeight: 700 }}>
-        Sector Heatmap
+      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+        Sector Heatmap <ProvenanceBadge kind="illustrative" />
       </h3>
       <p style={{ margin: '0 0 16px', color: C.muted, fontSize: '0.82rem' }}>
         Risk metrics by employment sector — cells shaded green (low) → red (high)
       </p>
+
+      {/* Exposure overlay (A3) — this bank's book hotspots × distress */}
+      {exposure?.areas?.length > 0 && (
+        <div style={{ marginBottom: 24, maxWidth: 720 }}>
+          <ExposureOverlay exposure={exposure} title="Your book exposure × distress" />
+        </div>
+      )}
 
       {/* Grid heatmap */}
       <div style={{ overflowX: 'auto', marginBottom: 32 }}>
@@ -779,14 +909,15 @@ function ExplainPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
 
-  const lookup = async () => {
-    if (!userId.trim()) return;
+  const lookup = useCallback(async (idOverride) => {
+    const id = (typeof idOverride === 'string' ? idOverride : userId).trim();
+    if (!id) return;
     setLoading(true);
     setError(null);
     setResult(null);
     try {
       const token = localStorage.getItem('bondly_token') || sessionStorage.getItem('bondly_token') || '';
-      const res = await fetch(`/api/bank/borrower/${encodeURIComponent(userId.trim())}/explain`, {
+      const res = await fetch(`/api/bank/borrower/${encodeURIComponent(id)}/explain`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 503) { setError('ML server unavailable'); return; }
@@ -797,7 +928,18 @@ function ExplainPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  // Cross-link (#30): deep-link the explainer by ?ref= / ?borrower= — prefill the
+  // borrower id and auto-load so a deal can jump straight to its risk explainer.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = (params.get('ref') || params.get('borrower') || '').trim();
+      if (ref) { setUserId(ref); lookup(ref); }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const riskBandColor = (band) => {
     if (!band) return C.muted;
@@ -924,7 +1066,7 @@ function StatCard({ label, value, accent, sub }) {
   );
 }
 
-function ContagionTab() {
+function ContagionTab({ exposure }) {
   const [report, setReport]   = useState(null);
   const [loadErr, setLoadErr] = useState(null);
 
@@ -1001,8 +1143,8 @@ function ContagionTab() {
 
   return (
     <div style={{ padding: '20px 28px' }}>
-      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1.1rem', fontWeight: 700 }}>
-        Contagion & Systemic Risk
+      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+        Contagion & Systemic Risk <ProvenanceBadge kind="illustrative" />
       </h3>
       <p style={{ margin: '0 0 18px', color: C.muted, fontSize: '0.82rem' }}>
         Portfolio-level concentration, correlated-default risk, and province shock propagation
@@ -1084,6 +1226,34 @@ function ContagionTab() {
                   </div>
                 ))}
               </div>
+              {/* Exposure-weighted impact for THIS bank (A3.3) — read-only overlay
+                  on top of the simulator's own systemic-risk fraction. */}
+              {exposure?.areas?.length > 0 && (() => {
+                const lossFrac = Math.max(0, Math.min(1, simResult.systemic_risk_score ?? 0));
+                const provAreas = exposure.areas.filter(a => a.province === shockProvince);
+                const provExposure = provAreas.reduce((s, a) => s + a.exposureRand, 0);
+                const provBonds = provAreas.reduce((s, a) => s + a.bondCount, 0);
+                const affectedR = Math.round(provExposure * lossFrac);
+                const affectedBonds = Math.round(provBonds * lossFrac);
+                const rec = affectedR >= 0.08 * (exposure.bookTotalRand || 1) ? 'reduce' : affectedR > 0 ? 'review' : 'hold';
+                const recS = REC_STYLES[rec];
+                return (
+                  <div style={{ background: '#0d1520', border: `1px solid ${C.border}`, borderLeft: `3px solid ${recS.color}`, borderRadius: 8, padding: '12px 14px', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontFamily: MONO, fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: C.gold }}>Your exposure in {shockProvince}</span>
+                      <ProvenanceBadge kind="illustrative" />
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, fontSize: '0.8rem', color: C.text }}>
+                      <span>Expected affected <b style={{ color: recS.color }}>{randShort(affectedR)}</b></span>
+                      <span style={{ color: C.muted }}>≈ {affectedBonds} of {provBonds} bonds</span>
+                      <span style={{ marginLeft: 'auto', fontFamily: MONO, fontWeight: 700, color: recS.color }}>→ {recS.label}</span>
+                    </div>
+                    <div style={{ fontFamily: MONO, fontSize: 9, color: C.faint, marginTop: 8 }}>
+                      Illustrative: your synthetic book exposure in {shockProvince} ({randShort(provExposure)}) weighted by the simulated systemic-risk fraction ({(lossFrac * 100).toFixed(0)}%). Simulator math unchanged.
+                    </div>
+                  </div>
+                );
+              })()}
               <div style={{ fontSize: '0.62rem', color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Adjacent provinces</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {Object.entries(simResult.adjacent_provinces || {}).map(([prov, d]) => (
@@ -1454,56 +1624,6 @@ function TrendsTab({ data }) {
     );
   }
 
-  // SVG multi-line chart helper
-  function LineChart({ series, labels, height = 140, yLabel = '' }) {
-    const allVals = series.flatMap(s => s.values.filter(v => v != null));
-    const min = Math.min(...allVals, 0);
-    const max = Math.max(...allVals, 1);
-    const range = max - min || 1;
-    const W = 600, H = height, PAD = { top: 12, right: 16, bottom: 24, left: 44 };
-    const iW = W - PAD.left - PAD.right;
-    const iH = H - PAD.top - PAD.bottom;
-    const n = labels.length;
-    const x = i => PAD.left + (i / Math.max(n - 1, 1)) * iW;
-    const y = v => PAD.top + iH - ((v - min) / range) * iH;
-
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: height, display: 'block' }}>
-        {yLabel && (
-          <text x={10} y={H / 2} textAnchor="middle" fontSize="8.5" fill="#4a6080"
-            transform={`rotate(-90, 10, ${H / 2})`} letterSpacing="0.5">{yLabel}</text>
-        )}
-        {[0, 25, 50, 75, 100].filter(v => v >= min && v <= max).map(v => (
-          <g key={v}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            <text x={PAD.left - 4} y={y(v) + 4} textAnchor="end" fontSize="9" fill="#4a6080">{v}</text>
-          </g>
-        ))}
-        {labels.map((l, i) => (
-          <text key={i} x={x(i)} y={H - 4} textAnchor="middle" fontSize="9" fill="#4a6080">
-            {l.slice(5)}
-          </text>
-        ))}
-        {series.map((s, si) => {
-          let d = '';
-          s.values.forEach((v, i) => {
-            if (v == null) return;
-            const cmd = (i === 0 || s.values[i-1] == null) ? 'M' : 'L';
-            d += `${cmd}${x(i)},${y(v)} `;
-          });
-          return (
-            <g key={si}>
-              <path d={d} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" />
-              {s.values.map((v, i) => v != null && (
-                <circle key={i} cx={x(i)} cy={y(v)} r="3" fill={s.color} />
-              ))}
-            </g>
-          );
-        })}
-      </svg>
-    );
-  }
-
   const periodShort = p => p ? p.slice(5) : '';
 
   return (
@@ -1513,7 +1633,7 @@ function TrendsTab({ data }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#c8a84b', fontWeight: 700, marginBottom: 4 }}>Historical Analysis</div>
-          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#e2e8f0' }}>Trends & Period Analysis</h2>
+          <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 10 }}>Trends & Period Analysis <ProvenanceBadge kind="illustrative" /></h2>
           <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#7c8fa6' }}>{timeline.length} periods · {periodShort(periods[0])} → {periodShort(periods[periods.length - 1])}</p>
         </div>
         <button onClick={() => setCompareMode(m => !m)} style={{
@@ -1736,7 +1856,8 @@ function FraudNetworksTab({ heatmaps }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(70,197,146,0.05)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
         <Lock size={14} color={C.low} />
-        <span style={{ fontFamily: SANS, fontSize: 12, color: C.body }}>Anonymised network intelligence. Node colours = risk score (green low → red high). Arrows show fund flow direction. Identities resolve only inside <strong style={{ color: C.text }}>your own bid review</strong>; cross-market stays k-anonymised (POPIA/FIC compliant).</span>
+        <span style={{ fontFamily: SANS, fontSize: 12, color: C.body, flex: 1 }}>Anonymised network intelligence. Node colours = risk score (green low → red high). Arrows show fund flow direction. Identities resolve only inside <strong style={{ color: C.text }}>your own bid review</strong>; cross-market stays k-anonymised (POPIA/FIC compliant).</span>
+        <ProvenanceBadge kind="illustrative" />
       </div>
 
       {/* KPI row */}
@@ -1882,6 +2003,110 @@ function FraudNetworksTab({ heatmaps }) {
   );
 }
 
+// ── Market-wide winning-rate benchmarks (#31) ────────────────────────────────
+// Anonymised distribution of WINNING bid rates across all banks. Never reveals
+// competitor identities; every bucket is labelled with its own sample size.
+const QUALITY_BAND_LABEL = { '85+': 'A · 85+', '75-84': 'B · 75–84', '60-74': 'C · 60–74', '<60': 'D/E · <60', unknown: 'Unknown' };
+const TYPE_LABEL = { swap: 'Switch', origination: 'New bond', unknown: 'Unknown' };
+
+function MarketBenchmarkTab() {
+  const [data, setData]       = useState(null);
+  const [error, setError]     = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    bankApi.marketBenchmark()
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, []);
+
+  const fmtRate = (v) => v == null ? '—' : v.toFixed(2) + '%';
+
+  const Section = ({ title, rows, labelMap }) => (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ fontFamily: MONO, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.gold, fontWeight: 500, marginBottom: 10 }}>{title}</div>
+      {(!rows || rows.length === 0) ? (
+        <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.faint, padding: '12px 0' }}>No winning bids recorded for this breakdown yet.</div>
+      ) : (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', maxWidth: 720 }}>
+          <thead>
+            <tr>
+              {['', 'Median win rate', 'P25', 'P75', 'Range', 'Sample'].map((h, i) => (
+                <th key={i} style={{ textAlign: i === 0 ? 'left' : 'right', padding: '8px 12px', color: C.muted, fontWeight: 700, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: `1px solid ${C.border}` }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => {
+              const thin = r.n < (data?.minSampleHint ?? 5);
+              return (
+                <tr key={r.key}>
+                  <td style={{ padding: '8px 12px', color: C.text, fontWeight: 600, borderBottom: `1px solid ${C.border}`, whiteSpace: 'nowrap' }}>{(labelMap && labelMap[r.key]) || r.key}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', color: C.text, fontWeight: 700, borderBottom: `1px solid ${C.border}` }}>{fmtRate(r.median)}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', color: C.body, borderBottom: `1px solid ${C.border}` }}>{fmtRate(r.p25)}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', color: C.body, borderBottom: `1px solid ${C.border}` }}>{fmtRate(r.p75)}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', color: C.muted, fontFamily: MONO, fontSize: 11, borderBottom: `1px solid ${C.border}` }}>{r.min == null ? '—' : `${fmtRate(r.min)}–${fmtRate(r.max)}`}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', borderBottom: `1px solid ${C.border}` }}>
+                    <span style={{ fontFamily: MONO, fontSize: 11, color: thin ? C.medium : C.muted }} title={thin ? 'Thin sample — interpret with caution' : ''}>
+                      n={r.n}{thin ? ' ⚠' : ''}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{ padding: '22px 28px' }}>
+      <h3 style={{ margin: '0 0 4px', color: C.text, fontFamily: DISP, fontSize: '1.2rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
+        Market Winning-Rate Benchmarks
+        <ProvenanceBadge kind="real" />
+      </h3>
+      <p style={{ margin: '0 0 18px', color: C.muted, fontSize: '0.82rem', maxWidth: 720 }}>
+        Distribution of the <strong style={{ color: C.body }}>winning</strong> (accepted) bid rates across <strong style={{ color: C.body }}>all banks on the platform</strong>, fully anonymised — competitor identities are never shown. Use it to see where the market is clearing by quality band, deal type, and region.
+      </p>
+
+      {loading && <div style={{ color: C.muted, padding: '12px 0' }}>Loading market benchmarks…</div>}
+      {error && <div style={{ color: C.high, padding: '10px 14px', background: 'rgba(239,68,68,0.08)', borderRadius: 6, maxWidth: 720 }}>{error}</div>}
+
+      {data && (
+        <>
+          {/* Headline + honesty banner */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+            <div style={{ background: C.card, borderRadius: 10, padding: '14px 18px', minWidth: 150 }}>
+              <div style={{ fontFamily: MONO, fontSize: 9.5, textTransform: 'uppercase', color: C.faint, marginBottom: 6 }}>Market median win rate</div>
+              <div style={{ fontFamily: DISP, fontSize: 26, fontWeight: 500, color: C.text }}>{fmtRate(data.overall?.median)}</div>
+            </div>
+            <div style={{ background: C.card, borderRadius: 10, padding: '14px 18px', minWidth: 150 }}>
+              <div style={{ fontFamily: MONO, fontSize: 9.5, textTransform: 'uppercase', color: C.faint, marginBottom: 6 }}>Winning bids in sample</div>
+              <div style={{ fontFamily: DISP, fontSize: 26, fontWeight: 500, color: C.text }}>{data.totalWinningBids}</div>
+              <div style={{ fontFamily: SANS, fontSize: 11, color: C.faint, marginTop: 4 }}>across {data.distinctWinningBanks} bank{data.distinctWinningBanks === 1 ? '' : 's'} (anonymised)</div>
+            </div>
+          </div>
+
+          {data.thin && (
+            <div style={{ marginBottom: 20, padding: '10px 14px', background: 'rgba(210,153,34,0.08)', border: `1px solid rgba(210,153,34,0.35)`, borderRadius: 8, fontFamily: SANS, fontSize: '0.78rem', color: C.medium, maxWidth: 720 }}>
+              ⚠ Thin data: fewer than {data.minSampleHint} winning bids recorded so far. These benchmarks are indicative only and will sharpen as more deals close across the market.
+            </div>
+          )}
+
+          <Section title="By quality band" rows={data.byQualityBand} labelMap={QUALITY_BAND_LABEL} />
+          <Section title="By deal type"    rows={data.byType}        labelMap={TYPE_LABEL} />
+          <Section title="By region"       rows={data.byRegion} />
+
+          <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, marginTop: 4, lineHeight: 1.5, maxWidth: 720 }}>
+            Win rate = the headline rate on the accepted bid. Percentiles computed across all banks' winning bids; buckets with small samples (n &lt; {data.minSampleHint}) are flagged ⚠. No bank is ever identified.
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function BankIntelligence() {
   const [data,        setData]        = useState(null);
   const [err,         setErr]         = useState(null);
@@ -1889,7 +2114,13 @@ export default function BankIntelligence() {
   const [granularity, setGranularity] = useState('monthly');
   const [periodIdx,   setPeriodIdx]   = useState(null);
   const [activeTab,   setActiveTab]   = useState('overview');
+  const [exposure,    setExposure]    = useState(null);
   const pollRef = useRef(null);
+
+  // Risk-committee exposure overlay — this bank's book × geo distress (illustrative).
+  useEffect(() => {
+    bankApi.exposure().then(setExposure).catch(() => setExposure(null));
+  }, []);
 
   useEffect(() => {
     const load = () =>
@@ -1983,12 +2214,21 @@ export default function BankIntelligence() {
 
   // Sector donut data
   const totalSector = (sectorBreakdown || []).reduce((s, r) => s + r.count, 0);
-  const donutSlices = (sectorBreakdown || []).slice(0, 8).map(s => ({
+  const _pct = (c) => (totalSector ? Math.round((c / totalSector) * 100) : 0);
+  // #13 — show top 7 + an "Other" bucket for the remainder so the legend sums to 100%.
+  const _secSorted = [...(sectorBreakdown || [])].sort((a, b) => b.count - a.count);
+  const _secTop = _secSorted.slice(0, 7);
+  const _secRest = _secSorted.slice(7);
+  const donutSlices = _secTop.map(s => ({
     label: SECTOR_LABELS[s.sector] || s.sector,
     color: SECTOR_COLORS[s.sector] || C.muted,
-    pct:   s.pct,
+    pct:   _pct(s.count),
     count: s.count,
   }));
+  if (_secRest.length) {
+    const restCount = _secRest.reduce((s, r) => s + r.count, 0);
+    donutSlices.push({ label: `Other (${_secRest.length})`, color: C.muted, pct: _pct(restCount), count: restCount });
+  }
 
   // Top high-distress suburbs
   const topHigh = [...currentPanel].sort((a, b) => (b.fdi ?? 0) - (a.fdi ?? 0)).slice(0, 5);
@@ -2010,6 +2250,7 @@ export default function BankIntelligence() {
     { id: 'networks',  label: 'Networks',        icon: <ShieldAlert size={13} />, badge: FRAUD_NETS.filter(n=>n.status!=='Cleared').length },
     { id: 'geo',       label: 'Geo Risk',        icon: <MapPin     size={13} /> },
     { id: 'sector',    label: 'Sector Heatmap',  icon: <LayoutGrid size={13} /> },
+    { id: 'market',    label: 'Market Rates',    icon: <BarChart3  size={13} /> },
     { id: 'contagion', label: 'Contagion',       icon: <GitBranch  size={13} /> },
     { id: 'settings',  label: 'Risk Settings',   icon: <Settings   size={13} /> },
   ];
@@ -2040,11 +2281,18 @@ export default function BankIntelligence() {
             <div style={{ fontFamily: MONO, fontSize: 9.5, color: C.faint, letterSpacing: 1, marginTop: 3 }}>CROSS-MARKET LENDER INTELLIGENCE</div>
           </div>
         </div>
-        {meta?.pipelineRun && (
-          <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, padding: '5px 10px', borderRadius: 7 }}>
-            Updated {new Date(meta.pipelineRun).toLocaleDateString('en-ZA', { day:'numeric', month:'short' })}
-          </span>
-        )}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {meta?.provenance === 'illustrative' && (
+            <span title="Synthetic sample — not live customer data" style={{ fontFamily: MONO, fontSize: 10, color: '#d29922', background: 'rgba(210,153,34,0.10)', border: '1px solid rgba(210,153,34,0.35)', padding: '5px 10px', borderRadius: 7 }}>
+              Illustrative · synthetic sample
+            </span>
+          )}
+          {meta?.pipelineRun && (
+            <span style={{ fontFamily: MONO, fontSize: 10, color: C.faint, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, padding: '5px 10px', borderRadius: 7 }}>
+              Updated {new Date(meta.pipelineRun).toLocaleDateString('en-ZA', { day:'numeric', month:'short' })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* ── Tab bar ─────────────────────────────────────────────────── */}
@@ -2077,14 +2325,14 @@ export default function BankIntelligence() {
       {/* ── Geo Risk Map ────────────────────────────────────────────── */}
       {activeTab === 'geo' && (
         <div style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
-          <GeoRiskMap heatmaps={data?.heatmaps} monthlyPanels={monthlyPanels} periods={activePeriods} suburbPanel={suburbPanel} />
+          <GeoRiskMap heatmaps={data?.heatmaps} monthlyPanels={monthlyPanels} periods={activePeriods} suburbPanel={suburbPanel} exposure={exposure} />
         </div>
       )}
 
       {/* ── Sector Heatmap ──────────────────────────────────────────── */}
       {activeTab === 'sector' && (
         <div style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
-          <SectorHeatmap heatmaps={data?.heatmaps} />
+          <SectorHeatmap heatmaps={data?.heatmaps} exposure={exposure} />
         </div>
       )}
 
@@ -2095,10 +2343,17 @@ export default function BankIntelligence() {
         </div>
       )}
 
+      {/* ── Market Rates (#31) ──────────────────────────────────────── */}
+      {activeTab === 'market' && (
+        <div style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
+          <MarketBenchmarkTab />
+        </div>
+      )}
+
       {/* ── Contagion ───────────────────────────────────────────────── */}
       {activeTab === 'contagion' && (
         <div style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
-          <ContagionTab />
+          <ContagionTab exposure={exposure} />
         </div>
       )}
 
@@ -2281,7 +2536,7 @@ export default function BankIntelligence() {
                 Engine Accuracy
               </div>
               <div style={{ fontFamily: SANS, fontSize: '0.68rem', color: C.faint, marginBottom: 10, lineHeight: 1.4 }}>
-                F1 = harmonic mean of precision &amp; recall. 70%+ is production-grade for fraud detection.
+                F1 = harmonic mean of precision &amp; recall, approaching the 0.70 production benchmark for fraud detection.
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {[

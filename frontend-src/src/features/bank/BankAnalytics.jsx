@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { bankApi, bankFmtPct, bankFmtR } from './bankApi.js';
+import LineChart from '../../components/LineChart.jsx';
 
 /**
  * Win/loss analytics — the feedback loop banks need to improve pricing.
@@ -164,6 +165,32 @@ export default function BankAnalytics() {
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'inline-block', width: 12, height: 12, background: '#e5e7eb', borderRadius: 2 }} /> Bids</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'inline-block', width: 12, height: 3, background: '#c8a84b', borderRadius: 2, marginBottom: 1 }} /> Win rate</span>
         </div>
+
+        {/* Banded win-rate trend (A4.3) — overall vs fast-response win-rate over
+            the same weeks, rendered with the shared multi-series LineChart.
+            Both series are real, derived from bidsPerWeek; no synthetic curve. */}
+        {weeks.length > 1 && (() => {
+          const labels = weeks.map((w, i) => w.week || w.weekStartISO || `2000-W${i + 1}`);
+          const overall = weeks.map(w => w.bidCount > 0 ? Math.round((w.wonCount / w.bidCount) * 100) : null);
+          const fast = weeks.map(w => (w.fastCount > 0) ? Math.round(((w.fastWonCount ?? 0) / w.fastCount) * 100) : null);
+          const series = [{ values: overall, color: '#c8a84b', label: 'Overall' }];
+          if (fast.some(v => v != null)) series.push({ values: fast, color: '#16a34a', label: 'Fast-response' });
+          return (
+            <div style={{ marginTop: 18 }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                Win-rate trend (%)
+              </div>
+              <LineChart series={series} labels={labels} height={150} yLabel="Win rate %" />
+              <div style={{ display: 'flex', gap: 14, marginTop: 4, fontSize: '0.72rem' }}>
+                {series.map(s => (
+                  <span key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'inline-block', width: 12, height: 3, background: s.color, borderRadius: 2 }} /> {s.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {data.winRateByProvince && data.winRateByProvince.length > 0 && (
