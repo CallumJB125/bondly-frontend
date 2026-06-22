@@ -35,8 +35,12 @@ export default function BankAnalytics() {
           v={s.medianTimeToBidMins == null ? '—' : s.medianTimeToBidMins + ' min'}
           sub={s.speedPercentile != null
             ? `faster than ${s.speedPercentile}% of banks`
-            : 'from application submit'}
-          good={s.speedPercentile != null && s.speedPercentile >= 75}
+            : s.medianTimeToBidMins == null ? 'from application submit'
+            : s.medianTimeToBidMins <= 30 ? 'competitive — under 30 min'
+            : s.medianTimeToBidMins <= 120 ? 'from application submit'
+            : 'slow — faster bids win materially more'}
+          good={(s.speedPercentile != null && s.speedPercentile >= 75) || (s.speedPercentile == null && s.medianTimeToBidMins != null && s.medianTimeToBidMins <= 30)}
+          bad={(s.speedPercentile != null && s.speedPercentile < 25) || (s.speedPercentile == null && s.medianTimeToBidMins != null && s.medianTimeToBidMins > 120)}
         />
       </div>
 

@@ -395,7 +395,7 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
             <div className="bank-section" style={{ border: '1px solid #c4b5fd', background: 'linear-gradient(180deg,#faf5ff,#fff)', borderRadius: 10 }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 Cross-bank intelligence
-                <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6d28d9', background: '#ede9fe', border: '1px solid #ddd6fe', borderRadius: 999, padding: '2px 8px' }}>Roadmap · simulated</span>
+                <span title="Roadmap preview — every figure in this card is simulated on a synthetic cohort to show what cross-bank intelligence will surface once live. Not real customer data and not a booked figure." style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6d28d9', background: '#ede9fe', border: '1px solid #ddd6fe', borderRadius: 999, padding: '2px 8px', cursor: 'help' }}>Roadmap · simulated</span>
               </h3>
               <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: '#6b7280' }}>
                 Only Bondly sees this applicant's flows across <em>all</em> their banks (by consent). Preview of roadmap signals — not live.
@@ -428,7 +428,7 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
               </div>
               {d.roadmap.primacy.relationshipUpliftLifetime > 0 && (
                 <div className="bank-row">
-                  <span className="k">Win-the-salary uplift</span>
+                  <span className="k">Win-the-salary uplift<Explain text="Estimated extra lifetime value if winning this bond also moves the salary + primary banking to you: transactional fees, deposit float and cross-sell over the bond term, net of acquisition cost. Simulated estimate, not a booked figure." /></span>
                   <span className="v" style={{ color: '#15803d' }}>+{bankFmtR(d.roadmap.primacy.relationshipUpliftLifetime)} lifetime relationship value</span>
                 </div>
               )}
