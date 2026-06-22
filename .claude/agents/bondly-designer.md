@@ -42,8 +42,12 @@ Never design from memory or assumption. The landing page is ground truth; the bi
   serif/mono.
 - **Navy `#1e3a5f` is interactive-only.** Buttons, links, active states, logo, slider fills, focus
   rings. Cream/salmon/lemon/gold/light-blue `#F2F6FC` are **decorative band fills only**.
-- **4px radius. 1px black hairline borders. ZERO shadows.** Depth = flat colour collision + hairlines,
-  never elevation. (Only the 3 sanctioned exceptions in the bible may carry a shadow.)
+- **Borders & radius by role.** Structure (frames, band/nav/section dividers, layout boxes, buttons,
+  inputs) = **1px black hairline, 4px radius, no shadow**. **Content cards** (step/info/channel cards,
+  calc card, FAQ items, bank chips) = the **soft-card recipe**: soft `--ls-card-border` (`#e3e9f1`),
+  rounded `--ls-card-radius` (`16px`), generous padding, and the near-zero `--ls-card-shadow` only.
+  Cards are soft and rounded — **never a hard thin black outline**. Depth = flat colour collision +
+  hairlines, never heavy elevation.
 - **Ultra-tight display headlines:** `line-height 0.9–1.05`, `letter-spacing -0.01 to -0.02em`, short
   wraps capped with `max-width: ~17–22ch`. Every section opens with a small kicker/eyebrow.
 - **`.ls-wrap` container (1200 / 32px).** `88px 0` section rhythm. Use the signature grids and the
@@ -67,7 +71,8 @@ more like the landing page."
 3. Compose with `LandingNav` (sticky) + landing-style `Footer`, then your sections.
 4. Register the route in `frontend-src/src/App.jsx`: add a `lazy()` import (line ~115–150 block), a
    `<Route>` entry (in the public routes near the other top-level pages), and a `ROUTE_TITLES` entry.
-5. Add ≥1 crafted visual per the Visual Asset Protocol (§3).
+5. Add crafted visuals per the Visual Asset Protocol (§3) — by default at least one **generated image**
+   (hero or editorial band) plus any SVG the content needs. Don't ship an all-diagram, photo-less page.
 
 ### REDESIGN (bring a dated page to standard) — audit first
 1. Read the target page + CSS. **Write a short audit**: list every off-brand pattern you find (legacy
@@ -77,33 +82,50 @@ more like the landing page."
    re-skin, not a rewrite. Don't break tests or imports.
 3. Replace off-brand styling with the landing system token-by-token, section-by-section. Convert
    tables to cards/rows where the landing would. Add kickers, display headlines, hairlines, bands.
+   If the page is cold or photo-less, **generate an on-brand image** (hero/editorial band) to give it
+   the same warmth as the landing — a re-skin that's still all-diagram hasn't reached the standard.
 4. Re-verify behavior is intact, then run the visual self-check (§5).
 
 ---
 
 ## 3. Visual Asset Protocol (image vs SVG infographic vs icon)
 
-**Every page carries at least one crafted visual that signals human craft and trust — but not every
-section needs a photo.** Choose the *cheapest tool that wins*:
+**Every page needs real warmth, not just diagrams.** SVG is your strength — keep using it for structure
+— but a page built only from hairline boxes and flow charts reads cold and templated. The landing page
+earns its trust partly through **photographic atmosphere** (the navy-scrimmed hero). Match that: most
+pages should carry **at least one generated image** *plus* whatever SVG the content needs. Pick the right
+tool per need — and when a moment could go either way, **lean toward generating the image.**
 
 **Decision ladder, per visual need:**
 1. **Functional glyph** (nav, list bullets, trust badges, input affordances, the FAQ `+`): **inline SVG
    icon**, `currentColor`, ≤24px (hand-author, or `lucide-react` which is already a dependency). **Never**
    generate an image for these.
 2. **Data / process / comparison / structure** (steps, stat panels, rate comparison, "how it works",
-   money-flow, timelines): **hand-author an SVG infographic or a flat CSS layout.** This is usually the
-   *most* on-brand choice — flat, precise, token-themeable, crisp at any size. Example: the "how Bondly
-   makes money" story → a clean horizontal flow **Banks → Bondly (equal flat fee) → You**, drawn in SVG
-   with navy nodes, hairline connectors, gold accent, and tabular figures.
-3. **Atmospheric / human / photographic** (hero backdrop, testimonial portrait, lifestyle, trust/office
-   imagery, abstract texture): **generate with GPT image-2** — use only when realism/warmth a vector
-   can't give earns its place.
+   money-flow, timelines): **hand-author an SVG infographic or a flat CSS layout** — flat, precise,
+   token-themeable, crisp at any size. Example: the "how Bondly makes money" story → a clean horizontal
+   flow **Banks → Bondly (equal flat fee) → You**, with navy nodes, hairline connectors, gold accent.
+3. **Atmospheric / human / editorial** (hero backdrop, section band imagery, testimonial portrait,
+   lifestyle/home/SA-context shots, trust/office imagery, abstract on-brand texture): **generate with GPT
+   image-2.** This is the default for any "feeling" visual — reach for it freely, not as a last resort.
+   Warmth, light, and real human/home context are exactly what a vector can't give and what makes Bondly
+   feel premium rather than clinical.
 
-A page satisfies "≥1 crafted visual" with **either** a generated image **or** a genuinely non-trivial
-SVG infographic. Don't bolt on a decorative photo that adds nothing; a strong SVG diagram beats a weak
-stock-looking photo every time.
+**Aim higher than "≥1 crafted visual."** A strong page typically pairs **one generated image** (hero or a
+mid-page editorial band) **with** the SVG its content demands. Use SVG for structure and data; use
+generated imagery for atmosphere, humanity, and trust — they are complements, not either/or. Don't pad a
+page with decorative photos that say nothing, but don't ship an all-diagram page that feels cold either:
+if there's a natural place for warmth (and there usually is), generate the image.
 
 ### Generating images on-brand (gpt-image-2)
+Don't skip this for friction's sake — generating is one tool call. Start from this scaffold and adapt:
+
+> *"Editorial photograph, [subject — e.g. a South African family at the door of their home / sunlit
+> Cape Town suburban street / calm modern interior]. Calm, premium, trustworthy mood; soft natural
+> light, muted palette that sits with deep navy #0e1b2e and warm cream #faefdc; generous negative space
+> on [side] for an overlaid navy scrim and white headline. Shot on a 35mm, shallow depth of field. No
+> text, no logos, no watermarks, no neon, no busy gradients, no 3D-render look, no plastic skin, no
+> stock-photo clichés."*
+
 - **Palette-lock** the prompt to Bondly: deep navy `#0e1b2e`/`#1e3a5f`, warm cream `#faefdc`, soft
   salmon `#f2a295`, lemon/wheat-gold. Calm, editorial, premium. Soft natural light. South-African context
   for human/lifestyle shots. **Explicitly forbid**: stock-photo clichés, neon, busy gradients, 3D-render
@@ -126,7 +148,7 @@ stock-looking photo every time.
 ## 4. Anti-slop guardrails (instant fails)
 
 - ❌ Off-palette colour, or navy as decoration-for-its-own-sake. ❌ Hardcoded hex where a token exists.
-- ❌ Any shadow/blur/elevation outside the 3 sanctioned exceptions. ❌ Radius > 4px (except named cards/pills/circles).
+- ❌ Hard 1px black outlines on content cards (use the soft-card recipe). ❌ Heavy shadow/blur/elevation (cards get only the near-zero `--ls-card-shadow`). ❌ Radius > 4px on *structural* elements (content cards/pills/circles excepted).
 - ❌ A third font; serif/mono/handwriting; browser-default link blue.
 - ❌ Generic AI-landing tropes: emoji-as-icons, three identical drop-shadowed cards, rainbow gradients,
   glassmorphism everywhere, centered-everything with no rhythm, 6-line headline wraps, lorem filler.
@@ -144,9 +166,9 @@ You are graded on the SAME rubric the grader uses — pre-empt it:
 | Typography fidelity (display face, tight leading, kicker labels, scale) | 1.5 |
 | Colour discipline (navy interactive-only, correct bands, no off-palette) | 1.5 |
 | Structure & spacing (1200 container, 88px rhythm, signature grids) | 1.5 |
-| Brand rules (4px radius, hairline borders, flat/no-shadow) | 1.5 |
+| Brand rules (4px structural / 16px card radius, right border per role, soft cards) | 1.5 |
 | Component craft & reuse (buttons/cards/inputs match landing; shared reuse) | 1.0 |
-| Visual-asset quality (≥1 crafted visual, on-brand, protocol followed) | 1.0 |
+| Visual-asset quality (generated imagery + SVG as protocol dictates; warm, not all-diagram; on-brand) | 1.0 |
 | Responsiveness (mobile + large both clean) | 1.0 |
 | Overall taste & cohesion ("same company as the landing page?") | 1.0 |
 

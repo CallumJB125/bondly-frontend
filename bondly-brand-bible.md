@@ -13,9 +13,10 @@ doubt, open it and copy how it does the thing. This file distills that standard 
 ## 0. The one-paragraph soul
 
 Bondly is **Varo "poster-zine" fintech**: bold, ultra-compressed display headlines on white and flat
-colour bands, **navy `#1e3a5f` as the only interactive colour**, **1px hairline black borders**, a hard
-**4px radius**, and **zero shadows**. Depth comes from *flat colour collision and hairline strokes*, never
-from elevation. The feeling is calm, editorial, premium, trustworthy, and warm — a serious money brand
+colour bands, **navy `#1e3a5f` as the only interactive colour**, **1px hairline borders** (hard black for
+structure, soft `#e3e9f1` for content cards), a tight **4px structural radius** with softly **rounded
+content cards**, and **essentially no shadows** (cards carry only a near-zero lift). Depth comes from
+*flat colour collision and hairline strokes*, never from heavy elevation. The feeling is calm, editorial, premium, trustworthy, and warm — a serious money brand
 that doesn't shout. Restraint over decoration. If a screen looks busy, glossy, gradient-heavy, drop-
 shadowed, or rounded-and-bubbly, it is **off-brand**.
 
@@ -146,9 +147,12 @@ rgba(30,58,95,.15)`. Strip number spinners. Use the `--focus-ring` token for key
 font-size:12px; weight 600; padding: 5px 12px 5px 10px; gap:6px`. (Pills are the *only* 999px-radius UI
 besides genuine circles.)
 
-**Card / panel:** white, `border: 1px solid #000` (hairline), `border-radius: 4px` (the calc card and FAQ
-items use 14px as a deliberate soft exception — keep new cards at 4px unless matching those specific
-patterns). **No shadow.**
+**Card / panel:** content cards (step/info cards, channel cards, the calc card, FAQ items, bank chips)
+use the **soft-card recipe**: white bg, a **soft hairline** `--ls-card-border` (`#e3e9f1`), rounded
+`--ls-card-radius` (`16px`), generous padding (~24–32px), and a near-zero lift `--ls-card-shadow`
+(`0 1px 2px rgba(16,24,40,.04)`). Soft, calm, rounded — **never a hard thin black outline**. The hard
+`1px solid #000` / `4px` hairline is reserved for **structural frames, band dividers, and layout boxes**
+(e.g. the two-card case-study split, table-like row groups, nav/section borders), not soft content cards.
 
 **FAQ accordion** (`.ls-faq__*`): rows divided by `1px solid #e3e8f0`; open row gets navy border + white
 bg; question is display face `18px/600`; the `+` icon sits in a `30px` circle and rotates `135deg` on open
@@ -166,13 +170,16 @@ copy the landing `Footer`. Nav is `64px`, sticky, white, hairline bottom border,
 
 ## 5. Effects, motion, a11y
 
-- **Radius:** everything `4px` (`--radius`). `--radius-full` (9999) only for genuine circles (avatars,
-  spinner, pills). The calc card / FAQ item / dark stat panel use 14–24px as deliberate, named exceptions.
-- **Borders:** `1px solid #000` hairlines for structure/separation. Subtle inner dividers may use
-  `#e3e8f0`/`#e3e9f1`.
-- **Shadows:** **none** (`--shadow* = none`). The three sanctioned exceptions, copy verbatim only if you're
-  building that exact element: slider thumb `0 1px 3px rgba(14,27,46,.25)`; dark stat panel `0 40px 80px
-  -48px rgba(6,20,59,.7)`; bank chip near-zero `0 1px 2px rgba(16,24,40,.04)`. Don't add others.
+- **Radius:** structural elements (frames, dividers, bands, buttons, inputs) `4px` (`--radius`).
+  **Content cards** use `--ls-card-radius` (`16px`). `--radius-full` (9999) only for genuine circles
+  (avatars, spinner, pills); the dark stat panel uses 16–24px.
+- **Borders:** `1px solid #000` hairlines for **structure/separation** (frames, band/nav/section
+  dividers, layout boxes). **Content cards** use the soft `--ls-card-border` (`#e3e9f1`); inner dividers
+  may use `#e3e8f0`/`#e3e9f1`.
+- **Shadows:** structural elements carry **none** (`--shadow* = none`). **Content cards** carry only the
+  near-zero `--ls-card-shadow` (`0 1px 2px rgba(16,24,40,.04)`) — a faint lift, never a real drop shadow.
+  The two further sanctioned exceptions, copy verbatim only if building that exact element: slider thumb
+  `0 1px 3px rgba(14,27,46,.25)`; dark stat panel `0 40px 80px -48px rgba(6,20,59,.7)`. Don't add others.
 - **Motion:** one easing curve — `--ease-out: cubic-bezier(0.22,1,0.36,1)`. Durations 150–400ms, never
   bouncy. Transitions `--transition-fast/base/slow`. Always honour `prefers-reduced-motion` (tokens.css
   already zeroes it globally; in JS use Framer's `useReducedMotion()`).

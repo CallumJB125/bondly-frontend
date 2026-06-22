@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bondly · Competitive Intelligence Report — June 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#1e3a5f; --brand-dark:#152d4a; --brand-light:#e8eef5; --brand-deep:#0e1b2e;
+  --cream:#faefdc; --salmon:#f2a295; --lemon:#fdf0af; --gold:#e2c87d; --gold-light:#f3e2b0;
+  --ink:#111111; --heading:#06143b; --muted:#5a5a5a; --muted2:#6b7280;
+  --card-border:#e3e9f1; --line:#000000; --section-blue:#F2F6FC; --offwhite:#fbfcfe;
+  --ok:#16a34a; --err:#dc2626; --warn:#d97706; --info:#2563eb;
+  --display:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --sans:'Inter','Helvetica Neue',Arial,sans-serif;
+  --sub:'Plus Jakarta Sans','Inter',sans-serif;
+}
+@page{ size:A4; margin:0; }
+*{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+html,body{ margin:0; padding:0; }
+body{ font-family:var(--sans); color:var(--ink); font-size:10.2px; line-height:1.5; background:#fff; }
+
+.page{ width:210mm; min-height:297mm; padding:17mm 16mm 15mm; position:relative; page-break-after:always; overflow:hidden; }
+.page:last-child{ page-break-after:auto; }
+
+.foot{ position:absolute; left:16mm; right:16mm; bottom:8.5mm; display:flex; justify-content:space-between;
+  font-family:var(--sans); font-size:7.4px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted2);
+  border-top:1px solid var(--card-border); padding-top:5px; }
+.foot strong{ color:var(--brand); font-weight:600; }
+
+.eyebrow{ font-family:var(--sans); font-size:8.4px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand); display:flex; align-items:center; gap:8px; margin:0 0 9px; }
+.eyebrow::before{ content:""; width:22px; height:2px; background:var(--brand); display:inline-block; }
+.eyebrow--light{ color:var(--gold); } .eyebrow--light::before{ background:var(--gold); }
+h1,h2,h3,h4{ font-family:var(--display); color:var(--heading); margin:0; }
+.h-sec{ font-size:25px; font-weight:700; line-height:.99; letter-spacing:-.02em; margin:0 0 6px; max-width:22ch; }
+.h-sec--sm{ font-size:21px; }
+.h-sub{ font-family:var(--sub); font-size:10.6px; line-height:1.5; color:var(--muted); max-width:66ch; margin:0 0 15px; }
+.h3{ font-size:13px; font-weight:700; letter-spacing:-.01em; line-height:1.12; color:var(--heading); margin-bottom:5px; }
+.h4{ font-size:10.6px; font-weight:700; letter-spacing:.01em; color:var(--heading); }
+p{ margin:0 0 7px; } .lead{ font-family:var(--sub); font-size:11px; line-height:1.58; color:#26303f; }
+strong{ font-weight:600; color:var(--heading); }
+.num{ font-variant-numeric:tabular-nums; }
+.rule{ height:1px; background:var(--line); border:0; margin:12px 0; }
+.rule--soft{ background:var(--card-border); }
+a{ color:var(--brand); text-decoration:none; }
+
+/* cover */
+.cover{ background:var(--brand-deep); color:#fff; height:297mm; padding:22mm 18mm; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+.cover::after{ content:""; position:absolute; right:-130px; top:-120px; width:480px; height:480px; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(226,200,125,.18), rgba(14,27,46,0) 62%); }
+.cover::before{ content:""; position:absolute; left:-160px; bottom:-200px; width:520px; height:520px; border-radius:50%;
+  background:radial-gradient(circle at 60% 40%, rgba(30,58,95,.55), rgba(14,27,46,0) 60%); }
+.cover__brand{ display:flex; align-items:center; gap:9px; font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:-.01em; color:#fff; position:relative; z-index:2; }
+.cover__mark{ width:24px; height:24px; border:1.5px solid var(--gold); border-radius:5px; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:13px; }
+.cover__spacer{ flex:1; }
+.cover__kicker{ font-family:var(--sans); font-size:9.5px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:15px; display:flex; align-items:center; gap:9px; position:relative; z-index:2; }
+.cover__kicker::before{ content:""; width:30px; height:2px; background:var(--gold); }
+.cover__title{ font-family:var(--display); font-weight:800; font-size:55px; line-height:.9; letter-spacing:-.03em; color:#fff; max-width:15ch; margin:0 0 16px; position:relative; z-index:2; }
+.cover__title em{ font-style:normal; color:var(--lemon); }
+.cover__sub{ font-family:var(--sub); font-size:12.5px; line-height:1.55; color:#c9d4e4; max-width:58ch; margin-bottom:22px; position:relative; z-index:2; }
+.cover__meta{ display:flex; gap:36px; border-top:1px solid rgba(255,255,255,.16); padding-top:16px; position:relative; z-index:2; }
+.cover__meta div{ display:flex; flex-direction:column; gap:3px; }
+.cover__meta .k{ font-size:7.6px; letter-spacing:.14em; text-transform:uppercase; color:#8ea3c0; font-weight:600; }
+.cover__meta .v{ font-family:var(--display); font-size:12.5px; font-weight:600; color:#fff; }
+.cover__tag{ display:inline-flex; align-items:center; gap:6px; background:rgba(226,200,125,.14); border:1px solid rgba(226,200,125,.4); color:var(--gold); border-radius:999px; font-size:8.4px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:5px 12px; align-self:flex-start; margin-bottom:26px; position:relative; z-index:2; }
+
+/* bands */
+.band{ margin:0 -16mm; padding:18px 16mm; }
+.band--cream{ background:var(--cream); } .band--salmon{ background:var(--salmon); }
+.band--blue{ background:var(--section-blue); } .band--navy{ background:var(--brand-deep); color:#fff; }
+.page.band--navy .h-sec, .page.band--navy .h3, .page.band--navy h2, .page.band--navy h3{ color:#fff; }
+.page.band--navy .h-sub{ color:#b9c6da; }
+.page.band--navy strong{ color:#eef2f8; }
+
+/* stats */
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin:4px 0; }
+.stats--3{ grid-template-columns:repeat(3,1fr); }
+.stat{ border:1px solid var(--card-border); border-radius:12px; padding:13px 13px 12px; background:#fff; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+.stat .fig{ font-family:var(--display); font-weight:700; font-size:23px; line-height:.9; letter-spacing:-.02em; color:var(--brand); font-variant-numeric:tabular-nums; }
+.stat .lbl{ font-size:8px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted2); margin-top:6px; font-weight:600; line-height:1.3; }
+.stat--dark{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); }
+.stat--dark .fig{ color:var(--gold); } .stat--dark .lbl{ color:#9fb0c8; }
+
+/* competitor card */
+.ccard{ border:1px solid var(--card-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04); margin-bottom:11px; break-inside:avoid; }
+.ccard__head{ display:flex; align-items:center; justify-content:space-between; padding:12px 15px; background:var(--brand-light); border-bottom:1px solid var(--card-border); }
+.ccard__name{ font-family:var(--display); font-size:14.5px; font-weight:700; letter-spacing:-.01em; color:var(--heading); }
+.ccard__name span{ display:block; font-family:var(--sans); font-size:8.2px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:var(--muted2); margin-top:2px; }
+.ccard__tag{ font-size:8px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--brand); border:1px solid var(--brand); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+.ccard__tag--threat{ color:#b45309; border-color:#d97706; }
+.ccard__body{ padding:12px 15px; display:grid; grid-template-columns:repeat(2,1fr); gap:8px 20px; }
+.ccard__body--1{ grid-template-columns:1fr; }
+.kv{ display:flex; flex-direction:column; gap:1px; }
+.kv .k{ font-size:7.8px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted2); font-weight:600; }
+.kv .v{ font-size:9.6px; color:var(--ink); line-height:1.4; }
+
+/* table */
+table.dt{ width:100%; border-collapse:collapse; font-size:8.9px; margin:4px 0 6px; }
+table.dt th{ text-align:left; font-family:var(--sans); font-size:7.6px; letter-spacing:.07em; text-transform:uppercase; color:#fff; background:var(--brand); font-weight:600; padding:7px 9px; }
+table.dt th:first-child{ border-top-left-radius:6px; } table.dt th:last-child{ border-top-right-radius:6px; }
+table.dt td{ padding:6px 9px; border-bottom:1px solid var(--card-border); vertical-align:top; color:#26303f; }
+table.dt tr:nth-child(even) td{ background:var(--offwhite); }
+table.dt td strong{ color:var(--heading); }
+
+/* callout */
+.callout{ border-left:3px solid var(--brand); background:var(--offwhite); padding:12px 15px; border-radius:0 8px 8px 0; margin:9px 0; break-inside:avoid; }
+.callout--gold{ border-left-color:var(--gold); background:#fffaf0; }
+.callout--salmon{ border-left-color:var(--salmon); background:#fff7f6; }
+.callout .q{ font-family:var(--display); font-size:12.5px; font-weight:600; line-height:1.28; letter-spacing:-.01em; color:var(--heading); margin-bottom:4px; }
+.callout .src{ font-size:8px; color:var(--muted2); letter-spacing:.03em; }
+
+/* boxes */
+.box{ border:1px solid var(--card-border); border-radius:12px; padding:13px 15px; break-inside:avoid; margin-bottom:9px; }
+.box--attack{ background:#fff7f6; border-color:#f4cdc6; } .box--win{ background:#f3faf5; border-color:#c4e6d1; }
+.box--neutral{ background:var(--offwhite); }
+.box__h{ display:flex; align-items:center; gap:8px; font-family:var(--display); font-size:11px; font-weight:700; color:var(--heading); margin-bottom:6px; }
+.chip{ font-size:7.4px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; border-radius:4px; padding:3px 7px; }
+.chip--attack{ background:var(--salmon); color:#5b1b12; } .chip--win{ background:var(--ok); color:#fff; }
+.chip--play{ background:var(--brand); color:#fff; }
+ul.tight{ margin:3px 0 0; padding-left:15px; } ul.tight li{ margin-bottom:4px; }
+ul.tight li::marker{ color:var(--brand); }
+
+/* confidence */
+.cf{ display:inline-flex; align-items:center; gap:4px; font-size:7.6px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border-radius:999px; }
+.cf--hi{ background:#e6f4ec; color:#15803d; } .cf--med{ background:#fef3e2; color:#b45309; } .cf--lo{ background:#fdeaea; color:#b91c1c; }
+.cf .dot{ width:4px; height:4px; border-radius:50%; background:currentColor; }
+
+/* toc */
+.toc{ display:grid; grid-template-columns:1fr 1fr; gap:5px 32px; margin-top:6px; }
+.toc__item{ display:flex; align-items:baseline; gap:9px; padding:7px 0; border-bottom:1px solid var(--card-border); }
+.toc__no{ font-family:var(--display); font-weight:700; font-size:12px; color:var(--brand); width:22px; }
+.toc__t{ font-size:10px; font-weight:600; color:var(--heading); flex:1; }
+.toc__t span{ display:block; font-weight:400; font-size:8.2px; color:var(--muted2); margin-top:1px; }
+
+/* sources */
+.src-list{ font-size:8px; line-height:1.5; color:#37414f; columns:2; column-gap:22px; }
+.src-list .s{ break-inside:avoid; margin-bottom:5px; padding-left:13px; text-indent:-13px; }
+.src-list .s b{ color:var(--brand); }
+
+/* misc */
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid2--wide{ grid-template-columns:1.1fr .9fr; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.mt0{margin-top:0}.mb0{margin-bottom:0!important}
+.note{ font-size:8.2px; color:var(--muted2); font-style:italic; margin-top:4px; }
+.cite{ font-size:7.4px; color:var(--brand); font-weight:600; vertical-align:super; }
+.bignum{ font-family:var(--display); font-weight:800; font-size:38px; color:var(--brand-light); line-height:1; letter-spacing:-.03em; }
+.divider-band{ display:flex; align-items:center; gap:12px; margin:10px 0; }
+.divider-band .ln{ flex:1; height:1px; background:var(--card-border); }
+.divider-band .lbl{ font-size:8px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); }
+.tl{ position:relative; padding-left:18px; }
+.tl::before{ content:""; position:absolute; left:4px; top:3px; bottom:3px; width:1.5px; background:var(--card-border); }
+.tl__i{ position:relative; margin-bottom:9px; break-inside:avoid; }
+.tl__i::before{ content:""; position:absolute; left:-17.5px; top:3px; width:8px; height:8px; border-radius:50%; background:var(--brand); border:2px solid #fff; box-shadow:0 0 0 1px var(--card-border); }
+.tl__yr{ font-family:var(--display); font-weight:700; font-size:11px; color:var(--brand); }
+.tl__t{ font-size:9.4px; color:#26303f; line-height:1.4; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <div class="cover__brand"><span class="cover__mark">⌂</span> Bondly</div>
+  <div class="cover__spacer"></div>
+  <span class="cover__tag">● Confidential — Internal Strategy</span>
+  <div class="cover__kicker">Competitive Intelligence Report</div>
+  <h1 class="cover__title">The SA Bond<br>Origination <em>War.</em></h1>
+  <p class="cover__sub">A three-round, adversarially-verified teardown of BetterBond, ooba, and the fintech challengers reshaping South Africa's R1.88-trillion mortgage market — and the three places Bondly can win.</p>
+  <div class="cover__spacer"></div>
+  <div class="cover__meta">
+    <div><span class="k">Prepared for</span><span class="v">Bondly Strategy</span></div>
+    <div><span class="k">Date</span><span class="v">18 June 2026</span></div>
+    <div><span class="k">Method</span><span class="v">3-round deep research</span></div>
+    <div><span class="k">Sources</span><span class="v">73 · 3 rounds</span></div>
+  </div>
+</section>
+
+<!-- ============ EXECUTIVE SUMMARY ============ -->
+<section class="page">
+  <div class="eyebrow">Executive Summary</div>
+  <h2 class="h-sec">The market is won at the agent, not the app.</h2>
+  <p class="lead">South African bond origination looks like a consumer-choice market — slick websites, calculators, "apply online in minutes." It mostly isn't. The home-buyer rarely chooses their originator; the <strong>estate agent defaults it at offer-to-purchase</strong>, and the incumbents have spent a decade buying the agent layer. That single structural fact reframes every recommendation in this report.</p>
+
+  <div class="stats" style="margin-top:13px">
+    <div class="stat"><div class="fig num">R1.88<span style="font-size:13px">tn</span></div><div class="lbl">SA mortgages outstanding, end-2024 (SARB)</div></div>
+    <div class="stat"><div class="fig num">R336.7<span style="font-size:12px">bn</span></div><div class="lbl">New residential bonds granted, 2024 — down from R391bn in 2022</div></div>
+    <div class="stat"><div class="fig">~1 in 3</div><div class="lbl">SA home loans via BetterHome Group (self-claimed)</div></div>
+    <div class="stat"><div class="fig num">R0</div><div class="lbl">Cost to the buyer — the bank pays the commission</div></div>
+  </div>
+
+  <hr class="rule">
+
+  <div class="grid2">
+    <div>
+      <div class="h4" style="margin-bottom:5px">The five things that matter</div>
+      <ul class="tight mb0">
+        <li><strong>It's a B2B2C referral market.</strong> SA's own originator regulator (MORCSA) calls estate-agent referral "the primary channel" through which buyers reach originators.</li>
+        <li><strong>BetterBond's moat is ownership, not UX.</strong> Parent BetterHome owns stakes in RE/MAX, Chas Everitt, Tyson, Just Property, a majority of Private Property, and lead-gen tool amplifi.</li>
+        <li><strong>The real disruptor is MortgageMarket</strong>, not the incumbents — direct bank contracts, &lt;2-min pre-approval, a white-label platform.</li>
+        <li><strong>The market is shrinking</strong> (–14% new residential lending vs 2022), so incumbents are defending, not expanding.</li>
+        <li><strong>Pure-AI broking has failed everywhere it's been tried.</strong> Hybrid human+AI wins.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="h4" style="margin-bottom:5px">Bondly's three openings</div>
+      <div class="box box--win mb0" style="margin-bottom:7px">
+        <div class="box__h mb0"><span class="chip chip--win">01</span> Own the switch</div>
+        <div style="font-size:9.2px;color:#26303f;line-height:1.4">Incumbents optimise for <em>purchase</em> origination. The refinance/switch market — Bondly's "Stop overpaying" wedge — is barely contested and needs no estate agent.</div>
+      </div>
+      <div class="box box--win mb0" style="margin-bottom:7px">
+        <div class="box__h mb0"><span class="chip chip--win">02</span> Weaponise transparency</div>
+        <div style="font-size:9.2px;color:#26303f;line-height:1.4">The "commission doesn't affect your rate" claim is unproven and the law already forces commission disclosure. An openly on-your-side originator attacks the trust gap.</div>
+      </div>
+      <div class="box box--win mb0">
+        <div class="box__h mb0"><span class="chip chip--win">03</span> Hybrid AI, not no-human</div>
+        <div style="font-size:9.2px;color:#26303f;line-height:1.4">Use AI to compress turnaround and pre-qual; keep humans for the anxiety moments. The global evidence says this is the only model that converts.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout--gold">
+    <div class="q">"Does the buyer choose the originator at all — or does the agent choose it for them?"</div>
+    <div class="src">The contrarian question that dictates Bondly's entire go-to-market. Answered on p.5.</div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 02</span></div>
+</section>
+
+<!-- ============ CONTENTS ============ -->
+<section class="page">
+  <div class="eyebrow">Contents</div>
+  <h2 class="h-sec">What's inside.</h2>
+  <p class="h-sub">Eleven sections, built from three rounds of fan-out web research, adversarial 3-vote fact-checking, and a Bondly-specific strategic synthesis.</p>
+  <div class="toc">
+    <div class="toc__item"><span class="toc__no">01</span><span class="toc__t">The market &amp; the model<span>Size, mechanics, and why it's contracting</span></span></div>
+    <div class="toc__item"><span class="toc__no">02</span><span class="toc__t">Who really chooses the originator<span>The agent-referral truth — the report's spine</span></span></div>
+    <div class="toc__item"><span class="toc__no">03</span><span class="toc__t">BetterBond &amp; BetterHome Group<span>The vertically-integrated conglomerate</span></span></div>
+    <div class="toc__item"><span class="toc__no">04</span><span class="toc__t">ooba Home Loans<span>The pioneer, and who owns it</span></span></div>
+    <div class="toc__item"><span class="toc__no">05</span><span class="toc__t">MortgageMarket &amp; EasyMortgages<span>The genuine fintech threat</span></span></div>
+    <div class="toc__item"><span class="toc__no">06</span><span class="toc__t">The wider field<span>MortgageMax, Roost, banks-direct &amp; more</span></span></div>
+    <div class="toc__item"><span class="toc__no">07</span><span class="toc__t">How they became leaders<span>First-mover, integration, lock-in</span></span></div>
+    <div class="toc__item"><span class="toc__no">08</span><span class="toc__t">Marketing &amp; acquisition<span>SEO, content &amp; the captive funnel</span></span></div>
+    <div class="toc__item"><span class="toc__no">09</span><span class="toc__t">Product, tech &amp; the AI reality check<span>What converts — and what doesn't</span></span></div>
+    <div class="toc__item"><span class="toc__no">10</span><span class="toc__t">Weaknesses &amp; regulatory levers<span>The attack surface</span></span></div>
+    <div class="toc__item"><span class="toc__no">11</span><span class="toc__t">The Bondly playbook<span>Where and how to win</span></span></div>
+    <div class="toc__item"><span class="toc__no">—</span><span class="toc__t">Method, confidence &amp; sources<span>How this was built; what to trust</span></span></div>
+  </div>
+
+  <div class="divider-band"><span class="lbl">At a glance · the field</span><span class="ln"></span></div>
+  <table class="dt">
+    <thead><tr><th>Player</th><th>Founded</th><th>Owner</th><th>Model focus</th><th>Banks</th><th>Edge</th><th>Conf.</th></tr></thead>
+    <tbody>
+      <tr><td><strong>BetterBond</strong></td><td class="num">2000</td><td>BetterHome Group</td><td>Purchase origination</td><td class="num">8</td><td>Agency &amp; portal ownership</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>ooba</strong></td><td class="num">1999</td><td>ARC (Motsepe) control</td><td>Purchase origination</td><td class="num">9</td><td>First-mover, brand, data</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>MortgageMarket</strong></td><td class="num">2019</td><td>Independent · IDF Capital</td><td>Direct-deal + white-label</td><td class="num">7</td><td>Speed + embedded rails</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>EasyMortgages</strong></td><td class="num">2025</td><td>MortgageMarket tech · EasyEquities reach</td><td>Embedded fintech</td><td class="num">7</td><td>EasyEquities user base</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>SA Home Loans</strong></td><td class="num">1999</td><td>Independent lender</td><td><strong>Bond switching</strong></td><td>Self-funded</td><td>Dedicated switch product</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>MortgageMax</strong></td><td class="num">—</td><td>BetterHome Group</td><td>Purchase origination</td><td>Majors</td><td>Group's 2nd brand</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td></tr>
+      <tr><td><strong>Bondly</strong></td><td class="num">—</td><td>—</td><td><strong>Switch / refinance</strong></td><td class="num">7</td><td>Savings-led, AI, transparent</td><td><span class="cf cf--hi"><span class="dot"></span>Own</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">MortgageMarket is independent — founded 2019 by Tim Akinnusi, ~$0.69m seed from IDF Capital. EasyEquities / Purple Group is a <strong>distribution partner, not a shareholder</strong>; EasyMortgages runs on MortgageMarket's white-label engine (which also powers MTN MoMo). SA Home Loans is both a panel lender and the one incumbent actively marketing bond <em>switching</em>.</div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 03</span></div>
+</section>
+
+<!-- ============ 01 THE MARKET ============ -->
+<section class="page">
+  <div class="eyebrow">01 · The market &amp; the model</div>
+  <h2 class="h-sec">A R1.88-trillion market — that's quietly shrinking.</h2>
+  <p class="h-sub">Origination is a thin, bank-funded layer sitting on top of an enormous but currently contracting mortgage market. Understanding the denominator is the first thing round-1 research couldn't do — and round-2 fixed it with SARB data.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="fig num">R1.88tn</div><div class="lbl">Total mortgages outstanding, end-2024</div></div>
+    <div class="stat"><div class="fig num">R336.7bn</div><div class="lbl">New residential granted, 2024</div></div>
+    <div class="stat"><div class="fig num">−14%</div><div class="lbl">New residential lending vs 2022 (R391.3bn)</div></div>
+    <div class="stat"><div class="fig num">R477.7bn</div><div class="lbl">Total new mortgage lending, 2024 (incl. commercial)</div></div>
+  </div>
+  <div class="note" style="margin-bottom:10px">Source: SA Reserve Bank Quarterly Bulletin, March 2025 (series 1470M / 1474M / 1480M). Verified 3-0 / 2-0 in adversarial check.</div>
+
+  <div class="grid2--wide grid2">
+    <div>
+      <div class="h3">How bond origination actually works</div>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">A bond originator is a free-to-the-consumer broker. The buyer (or, usually, their estate agent) submits <strong>one application</strong>; the originator packages it to each bank's spec and fires it at <strong>multiple lenders simultaneously</strong> — the big-five banks (Absa, FNB, Nedbank, Standard Bank, Investec) plus specialists (RMB, Sentinel Homes, HIP, SA Home Loans). The banks return competing quotes; the buyer picks one; <strong>the winning bank pays the originator a commission.</strong> The buyer pays nothing.</p>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">This model — verified 3-0 across both incumbents and SA's industry regulator — is the universal mechanic. Every player runs it. Differentiation therefore comes from <strong>distribution, speed, trust and segment</strong>, not the core mechanism.</p>
+    </div>
+    <div>
+      <div class="box box--neutral">
+        <div class="box__h"><span class="chip chip--play">Flow</span> One application → many banks</div>
+        <ul class="tight mb0" style="font-size:9px">
+          <li>Buyer/agent submits a single application</li>
+          <li>Originator tailors &amp; submits to up to 9 lenders</li>
+          <li>Banks compete; buyer chooses the best offer</li>
+          <li>Winning bank pays commission on the settled loan</li>
+          <li>Buyer pays <strong>R0</strong></li>
+        </ul>
+      </div>
+      <div class="callout callout--salmon mb0">
+        <div class="q" style="font-size:11px">Indicatively 1–1.9% of the loan — but no primary source discloses it.</div>
+        <div class="src">Three research rounds confirm the bank-pays model (3-0) yet never the rate. The 1–1.9% band — ≈<strong>R12k–R23k on a R1.2m bond</strong>, implying a ~R3–6bn annual origination-commission pool — appears only in secondary snapshots. Treat as indicative; early-settlement clawback terms remain undocumented.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-band"><span class="lbl">Why the contraction matters to Bondly</span><span class="ln"></span></div>
+  <div class="grid3">
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:4px">Incumbents are defending</div><div style="font-size:9px;color:#26303f;line-height:1.4">A −14% purchase market means BetterBond/ooba are fighting over a shrinking pie — capital goes to retention, not innovation.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:4px">Switching is counter-cyclical</div><div style="font-size:9px;color:#26303f;line-height:1.4">When new purchases fall, refinancing/switching rises as owners chase rate relief. Bondly's wedge is timed with the cycle.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:4px">R1.88tn of installed base</div><div style="font-size:9px;color:#26303f;line-height:1.4">Every existing bond is a switch candidate. The switch TAM is the whole book, not just this year's R337bn of new loans.</div></div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 04</span></div>
+</section>
+
+<!-- ============ 02 THE CHANNEL TRUTH ============ -->
+<section class="page band--blue">
+  <div class="eyebrow">02 · Who really chooses the originator</div>
+  <h2 class="h-sec">The contrarian question, answered.</h2>
+  <p class="h-sub">This is the report's spine. If buyers choose originators, a better app wins. If <em>agents</em> choose for them, the war is fought a layer up — and the incumbents already own that layer.</p>
+
+  <div class="grid2--wide grid2">
+    <div>
+      <div class="callout callout--gold" style="background:#fff;margin-top:0">
+        <div class="q">"[Estate-agent referral is] the primary channel through which consumers are informed of their ability to use the services of bond brokers."</div>
+        <div class="src">— MORCSA (Mortgage Originators Regulatory Council of SA), submission to the SA Parliament (pmg.org.za). Primary source.</div>
+      </div>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">SA's own originator regulator confirms it: this is a <strong>B2B2C referral market</strong>. The agent, at the offer-to-purchase moment, routes the buyer to whichever originator they default to. Referral relationships between agencies, agents, developers and bond brokers are described as <strong>"common place in the industry."</strong></p>
+      <div class="callout callout--salmon" style="background:#fff">
+        <div class="q" style="font-size:11px">But — the crack — "a referral does not legally oblige a consumer to use a given originator."</div>
+        <div class="src">The agent <em>defaults</em> the choice; they cannot <em>compel</em> it. A buyer who already knows Bondly can override the default.</div>
+      </div>
+    </div>
+    <div>
+      <div class="h3">Why this is a moat the incumbents bought</div>
+      <p style="font-size:9.4px;line-height:1.45;color:#26303f">BetterHome Group didn't win the agent layer by persuasion — it <strong>acquired equity in it</strong>:</p>
+      <ul class="tight" style="font-size:9.2px">
+        <li>Stakes in <strong>RE/MAX SA</strong> (2015), <strong>RealNet</strong>, <strong>Chas Everitt</strong>, <strong>Tyson Properties</strong> (2015), <strong>Fine &amp; Country</strong> (2022), <strong>Just Property</strong> (2024)</li>
+        <li><strong>Majority shareholder of Private Property</strong> (2023) — ~3m monthly unique visitors, a captive top-of-funnel</li>
+        <li><strong>amplifi</strong> — a social-media lead-gen engine sold <em>to agents</em>, partnered with Private Property</li>
+      </ul>
+      <p style="font-size:9.2px;line-height:1.45;color:#26303f">When your parent owns the agency, the portal and the agent's lead tool, the "referral" to BetterBond is structurally pre-loaded.</p>
+      <div class="note">Source: betterhome.co.za/our-investments (primary, self-reported); propertyprofessional.co.za on amplifi. Rate limit prevented independent triple-verification — treat agency-stake list as single-source.</div>
+    </div>
+  </div>
+
+  <div class="box box--win" style="margin-top:6px;background:#fff">
+    <div class="box__h"><span class="chip chip--win">Strategic read</span> Two doors are open — and Bondly should walk through both</div>
+    <div class="grid2 mb0" style="gap:16px">
+      <div style="font-size:9.2px;color:#26303f;line-height:1.45"><strong>Door A — go around the agent.</strong> The <em>switch</em> market has no estate agent. A homeowner refinancing an existing bond reaches Bondly direct. The incumbents' agency moat is worth nothing here.</div>
+      <div style="font-size:9.2px;color:#26303f;line-height:1.45"><strong>Door B — win the agent.</strong> Where purchase origination matters, give agents a faster, higher-approval, better-tracked tool so <em>they</em> default to Bondly — competing on agent throughput, not consumer polish.</div>
+    </div>
+  </div>
+  <div class="divider-band"><span class="lbl">Corroborated three independent ways</span><span class="ln"></span></div>
+  <div class="grid3">
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px">MORCSA · the regulator</div><div style="font-size:8.8px;color:#26303f;line-height:1.4">The originator industry body tells Parliament agent referral is "the primary channel" through which buyers reach originators — while conceding it never obliges the buyer.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px">The process map</div><div style="font-size:8.8px;color:#26303f;line-height:1.4">Academic &amp; portal descriptions agree: buyer signs the offer → agent asks how it's financed → forwards details to the originator → originator calls the buyer.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px">Industry reality · IOL</div><div style="font-size:8.8px;color:#26303f;line-height:1.4">"Most agencies these days own, have JVs with, or are affiliated to" an originator — and historically earned 0.3–1.3% referral fees for the introduction.</div></div>
+  </div>
+  <div class="note" style="margin-top:5px">The one number that didn't survive: a "~60% of home loans via origination" figure was refuted (1-2). The channel-split % remains unquantified — a known gap.</div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 05</span></div>
+</section>
+
+<!-- ============ 03 BETTERBOND ============ -->
+<section class="page">
+  <div class="eyebrow">03 · Competitor deep-dive</div>
+  <h2 class="h-sec">BetterBond &amp; the BetterHome conglomerate.</h2>
+  <p class="h-sub">Not a bond originator with a marketing budget — a vertically-integrated home-journey holding company that happens to originate bonds. This is the structure to respect.</p>
+
+  <div class="ccard">
+    <div class="ccard__head">
+      <div class="ccard__name">BetterBond <span>BetterHome Group · est. 2000</span></div>
+      <div class="ccard__tag">Incumbent · scale leader</div>
+    </div>
+    <div class="ccard__body">
+      <div class="kv"><span class="k">Core model</span><span class="v">Single application → 8-lender panel (big-5 + RMB, Sentinel, HIP)</span></div>
+      <div class="kv"><span class="k">Self-claimed scale</span><span class="v">"~1 in 3" SA home loans; "1m+" homeowners served (unaudited)</span></div>
+      <div class="kv"><span class="k">Distribution</span><span class="v">Captive agency stakes + Private Property + amplifi lead-gen</span></div>
+      <div class="kv"><span class="k">Reputation</span><span class="v">Hellopeter 4.79 / 5 across 2,322 reviews</span></div>
+      <div class="kv"><span class="k">Digital</span><span class="v">24/7/365 online application, doc upload, e-sign</span></div>
+      <div class="kv"><span class="k">Sister brand</span><span class="v">MortgageMax (group's 2nd originator)</span></div>
+    </div>
+  </div>
+
+  <div class="grid2--wide grid2">
+    <div>
+      <div class="h3">The group is the strategy</div>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">BetterHome Group spans <strong>origination</strong> (BetterBond + MortgageMax), <strong>real estate</strong> (Private Property, amplifi, Loom, plus equity in major agencies), and <strong>insurance</strong> (BetterSure). Each home-buyer touchpoint feeds the next: a Private Property listing → an agent who uses amplifi → a referral to BetterBond → a BetterSure policy.</p>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">This is the moat. A standalone originator competes on one transaction; BetterHome monetises the <strong>whole home journey</strong> and controls the lead before a competitor sees it.</p>
+      <div class="callout">
+        <div class="q" style="font-size:11px">Two of the group's two origination brands — BetterBond and MortgageMax — together are credited with ~30% of the SA mortgage market.</div>
+        <div class="src">Self-reported group figure; the specific "25% / BetterBond alone" and "largest originator" claims were refuted 0-3 in verification.</div>
+      </div>
+    </div>
+    <div>
+      <div class="box box--attack">
+        <div class="box__h"><span class="chip chip--attack">Where it's exposed</span></div>
+        <ul class="tight mb0" style="font-size:9.2px">
+          <li><strong>Purchase-only mindset.</strong> The entire funnel assumes a buying transaction with an agent — switching is an afterthought.</li>
+          <li><strong>Conglomerate inertia.</strong> Three divisions, group politics; slow to ship a focused, modern switch product.</li>
+          <li><strong>Channel conflict.</strong> Owning agencies can deter <em>rival</em> agencies from referring to BetterBond.</li>
+          <li><strong>Unverifiable superlatives.</strong> "Largest", "1 in 3" are marketing, not audited — a credibility lever for a transparent challenger.</li>
+        </ul>
+      </div>
+      <div class="box box--neutral mb0">
+        <div class="h4" style="margin-bottom:3px">BetterHome's home-journey stack</div>
+        <div style="font-size:8.8px;color:#26303f;line-height:1.5">Origination — BetterBond, MortgageMax · Real estate — Private Property, amplifi, Loom, REDi · Insurance — BetterSure · Agency equity — RE/MAX, Chas Everitt, Tyson, Fine &amp; Country, Just Property, RealNet</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 06</span></div>
+</section>
+
+<!-- ============ 04 OOBA ============ -->
+<section class="page">
+  <div class="eyebrow">04 · Competitor deep-dive</div>
+  <h2 class="h-sec">ooba Home Loans — the pioneer.</h2>
+  <p class="h-sub">First to bring origination to SA, strongest brand-in-category, and — confirmed this round — under the control of one of the country's most powerful capital houses.</p>
+
+  <div class="ccard">
+    <div class="ccard__head">
+      <div class="ccard__name">ooba Home Loans <span>formerly MortgageSA · est. 1999</span></div>
+      <div class="ccard__tag">Incumbent · category pioneer</div>
+    </div>
+    <div class="ccard__body">
+      <div class="kv"><span class="k">Core model</span><span class="v">"One application, up to 8 quotes" — submits to up to 9 lenders</span></div>
+      <div class="kv"><span class="k">Ownership</span><span class="v">African Rainbow Capital (Motsepe) — controlling stake since 2016</span></div>
+      <div class="kv"><span class="k">Heritage</span><span class="v">Brought bond origination to SA in 1999 (as MortgageSA)</span></div>
+      <div class="kv"><span class="k">Bank panel</span><span class="v">Absa, FNB, Nedbank, Standard Bank, Investec (+ HIP, RMB, Sentinel)</span></div>
+      <div class="kv"><span class="k">Digital</span><span class="v">my.ooba.co.za portal; upload, e-sign, pre-approval w/o a property</span></div>
+      <div class="kv"><span class="k">Data asset</span><span class="v">ooba Property Index / "Oobarometer" — earned-media engine</span></div>
+    </div>
+  </div>
+
+  <div class="grid2--wide grid2">
+    <div>
+      <div class="h3">Ownership: the record, corrected</div>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">Round-1 could not confirm ooba's owner and the ARC/Motsepe link was flagged "uncertain." Round-2 found the primary record: the <strong>SA Competition Tribunal approved African Rainbow Capital's acquisition of ooba on 12 August 2016</strong>, with ARC taking the shareholding that lets it "hold the majority shares… and exercise veto rights." ARC is the financial-services vehicle associated with <strong>Patrice Motsepe's</strong> Ubuntu-Botho group.</p>
+      <p style="font-size:9.6px;line-height:1.5;color:#26303f">But the nuance round-3 surfaced cuts the other way: to ARC, ooba is <strong>tiny</strong>. ARC's filings disclose only an <strong>R11m dividend</strong> from ooba (H2-2024), folded into an "Other Banking &amp; Digital" line worth ~1.1% of a ~R19bn fund. The firepower exists — but ARC is unlikely to bankroll a price war to defend a rounding-error holding. <strong>That's good news for Bondly:</strong> compete on segment and speed; a sustained attrition war is improbable.</p>
+      <div class="note">Sources: saflii.org ZACT/2016/84 (Competition Tribunal — verified 3-0); ARC Investments interim results, R11m ooba dividend &amp; ~1.1% bundle (verified 3-0 via filing extraction). The "Motsepe family trusts ultimately control ARC" chain was only single-sourced.</div>
+    </div>
+    <div>
+      <div class="box box--attack">
+        <div class="box__h"><span class="chip chip--attack">Where it's exposed</span></div>
+        <ul class="tight mb0" style="font-size:9.2px">
+          <li><strong>Consultant-led core.</strong> The model still leans on human consultants — slower, costlier per deal than an AI-first flow.</li>
+          <li><strong>Purchase-centric.</strong> Like BetterBond, switching is a side resource, not the product.</li>
+          <li><strong>"Leading originator" is unproven.</strong> Refuted 0-3; ooba's own superlatives don't survive scrutiny.</li>
+          <li><strong>Brand = incumbency.</strong> Pioneer status reads as "established" to some, "legacy" to a younger, rate-shopping switcher.</li>
+        </ul>
+      </div>
+      <div class="callout callout--gold mb0">
+        <div class="q" style="font-size:11px">ooba's Property Index is its sharpest weapon — and Bondly's cheapest one to copy.</div>
+        <div class="src">A quarterly, data-driven index earns press, backlinks and authority at near-zero cost. A "Bondly Switch Index" could do the same for the refinance narrative.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 07</span></div>
+</section>
+
+<!-- ============ 05 MORTGAGEMARKET ============ -->
+<section class="page band--navy">
+  <div class="eyebrow eyebrow--light">05 · The genuine threat</div>
+  <h2 class="h-sec">MortgageMarket &amp; EasyMortgages.</h2>
+  <p class="h-sub">Beating ooba and BetterBond is the wrong frame. The right reference class is the fintech that is quietly rebuilding the rails — and it looks a lot like what Bondly wants to be.</p>
+
+  <div class="ccard" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1)">
+    <div class="ccard__head" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1)">
+      <div class="ccard__name" style="color:#fff">MortgageMarket <span style="color:#9fb0c8">est. 2019 · founder Tim Akinnusi · IDF Capital-backed</span></div>
+      <div class="ccard__tag ccard__tag--threat" style="color:var(--gold);border-color:var(--gold)">Fintech · rails-builder</div>
+    </div>
+    <div class="ccard__body">
+      <div class="kv"><span class="k" style="color:#8ea3c0">Breakthrough</span><span class="v" style="color:#e7edf6">Claims first co. in 25 yrs with <strong style="color:#fff">direct origination contracts at all major banks</strong> (FNB, Absa, Std Bank, Nedbank, RMB, Investec)</span></div>
+      <div class="kv"><span class="k" style="color:#8ea3c0">Speed claim</span><span class="v" style="color:#e7edf6">Pre-approval in <strong style="color:#fff">&lt;2 minutes</strong>; grants in <strong style="color:#fff">&lt;48 hours</strong></span></div>
+      <div class="kv"><span class="k" style="color:#8ea3c0">Platform play</span><span class="v" style="color:#e7edf6">White-label rails powering EasyMortgages, Takealot, VodaLend, MTN MoMo, Telkom Financial Services</span></div>
+      <div class="kv"><span class="k" style="color:#8ea3c0">Distribution</span><span class="v" style="color:#e7edf6">Embedded finance — origination inside other companies' apps</span></div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-top:4px">
+    <div>
+      <div class="h3" style="color:#fff">EasyMortgages: the embedded model</div>
+      <p style="font-size:9.4px;line-height:1.5;color:#c2cee0">Announced May 2025, <strong style="color:#fff">EasyMortgages</strong> puts a fully-digital home loan <em>inside the EasyEquities app</em>, letting its large retail-investor base compare offers from the major banks and pre-approve "in minutes." The technology is MortgageMarket's; EasyEquities supplies the audience — a partnership, not an acquisition (Purple Group holds no equity). This is <strong style="color:#fff">distribution by embedding</strong>, not by estate agent — the one model that genuinely routes around the incumbents' moat.</p>
+    </div>
+    <div>
+      <div class="box" style="background:rgba(226,200,125,.08);border-color:rgba(226,200,125,.3)">
+        <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">Why Bondly must watch this</span></div>
+        <ul class="tight mb0" style="font-size:9.2px;color:#dbe3ef">
+          <li>It validates the <strong>AI-fast, low-human</strong> origination thesis in SA — and got the bank deals to back it.</li>
+          <li>Embedded distribution (Takealot, MTN MoMo) is a <strong>scalable answer to the agent moat</strong>.</li>
+          <li>If it adds <strong>switching</strong>, it competes directly with Bondly's wedge. Speed-to-market matters.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:6px">
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);margin-bottom:0">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:#16a34a;color:#fff">Verified 3-0</span> What's actually confirmed</div>
+      <ul class="tight mb0" style="font-size:9px;color:#cdd7e6"><li>One application → SA's top 7 banks; offers back in <strong>~72 hours</strong></li><li>Same white-label engine powers <strong>MTN MoMo &amp; VTC Africa</strong></li><li>EasyMortgages is a partnership — <strong>Purple/EasyEquities holds no equity</strong></li></ul>
+    </div>
+    <div class="box" style="background:rgba(242,162,149,.09);border-color:rgba(242,162,149,.32);margin-bottom:0">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--salmon);color:#5b1b12">Company-claimed</span> Treat with caution</div>
+      <ul class="tight mb0" style="font-size:9px;color:#cdd7e6"><li>"First in 25 years" with direct all-bank contracts — marketing line</li><li>"Real-time API decisioning" — asserted, not independently audited</li><li>Verified core is fast panel submission, not proven instant decisioning</li></ul>
+    </div>
+  </div>
+  <div class="note" style="color:#8ea3c0;margin-top:6px">Sources: blogs.easyequities.co.za &amp; mortgagemarket.co.za (primary), ventureburn.com, techfinancials.co.za, disrupt-africa.com (2021 seed). Structural facts verified 3-0 in round-3; "real-time / first-in-25-years" remains company-stated.</div>
+  <div class="foot"><span style="color:#8ea3c0"><strong style="color:#fff">Bondly</strong> · Competitive Intelligence</span><span style="color:#8ea3c0">Confidential · 08</span></div>
+</section>
+
+<!-- ============ 06 WIDER FIELD ============ -->
+<section class="page">
+  <div class="eyebrow">06 · The wider field</div>
+  <h2 class="h-sec">Everyone else competing for the same bond.</h2>
+  <p class="h-sub">Beyond the big two and the fintech, four more categories of competitor matter — each with a different angle of attack on the same registered bond.</p>
+
+  <table class="dt">
+    <thead><tr><th>Player / category</th><th>What they are</th><th>Threat to Bondly</th><th>Confidence</th></tr></thead>
+    <tbody>
+      <tr><td><strong>MortgageMax</strong></td><td>BetterHome Group's second origination brand — a multi-brand strategy to capture different agency relationships</td><td>Extends the group's agent lock-in; same moat, two front doors</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td></tr>
+      <tr><td><strong>Banks' direct channels</strong></td><td>Absa/FNB/Nedbank/Standard Bank own apps &amp; branches — origination at <strong>zero commission</strong> to the bank</td><td>Structural: if banks push direct, they squeeze every originator's economics, Bondly included</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td></tr>
+      <tr><td><strong>Roost · MultiNET</strong></td><td>Additional independent originators running the same multi-bank panel model</td><td>Fragment the long tail of agent relationships; minor individually</td><td><span class="cf cf--lo"><span class="dot"></span>Low</span></td></tr>
+      <tr><td><strong>Comparison portals</strong> (Hippo &amp; sim.)</td><td>Insurance-led aggregators extending into home-loan lead capture</td><td>Compete for the same "compare &amp; save" search intent Bondly targets</td><td><span class="cf cf--lo"><span class="dot"></span>Low</span></td></tr>
+      <tr><td><strong>SA Home Loans</strong></td><td>Non-bank lender that <strong>actively markets bond switching</strong> ("Switch smart") — dedicated calculators, consultants, capitalise-fees option</td><td><strong>The direct rival in Bondly's switch wedge</strong> — the one player already there</td><td><span class="cf cf--hi"><span class="dot"></span>Hi</span></td></tr>
+      <tr><td><strong>Switch specialists</strong></td><td>Investec "Switching Home Loans", Debt2Bond Bond Switch, bondoriginators.co.za — niche rate-switch players</td><td>Validate the switch category — and begin to crowd it</td><td><span class="cf cf--lo"><span class="dot"></span>Low</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2" style="margin-top:6px">
+    <div class="box box--neutral mb0">
+      <div class="box__h"><span class="chip chip--play">Read</span> The bank direct-channel is the quiet existential risk</div>
+      <div style="font-size:9.2px;color:#26303f;line-height:1.45">Originators exist because banks find them cheaper than branch acquisition. If a bank decides its app converts better at zero commission, it can dial down originator volume overnight. This risk is <strong>shared by every originator</strong> — but it's also why <strong>banks value a channel that brings them switchers they'd otherwise never see.</strong> Bondly's switch focus makes it <em>additive</em> to banks, not just another purchase-lead reseller.</div>
+    </div>
+    <div class="box box--win mb0">
+      <div class="box__h"><span class="chip chip--win">Opportunity</span> Be the channel banks <em>want</em></div>
+      <div style="font-size:9.2px;color:#26303f;line-height:1.45">A switcher leaving Bank A for Bank B is <strong>net-new business</strong> for Bank B — exactly the customer a bank will pay commission to win. Positioning Bondly as the originator that delivers <strong>incremental, rate-motivated switchers</strong> (not cannibalised purchase leads) is a stronger commercial pitch to banks than the incumbents can make.</div>
+    </div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 09</span></div>
+</section>
+
+<!-- ============ 07 HOW THEY BECAME LEADERS ============ -->
+<section class="page">
+  <div class="eyebrow">07 · How they became market leaders</div>
+  <h2 class="h-sec">First-mover, then integrate, then lock the channel.</h2>
+  <p class="h-sub">The incumbents' dominance isn't a product story — it's a 25-year distribution story. The same playbook, in three moves.</p>
+
+  <div class="grid2--wide grid2">
+    <div class="tl">
+      <div class="tl__i"><div class="tl__yr">1999 — Create the category</div><div class="tl__t">MortgageSA (later ooba) invents SA bond origination, persuading banks that a free-to-buyer broker is cheaper than branch acquisition. First-mover brand advantage compounds for two decades.</div></div>
+      <div class="tl__i"><div class="tl__yr">2000 — Fast follower at scale</div><div class="tl__t">BetterBond launches and races ooba for the same agent relationships, turning a two-horse category into a national footprint of consultants.</div></div>
+      <div class="tl__i"><div class="tl__yr">2015–2017 — Buy the agents</div><div class="tl__t">BetterHome takes equity stakes in RE/MAX, Chas Everitt, Tyson, RealNet — converting referral goodwill into ownership. ARC takes control of ooba (2016), adding capital firepower.</div></div>
+      <div class="tl__i"><div class="tl__yr">2022–2024 — Own the funnel</div><div class="tl__t">BetterHome takes majority of Private Property (2023), adds Fine &amp; Country (2022), Just Property (2024), and launches amplifi to feed agents leads. The channel is now vertically owned.</div></div>
+      <div class="tl__i"><div class="tl__yr">2025–2026 — Fintech arrives</div><div class="tl__t">MortgageMarket secures direct bank contracts and embeds origination in EasyEquities, Takealot &amp; telco apps — the first credible <em>distribution</em> innovation in 25 years.</div></div>
+    </div>
+    <div>
+      <div class="box box--neutral">
+        <div class="h4" style="margin-bottom:4px">The three repeatable moves</div>
+        <ul class="tight mb0" style="font-size:9.4px">
+          <li><strong>1 · First-mover brand</strong> — own the category word ("bond originator") and the data narrative (Property Index).</li>
+          <li><strong>2 · Vertical integration</strong> — capture adjacent home-journey steps (portal, agency, insurance) so the lead never leaves the group.</li>
+          <li><strong>3 · Channel ownership</strong> — buy or lock the estate-agent layer where the default referral happens.</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <div class="q" style="font-size:11px">Bondly cannot out-incumbent the incumbents on this path — it's 25 years and a balance sheet behind.</div>
+        <div class="src">The winning move is to change the game (switch + embed + transparency), not replay it.</div>
+      </div>
+      <div class="box box--win mb0">
+        <div class="h4" style="margin-bottom:4px">The new playbook MortgageMarket revealed</div>
+        <div style="font-size:9px;color:#26303f;line-height:1.45">Distribution by <strong>embedding</strong> (in apps people already use) + <strong>direct bank rails</strong> for speed. This is leapfrog, not catch-up — and it's available to Bondly too.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 10</span></div>
+</section>
+
+<!-- ============ 08 MARKETING ============ -->
+<section class="page">
+  <div class="eyebrow">08 · Marketing &amp; customer acquisition</div>
+  <h2 class="h-sec">Content for credibility, channel for conversion.</h2>
+  <p class="h-sub">The incumbents win two ways: a deep SEO/content layer that earns trust and search traffic, and a captive referral channel that converts. Bondly must out-execute the first and route around the second.</p>
+
+  <div class="grid2">
+    <div>
+      <div class="h3">What the incumbents do</div>
+      <ul class="tight" style="font-size:9.4px">
+        <li><strong>Resource-hub SEO.</strong> ooba and BetterBond run vast libraries of calculators, guides and FAQs ("how do originators make money", affordability, pre-approval) that capture high-intent search and build authority.</li>
+        <li><strong>Data-as-PR.</strong> ooba's quarterly Property Index / Oobarometer earns national press and backlinks — authority at near-zero marginal cost.</li>
+        <li><strong>Captive lead-gen.</strong> Private Property (~3m monthly visitors) + amplifi feed agents, who feed BetterBond. The cheapest lead is one you already own.</li>
+        <li><strong>Trust signals.</strong> Hellopeter 4.79/5 (2,322 reviews) is displayed as social proof and defends against challenger doubt.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box box--win">
+        <div class="box__h"><span class="chip chip--win">How Bondly out-markets them</span></div>
+        <ul class="tight mb0" style="font-size:9.2px">
+          <li><strong>Own "switch" search.</strong> Incumbents under-serve refinance intent ("lower my home-loan rate", "switch bond"). Build the definitive switch content hub.</li>
+          <li><strong>Launch a Switch Index.</strong> A quarterly data story on how much SA homeowners overpay — the ooba-Index playbook, aimed at refinancing.</li>
+          <li><strong>Savings-led hook.</strong> Bondly's "Stop overpaying" calculator <em>quantifies the prize</em> before asking for anything — a sharper conversion mechanic than "apply now".</li>
+          <li><strong>Embed, don't beg.</strong> Follow MortgageMarket: partner into apps/banks/employers where switchers already are.</li>
+        </ul>
+      </div>
+      <div class="callout callout--gold mb0">
+        <div class="q" style="font-size:11px">Reviews are a feature spec, not a vanity metric.</div>
+        <div class="src">Mine incumbents' 1–2★ reviews for the recurring failure themes (turnaround, consultant silence, wrong-bank submission) and make the opposite Bondly's product promise.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box--neutral" style="margin-top:4px">
+    <div class="h4" style="margin-bottom:4px">⚠ Evidence note on this section</div>
+    <div style="font-size:8.8px;color:#26303f;line-height:1.45">Specific SEO rankings, paid-media spend and exclusive-vs-non-exclusive agency contract terms were <strong>not individually verified</strong> — the round-2 verifier hit a session rate limit before completing. The strategic direction is well-grounded (the captive-channel structure is primary-sourced); the granular acquisition metrics are a recommended <strong>next research sprint</strong> (Google Ads Transparency Center + live SERP scrape + agency-contract digging).</div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 11</span></div>
+</section>
+
+<!-- ============ 09 PRODUCT + AI ============ -->
+<section class="page">
+  <div class="eyebrow">09 · Product, tech &amp; the AI reality check</div>
+  <h2 class="h-sec">The most important slide for Bondly's roadmap.</h2>
+  <p class="h-sub">Bondly's core bet is "AI automation beats the consultant model." The global evidence says: half-right. Automate the workflow, not the human out of the anxiety moment.</p>
+
+  <div class="grid2--wide grid2">
+    <div>
+      <div class="h3">The digital baseline (table stakes)</div>
+      <p style="font-size:9.4px;line-height:1.45;color:#26303f">Both incumbents already offer 24/7 online application, in-app document upload and e-signature. <strong>Digitisation is not a differentiator</strong> — it's the entry ticket. MortgageMarket raised the bar to <strong>&lt;2-min pre-approval and &lt;48-hr grants</strong> on proprietary, bank-direct rails. Bondly must at minimum match this speed.</p>
+      <div class="h3" style="margin-top:8px">The AI-automation reality, from abroad</div>
+      <ul class="tight" style="font-size:9.2px">
+        <li><strong>Habito (UK)</strong> — pure-digital broker; CEO departed amid a hard pivot. Fully-automated broking struggled to convert.</li>
+        <li><strong>Better.com (US)</strong> — aggressive no-human model; post-SPAC stock collapse; now publicly frames its AI as <strong>"empowering loan officers, not replacing them."</strong></li>
+        <li><strong>Trussle (UK)</strong> — Goldman-backed digital broker, absorbed by Better (~$9m, 2021) — independence didn't hold.</li>
+        <li><strong>J.D. Power 2025 (US)</strong> — borrower satisfaction with lenders giving "useful guidance/advice" rose to <strong>79% (from 69% in 2022)</strong>. Buyers want <em>more</em> human guidance, not less.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box box--win">
+        <div class="box__h"><span class="chip chip--win">The synthesis</span> Hybrid is the only model that converts</div>
+        <div style="font-size:9.2px;color:#26303f;line-height:1.45">A mortgage is a high-anxiety, once-a-decade, six-figure decision. Every market that tried to remove the human <em>re-added</em> one. The winning architecture:</div>
+        <ul class="tight mb0" style="font-size:9.2px;margin-top:5px">
+          <li><strong>AI does the grind</strong> — affordability pre-qual, document OCR, bank-matching, status chasing, turnaround compression.</li>
+          <li><strong>Humans do the trust</strong> — the reassurance call at decline, the negotiation, the "is this the right call?" moment.</li>
+          <li><strong>Bondly's edge:</strong> AI makes one human as productive as five, hitting incumbent reassurance <em>at fintech cost</em>.</li>
+        </ul>
+      </div>
+      <div class="callout callout--salmon mb0">
+        <div class="q" style="font-size:11px">Don't market "no humans". Market "instant answers, real people when it counts."</div>
+        <div class="src">The data says the consultant is a conversion asset, not just a cost — use AI to scale it, not delete it.</div>
+      </div>
+    </div>
+  </div>
+  <div class="note">Sources: sifted.eu (Habito), fortune.com &amp; housingwire.com (Better.com), cnbc.com (Trussle), scotsmanguide.com (J.D. Power). Company/press-stated; round-2 verifier rate-limited before triple-vote — directionally strong, individually unconfirmed.</div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 12</span></div>
+</section>
+
+<!-- ============ 10 WEAKNESSES + REGULATORY ============ -->
+<section class="page">
+  <div class="eyebrow">10 · Weaknesses &amp; regulatory levers</div>
+  <h2 class="h-sec">The attack surface.</h2>
+  <p class="h-sub">Where the incumbents are soft, and where South African law hands Bondly a transparency weapon the incumbents would rather you didn't notice.</p>
+
+  <div class="grid2">
+    <div>
+      <div class="box box--attack">
+        <div class="box__h"><span class="chip chip--attack">Incumbent weaknesses</span></div>
+        <ul class="tight mb0" style="font-size:9.2px">
+          <li><strong>Unverifiable superlatives.</strong> "25% of bonds", "largest", "leading" all failed adversarial verification (0-3). A challenger that only states what it can prove looks more honest.</li>
+          <li><strong>The rate-claim trust gap.</strong> "Commission doesn't affect your interest rate" was refuted 0-3 — contested and unproven. It implies a possible incentive to steer to the highest-commission bank.</li>
+          <li><strong>Purchase-only DNA.</strong> Switching is an afterthought across the field — an open flank.</li>
+          <li><strong>The 1★ pattern, named.</strong> ooba's leading negative theme is <em>consultant ghosting / post-submission silence</em> — buyers go dark for weeks after documents are in (one verified case ran ~6.5 weeks unanswered). That is the exact failure an AI status-engine eliminates.</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="box box--neutral">
+        <div class="box__h"><span class="chip chip--play">Regulatory perimeter</span></div>
+        <ul class="tight mb0" style="font-size:9px">
+          <li><strong>NCA s163(3).</strong> Originators are regulated under the National Credit Act 34 of 2005 — which already covers <strong>disclosure of fees/commission earned</strong>.</li>
+          <li><strong>FSCA market conduct.</strong> Subject to the Financial Sector Regulation Act 2017 (eff. 1 Apr 2018) — not regulated as estate agents.</li>
+          <li><strong>FAIS "advice".</strong> An automated affordability assessment or bank recommendation may constitute regulated <em>advice</em>, triggering suitability + record-keeping duties. Design the AI flow accordingly.</li>
+          <li><strong>POPIA s71.</strong> Constrains <strong>automated decision-making</strong> with legal/material effect — a real design constraint on AI-only declines.</li>
+        </ul>
+      </div>
+      <div class="callout callout--gold mb0">
+        <div class="q" style="font-size:11px">The law already requires commission disclosure. Bondly can simply <em>lead</em> with it.</div>
+        <div class="src">"We show you exactly what each bank pays us — and we still recommend the best rate for you." Turns a compliance line into the brand's spine.</div>
+      </div>
+    </div>
+  </div>
+  <div class="box box--neutral" style="margin-top:2px">
+    <div style="font-size:8.8px;color:#26303f;line-height:1.45"><strong>Compliance is also a moat-in-reverse:</strong> FAIS-advice and POPIA-automated-decision rules raise the cost of doing AI origination <em>correctly</em>. Building compliant-by-design AI is a barrier later entrants must also clear — make it a strength, not an afterthought.</div>
+  </div>
+  <div class="grid3" style="margin-top:6px">
+    <div class="stat" style="padding:11px 12px"><div class="fig num" style="font-size:19px">4.93<span style="font-size:11px"> · #1</span></div><div class="lbl">ooba Hellopeter (TrustIndex 10, NPS 93)</div></div>
+    <div class="stat" style="padding:11px 12px"><div class="fig num" style="font-size:19px">4.93<span style="font-size:11px"> · #3</span></div><div class="lbl">BetterBond Hellopeter (TrustIndex 9.2)</div></div>
+    <div class="stat" style="padding:11px 12px"><div class="fig num" style="font-size:19px">0</div><div class="lbl">NFO / FAIS / NCR rulings vs an SA originator found in 3 rounds</div></div>
+  </div>
+  <div class="note">Caveat: Hellopeter is solicitation-driven and skews positive (ooba ~1.1% one-star), so complaint themes are drawn from a small negative base — directional, not a defect rate. Reputation is a real incumbent asset to displace, not dismiss.</div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence</span><span>Confidential · 13</span></div>
+</section>
+
+<!-- ============ 11 PLAYBOOK ============ -->
+<section class="page band--navy">
+  <div class="eyebrow eyebrow--light">11 · The Bondly playbook</div>
+  <h2 class="h-sec">Win the switch. Route the agent. Lead with the truth.</h2>
+  <p class="h-sub">Five moves, ordered by leverage. Each plays where the incumbents are structurally weak, not where they are strong.</p>
+
+  <div class="grid2" style="gap:12px">
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">01</span> Own the switch market</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45">It needs no estate agent, so the incumbents' moat is void. The TAM is the entire R1.88tn book, and it's counter-cyclical to the −14% purchase slump. Make "Stop overpaying" the category-defining switch brand before MortgageMarket pivots there.</div>
+    </div>
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">02</span> Lead with radical transparency</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45">Disclose commission openly (the NCA already requires it) and pledge best-rate, not best-commission. Directly attacks the incumbents' unproven "doesn't affect your rate" claim and the trust gap underneath it.</div>
+    </div>
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">03</span> Hybrid AI, compliant by design</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45">AI for instant pre-qual, OCR, bank-matching and turnaround; humans for the anxiety moments. Build FAIS/POPIA-aware automation now — speed of a fintech, reassurance of an incumbent, at a fraction of the cost-per-deal.</div>
+    </div>
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1)">
+      <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">04</span> Distribute by embedding</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45">Copy MortgageMarket's leapfrog: embed Bondly's switch flow into banks (as net-new switcher supply), employers, insurers and fintech apps. Routes around the agent channel entirely.</div>
+    </div>
+  </div>
+  <div class="box" style="background:rgba(226,200,125,.1);border-color:rgba(226,200,125,.35);margin-top:4px">
+    <div class="box__h" style="color:#fff"><span class="chip" style="background:var(--gold);color:#3a2c00">05</span> If you must do purchase origination — win the agent, not the buyer</div>
+    <div style="font-size:9px;color:#e7ddc4;line-height:1.45">Where you compete for new-purchase bonds, the customer is the agent. Give them instant pre-qual at the viewing, faster turnaround that closes their sale, and clean tracking — so <strong style="color:#fff">they</strong> default to Bondly. Don't out-pretty the incumbents' consumer app; out-perform on the agent's throughput. <strong style="color:#fff">But sequence it second</strong> — the switch market is the beachhead.</div>
+  </div>
+  <div class="divider-band" style="margin-top:8px"><span class="lbl" style="color:#9fb0c8">Two realities to execute against</span><span class="ln" style="background:rgba(255,255,255,.16)"></span></div>
+  <div class="grid2" style="gap:12px">
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);margin-bottom:0">
+      <div class="box__h" style="color:#fff">⚠ The switch lane isn't empty</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45"><strong>SA Home Loans already markets bond-switching</strong> with calculators and consultants — and ooba reframes "refinance" as equity-release, not rate-switching. The big two have left the lane open; SAHL hasn't. Bondly must <strong>out-execute SAHL</strong> on AI speed, savings clarity and UX — not merely claim an empty space.</div>
+    </div>
+    <div class="box" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);margin-bottom:0">
+      <div class="box__h" style="color:#fff">Kill the switch friction in-product</div>
+      <div style="font-size:9px;color:#cdd7e6;line-height:1.45">The barrier is transfer + bond-registration cost. Solve it: <strong>capitalise the costs into the new bond</strong> (as SAHL does), surface <strong>Capitec's 50%-off registration</strong> and <strong>FNB paying cancellation/registration</strong>, and net it against savings — so the "should I switch?" maths is already done for the user.</div>
+    </div>
+  </div>
+  <div class="foot"><span style="color:#8ea3c0"><strong style="color:#fff">Bondly</strong> · Competitive Intelligence</span><span style="color:#8ea3c0">Confidential · 14</span></div>
+</section>
+
+<!-- ============ METHOD + SOURCES ============ -->
+<section class="page">
+  <div class="eyebrow">Method, confidence &amp; sources</div>
+  <h2 class="h-sec">How this was built — and what to trust.</h2>
+  <p class="h-sub">Three rounds of automated fan-out web research with adversarial 3-vote fact-checking, a human-directed blind-spot critique between rounds, and a final strategic synthesis. Confidence is labelled, not assumed.</p>
+
+  <div class="grid3" style="margin-bottom:8px">
+    <div class="stat"><div class="fig num">321</div><div class="lbl">Agent runs across three rounds</div></div>
+    <div class="stat"><div class="fig num">73</div><div class="lbl">Sources fetched &amp; logged</div></div>
+    <div class="stat"><div class="fig num">39</div><div class="lbl">Claims that survived 3-vote verification</div></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="h4" style="margin-bottom:4px">The five-phase method</div>
+      <ul class="tight" style="font-size:9px">
+        <li><strong>Round 1 — folklore.</strong> 5-angle fan-out established the model, structure, history &amp; field. Confirmed mechanics; refuted 6 incumbent superlatives.</li>
+        <li><strong>Blind-spot critique.</strong> A skeptic agent red-teamed round 1 and produced 20 sharper questions — including "who actually chooses the originator?"</li>
+        <li><strong>Round 2 — hard facts.</strong> Filings, SARB &amp; regulators. Landed market-size &amp; ownership before a provider rate limit cut verification short.</li>
+        <li><strong>Round 3 — gap-closing.</strong> Re-run after the limit reset: commission model, ooba's true scale, MortgageMarket's structure, complaint patterns &amp; the switch market — fully verified.</li>
+        <li><strong>Synthesis.</strong> This document — incumbent intel fused with Bondly's product reality into a playbook.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box box--neutral mb0">
+        <div class="h4" style="margin-bottom:4px">⚠ Honest confidence caveats</div>
+        <ul class="tight mb0" style="font-size:8.6px">
+          <li><strong>Verified (trust as fact):</strong> SARB market size; ooba's ARC ownership &amp; immaterial R11m dividend; the free-to-buyer model; the agent-referral channel (3 ways); MortgageMarket's 2019/Akinnusi/IDF structure; the switch-category map; ooba's complaint pattern.</li>
+          <li><strong>Company-claimed / single-source (use with care):</strong> BetterHome's agency-stake list, MortgageMarket's "real-time / first-in-25-years", BetterBond's 160/330 headcount, the international AI press.</li>
+          <li><strong>Still unknown:</strong> the exact Rand/% commission rate &amp; clawback terms (only an indicative 1–1.9%), audited per-originator volumes &amp; true share, the switch market's Rand size, any ombud/NCR ruling.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider-band"><span class="lbl">Refuted in verification — do not cite as fact</span><span class="ln"></span></div>
+  <div style="font-size:8.6px;color:#37414f;line-height:1.5">
+    ✗ "BetterBond = 25% of all new bonds" (0-3) &nbsp;·&nbsp; ✗ "BetterBond is the largest originator" (0-3) &nbsp;·&nbsp; ✗ "ooba is SA's leading originator" (0-3) &nbsp;·&nbsp; ✗ "ooba served ~600,000 families" (1-2) &nbsp;·&nbsp; ✗ "commission does not affect the consumer's interest rate" (0-3)
+  </div>
+
+  <div class="divider-band"><span class="lbl">Selected sources (primary &amp; verified first)</span><span class="ln"></span></div>
+  <div class="src-list">
+    <div class="s"><b>[1]</b> SA Reserve Bank — Quarterly Bulletin, Mar 2025 (mortgage series) · <i>primary, verified</i></div>
+    <div class="s"><b>[2]</b> SA Competition Tribunal — ARC/ooba, ZACT/2016/84 (saflii.org) · <i>primary, verified</i></div>
+    <div class="s"><b>[3]</b> MORCSA — submission to SA Parliament (pmg.org.za) · <i>primary</i></div>
+    <div class="s"><b>[4]</b> betterhome.co.za/our-investments &amp; /our-group · <i>primary, self-reported</i></div>
+    <div class="s"><b>[5]</b> betterbond.co.za/about-us &amp; /banking-partners · <i>primary</i></div>
+    <div class="s"><b>[6]</b> ooba.co.za — about, online application, how-originators-make-money · <i>primary</i></div>
+    <div class="s"><b>[7]</b> arci.co.za/investments/ooba · <i>primary</i></div>
+    <div class="s"><b>[8]</b> techfinancials.co.za — MortgageMarket all-bank deals (2026)</div>
+    <div class="s"><b>[9]</b> ventureburn.com — MortgageMarket × EasyEquities (2025)</div>
+    <div class="s"><b>[10]</b> blogs.easyequities.co.za/easymortgages · <i>primary</i></div>
+    <div class="s"><b>[11]</b> propertyprofessional.co.za — amplifi lead-gen (2024)</div>
+    <div class="s"><b>[12]</b> hellopeter.com/betterbond &amp; /ooba — review aggregates</div>
+    <div class="s"><b>[13]</b> sifted.eu — Habito CEO departure</div>
+    <div class="s"><b>[14]</b> fortune.com &amp; housingwire.com — Better.com</div>
+    <div class="s"><b>[15]</b> cnbc.com — Better acquires Trussle (2021)</div>
+    <div class="s"><b>[16]</b> scotsmanguide.com — J.D. Power 2025 mortgage study</div>
+    <div class="s"><b>[17]</b> popia.co.za — s71 automated decision-making</div>
+    <div class="s"><b>[18]</b> lightstone.co.za &amp; housingfinanceafrica.org — market data</div>
+    <div class="s"><b>[19]</b> ARC Investments — interim results &amp; AFS (ooba R11m dividend) · <i>primary</i></div>
+    <div class="s"><b>[20]</b> sahomeloans.com — "Switch smart" bond-switching · <i>primary</i></div>
+    <div class="s"><b>[21]</b> mortgagemarket.co.za &amp; disrupt-africa.com — structure &amp; 2021 seed</div>
+    <div class="s"><b>[22]</b> researchgate.net &amp; iol.co.za — origination process &amp; agent channel</div>
+  </div>
+  <div class="foot"><span><strong>Bondly</strong> · Competitive Intelligence · 18 Jun 2026</span><span>Confidential · 15</span></div>
+</section>
+
+</body>
+</html>

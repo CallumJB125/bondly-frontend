@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bondly · Switching Onboarding Blueprint — June 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brand:#1e3a5f; --brand-dark:#152d4a; --brand-light:#e8eef5; --brand-deep:#0e1b2e;
+  --cream:#faefdc; --salmon:#f2a295; --lemon:#fdf0af; --gold:#e2c87d; --gold-light:#f3e2b0;
+  --ink:#111111; --heading:#06143b; --muted:#5a5a5a; --muted2:#6b7280;
+  --card-border:#e3e9f1; --line:#000000; --section-blue:#F2F6FC; --offwhite:#fbfcfe;
+  --ok:#16a34a; --err:#dc2626; --warn:#d97706; --info:#2563eb;
+  --display:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --sans:'Inter','Helvetica Neue',Arial,sans-serif;
+  --sub:'Plus Jakarta Sans','Inter',sans-serif;
+}
+@page{ size:A4; margin:0; }
+*{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+html,body{ margin:0; padding:0; }
+body{ font-family:var(--sans); color:var(--ink); font-size:10.2px; line-height:1.5; background:#fff; }
+
+.page{ width:210mm; min-height:297mm; padding:17mm 16mm 15mm; position:relative; page-break-after:always; overflow:hidden; }
+.page:last-child{ page-break-after:auto; }
+
+.foot{ position:absolute; left:16mm; right:16mm; bottom:8.5mm; display:flex; justify-content:space-between;
+  font-family:var(--sans); font-size:7.4px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted2);
+  border-top:1px solid var(--card-border); padding-top:5px; }
+.foot strong{ color:var(--brand); font-weight:600; }
+
+.eyebrow{ font-family:var(--sans); font-size:8.4px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--brand); display:flex; align-items:center; gap:8px; margin:0 0 9px; }
+.eyebrow::before{ content:""; width:22px; height:2px; background:var(--brand); display:inline-block; }
+.eyebrow--light{ color:var(--gold); } .eyebrow--light::before{ background:var(--gold); }
+h1,h2,h3,h4{ font-family:var(--display); color:var(--heading); margin:0; }
+.h-sec{ font-size:25px; font-weight:700; line-height:.99; letter-spacing:-.02em; margin:0 0 6px; max-width:23ch; }
+.h-sec--sm{ font-size:21px; }
+.h-sub{ font-family:var(--sub); font-size:10.6px; line-height:1.5; color:var(--muted); max-width:70ch; margin:0 0 15px; }
+.h3{ font-size:13px; font-weight:700; letter-spacing:-.01em; line-height:1.12; color:var(--heading); margin-bottom:5px; }
+.h4{ font-size:10.6px; font-weight:700; letter-spacing:.01em; color:var(--heading); }
+p{ margin:0 0 7px; } .lead{ font-family:var(--sub); font-size:11px; line-height:1.58; color:#26303f; }
+strong{ font-weight:600; color:var(--heading); }
+.num{ font-variant-numeric:tabular-nums; }
+.rule{ height:1px; background:var(--line); border:0; margin:12px 0; }
+.rule--soft{ background:var(--card-border); }
+a{ color:var(--brand); text-decoration:none; }
+
+/* cover */
+.cover{ background:var(--brand-deep); color:#fff; height:297mm; padding:22mm 18mm; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+.cover::after{ content:""; position:absolute; right:-130px; top:-120px; width:480px; height:480px; border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, rgba(226,200,125,.18), rgba(14,27,46,0) 62%); }
+.cover::before{ content:""; position:absolute; left:-160px; bottom:-200px; width:520px; height:520px; border-radius:50%;
+  background:radial-gradient(circle at 60% 40%, rgba(30,58,95,.55), rgba(14,27,46,0) 60%); }
+.cover__brand{ display:flex; align-items:center; gap:9px; font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:-.01em; color:#fff; position:relative; z-index:2; }
+.cover__mark{ width:24px; height:24px; border:1.5px solid var(--gold); border-radius:5px; display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:13px; }
+.cover__spacer{ flex:1; }
+.cover__kicker{ font-family:var(--sans); font-size:9.5px; font-weight:600; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:15px; display:flex; align-items:center; gap:9px; position:relative; z-index:2; }
+.cover__kicker::before{ content:""; width:30px; height:2px; background:var(--gold); }
+.cover__title{ font-family:var(--display); font-weight:800; font-size:54px; line-height:.9; letter-spacing:-.03em; color:#fff; max-width:16ch; margin:0 0 16px; position:relative; z-index:2; }
+.cover__title em{ font-style:normal; color:var(--lemon); }
+.cover__sub{ font-family:var(--sub); font-size:12.5px; line-height:1.55; color:#c9d4e4; max-width:60ch; margin-bottom:20px; position:relative; z-index:2; }
+.cover__verdict{ position:relative; z-index:2; border:1px solid rgba(226,200,125,.4); background:rgba(226,200,125,.08); border-radius:12px; padding:15px 17px; margin-bottom:22px; max-width:64ch; }
+.cover__verdict .vk{ font-size:8px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:6px; }
+.cover__verdict p{ font-family:var(--sub); font-size:11px; line-height:1.55; color:#eaf0f8; margin:0; }
+.cover__verdict strong{ color:#fff; }
+.cover__meta{ display:flex; gap:30px; border-top:1px solid rgba(255,255,255,.16); padding-top:16px; position:relative; z-index:2; }
+.cover__meta div{ display:flex; flex-direction:column; gap:3px; }
+.cover__meta .k{ font-size:7.6px; letter-spacing:.14em; text-transform:uppercase; color:#8ea3c0; font-weight:600; }
+.cover__meta .v{ font-family:var(--display); font-size:12.5px; font-weight:600; color:#fff; }
+.cover__tag{ display:inline-flex; align-items:center; gap:6px; background:rgba(226,200,125,.14); border:1px solid rgba(226,200,125,.4); color:var(--gold); border-radius:999px; font-size:8.4px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; padding:5px 12px; align-self:flex-start; margin-bottom:24px; position:relative; z-index:2; }
+
+/* bands */
+.band{ margin:0 -16mm; padding:18px 16mm; }
+.band--cream{ background:var(--cream); } .band--salmon{ background:var(--salmon); }
+.band--blue{ background:var(--section-blue); } .band--navy{ background:var(--brand-deep); color:#fff; }
+.page.band--navy .h-sec, .page.band--navy .h3, .page.band--navy h2, .page.band--navy h3{ color:#fff; }
+.page.band--navy .h-sub{ color:#b9c6da; }
+.page.band--navy strong{ color:#eef2f8; }
+
+/* stats */
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin:4px 0; }
+.stats--3{ grid-template-columns:repeat(3,1fr); }
+.stat{ border:1px solid var(--card-border); border-radius:12px; padding:13px 13px 12px; background:#fff; box-shadow:0 1px 2px rgba(16,24,40,.04); }
+.stat .fig{ font-family:var(--display); font-weight:700; font-size:23px; line-height:.9; letter-spacing:-.02em; color:var(--brand); font-variant-numeric:tabular-nums; }
+.stat .lbl{ font-size:8px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted2); margin-top:6px; font-weight:600; line-height:1.3; }
+.stat--dark{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09); }
+.stat--dark .fig{ color:var(--gold); } .stat--dark .lbl{ color:#9fb0c8; }
+
+/* competitor / info card */
+.ccard{ border:1px solid var(--card-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 2px rgba(16,24,40,.04); margin-bottom:11px; break-inside:avoid; }
+.ccard__head{ display:flex; align-items:center; justify-content:space-between; padding:11px 15px; background:var(--brand-light); border-bottom:1px solid var(--card-border); }
+.ccard__name{ font-family:var(--display); font-size:14px; font-weight:700; letter-spacing:-.01em; color:var(--heading); }
+.ccard__name span{ display:block; font-family:var(--sans); font-size:8.2px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; color:var(--muted2); margin-top:2px; }
+.ccard__tag{ font-size:8px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--brand); border:1px solid var(--brand); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+.ccard__tag--threat{ color:#b45309; border-color:#d97706; }
+.ccard__body{ padding:11px 15px; }
+
+/* table */
+table.dt{ width:100%; border-collapse:collapse; font-size:8.6px; margin:4px 0 6px; }
+table.dt th{ text-align:left; font-family:var(--sans); font-size:7.4px; letter-spacing:.06em; text-transform:uppercase; color:#fff; background:var(--brand); font-weight:600; padding:7px 8px; }
+table.dt th:first-child{ border-top-left-radius:6px; } table.dt th:last-child{ border-top-right-radius:6px; }
+table.dt td{ padding:6px 8px; border-bottom:1px solid var(--card-border); vertical-align:top; color:#26303f; }
+table.dt tr:nth-child(even) td{ background:var(--offwhite); }
+table.dt td strong{ color:var(--heading); }
+table.dt .hl{ background:var(--lemon)!important; }
+
+/* callout */
+.callout{ border-left:3px solid var(--brand); background:var(--offwhite); padding:12px 15px; border-radius:0 8px 8px 0; margin:9px 0; break-inside:avoid; }
+.callout--gold{ border-left-color:var(--gold); background:#fffaf0; }
+.callout--salmon{ border-left-color:var(--salmon); background:#fff7f6; }
+.callout .q{ font-family:var(--display); font-size:12.5px; font-weight:600; line-height:1.28; letter-spacing:-.01em; color:var(--heading); margin-bottom:4px; }
+.callout .src{ font-size:8px; color:var(--muted2); letter-spacing:.03em; }
+
+/* boxes */
+.box{ border:1px solid var(--card-border); border-radius:12px; padding:13px 15px; break-inside:avoid; margin-bottom:9px; }
+.box--attack{ background:#fff7f6; border-color:#f4cdc6; } .box--win{ background:#f3faf5; border-color:#c4e6d1; }
+.box--neutral{ background:var(--offwhite); }
+.box__h{ display:flex; align-items:center; gap:8px; font-family:var(--display); font-size:11px; font-weight:700; color:var(--heading); margin-bottom:6px; }
+.chip{ font-size:7.4px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; border-radius:4px; padding:3px 7px; }
+.chip--attack{ background:var(--salmon); color:#5b1b12; } .chip--win{ background:var(--ok); color:#fff; }
+.chip--play{ background:var(--brand); color:#fff; } .chip--watch{ background:var(--gold); color:#3a2c05; }
+ul.tight{ margin:3px 0 0; padding-left:15px; } ul.tight li{ margin-bottom:4px; }
+ul.tight li::marker{ color:var(--brand); }
+
+/* confidence */
+.cf{ display:inline-flex; align-items:center; gap:4px; font-size:7.6px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border-radius:999px; }
+.cf--hi{ background:#e6f4ec; color:#15803d; } .cf--med{ background:#fef3e2; color:#b45309; } .cf--lo{ background:#fdeaea; color:#b91c1c; }
+.cf .dot{ width:4px; height:4px; border-radius:50%; background:currentColor; }
+
+/* sources */
+.src-list{ font-size:8px; line-height:1.5; color:#37414f; columns:2; column-gap:22px; }
+.src-list .s{ break-inside:avoid; margin-bottom:5px; padding-left:13px; text-indent:-13px; }
+.src-list .s b{ color:var(--brand); }
+
+/* misc */
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid2--wide{ grid-template-columns:1.1fr .9fr; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.mt0{margin-top:0}.mb0{margin-bottom:0!important}
+.note{ font-size:8.2px; color:var(--muted2); font-style:italic; margin-top:4px; }
+.cite{ font-size:7.4px; color:var(--brand); font-weight:600; vertical-align:super; }
+.bignum{ font-family:var(--display); font-weight:800; font-size:38px; color:var(--brand-light); line-height:1; letter-spacing:-.03em; }
+
+/* flow steps */
+.flow{ counter-reset:fs; }
+.fstep{ display:grid; grid-template-columns:30px 1fr; gap:11px; padding:10px 0; border-bottom:1px solid var(--card-border); break-inside:avoid; }
+.fstep:last-child{ border-bottom:0; }
+.fstep__n{ font-family:var(--display); font-weight:700; font-size:13px; color:#fff; background:var(--brand); width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; }
+.fstep__n--keep{ background:var(--ok); } .fstep__n--new{ background:var(--gold); color:#3a2c05; } .fstep__n--fix{ background:var(--salmon); color:#5b1b12; }
+.fstep__t{ font-family:var(--display); font-size:11px; font-weight:700; color:var(--heading); margin-bottom:2px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.fstep__b{ font-size:9px; line-height:1.45; color:#37414f; }
+.fstep__b em{ color:var(--brand); font-style:normal; font-weight:600; }
+.tagk{ font-size:6.8px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border-radius:3px; padding:2px 5px; }
+.tagk--keep{ background:#e6f4ec; color:#15803d; } .tagk--new{ background:#fef3e2; color:#b45309; } .tagk--fix{ background:#fdecec; color:#b91c1c; }
+
+.mini{ font-size:9px; line-height:1.45; color:#37414f; }
+.kgrid{ display:grid; grid-template-columns:1fr 1fr; gap:7px 16px; margin-top:4px; }
+.kv{ display:flex; flex-direction:column; gap:1px; }
+.kv .k{ font-size:7.6px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted2); font-weight:600; }
+.kv .v{ font-size:9.4px; color:var(--ink); line-height:1.35; }
+.legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:8px; color:var(--muted2); margin:2px 0 10px; }
+.legend span{ display:inline-flex; align-items:center; gap:5px; }
+.dotk{ width:9px;height:9px;border-radius:3px;display:inline-block; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER / VERDICT-FORWARD ============ -->
+<section class="cover">
+  <div class="cover__brand"><span class="cover__mark">⌂</span> Bondly</div>
+  <div class="cover__spacer"></div>
+  <span class="cover__tag">● Confidential — Internal Strategy</span>
+  <div class="cover__kicker">Switching Onboarding Blueprint</div>
+  <h1 class="cover__title">Stop building a funnel. Build a <em>switch-readiness engine.</em></h1>
+  <p class="cover__sub">A CX-optimised, regulation-safe onboarding flow for Bondly's home-loan switching service — benchmarked against every SA originator, the SA banks' own switch journeys, and the world's best remortgage fintechs, then adversarially stress-tested.</p>
+
+  <div class="cover__verdict">
+    <div class="vk">◆ The verdict, in one breath</div>
+    <p><strong>Keep the spine — sharpen the edges, and change one belief.</strong> Bondly's savings-first, no-hard-credit-check, progressive-ladder flow already matches the global best-practice switching pattern (Athena, Habito, Mojo) and is the strongest onboarding opening in the SA market. Don't rebuild it. Win by reframing the product: Bondly is not a switch funnel — it is a <strong>switch-readiness engine</strong> that converts the minority who should switch <em>today</em> and compounds a rate-watch list of the majority who will switch <em>tomorrow</em>.</p>
+  </div>
+
+  <div class="cover__spacer"></div>
+  <div class="cover__meta">
+    <div><span class="k">Prepared for</span><span class="v">Bondly Strategy &amp; Product</span></div>
+    <div><span class="k">Date</span><span class="v">20 June 2026</span></div>
+    <div><span class="k">Method</span><span class="v">4 lanes · blindspot · 2 rounds</span></div>
+    <div><span class="k">Sources</span><span class="v">60+ public</span></div>
+  </div>
+</section>
+
+<!-- ============ PAGE 1 · THE VERDICT ============ -->
+<section class="page">
+  <div class="eyebrow">The Verdict — read this page if you read nothing else</div>
+  <h2 class="h-sec">The edge: own the switch before MortgageMarket does — honestly.</h2>
+  <p class="lead">No South African player leads with a <strong>savings-first, multi-bank, no-hard-credit-check switching</strong> journey for existing homeowners. The originators are purchase-led (BetterBond explicitly won't do simple rate-switching); the banks' switch pages are single-lender and form-first. That gap is real, and Bondly is already standing in it. But it is a <strong>6–12 month window, not a moat</strong> — so the recommendation is to move fast on five sharpening moves and one reframe, while building the one asset that compounds: the nurture list.</p>
+
+  <div class="grid2" style="margin-top:4px">
+    <div>
+      <div class="h4" style="margin-bottom:6px">The five things that decide this</div>
+      <ul class="tight mb0">
+        <li><strong>Biggest opportunity —</strong> a multi-bank, savings-first <em>switch</em> funnel is uncontested in SA. Bondly can own <em>"switch, let banks compete, we handle everything."</em></li>
+        <li><strong>Biggest threat —</strong> MortgageMarket just won direct origination contracts with all banks (May/Jun '26) + 2-min Experian pre-qual. The window is now.</li>
+        <li><strong>The honesty fix that is also the growth lever —</strong> show <em>net</em> savings after switching costs + break-even months on the Verdict. It's a CPA s.41 duty <em>and</em> it sorts visitors into "switch now" vs "watch."</li>
+        <li><strong>Kill fear-of-rejection —</strong> reframe the Switch Score as <em>bankability</em>, earned by a soft non-pull signal (LTV + affordability band), not an empty promise.</li>
+        <li><strong>Get one number first —</strong> the bank→originator commission on a <em>switch</em> (+ clawback on early cancellation). It decides how hard to push funnel vs nurture.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box box--win mb0" style="margin-bottom:7px">
+        <div class="box__h mb0"><span class="chip chip--win">DO</span> Ship first</div>
+        <ul class="tight mb0" style="font-size:9px">
+          <li>Net-of-cost Verdict (break-even + loss-framing + "your new bank may cover R10k–R30k").</li>
+          <li>Compliant rate-watch opt-in (POPIA s.69) keyed to prime moves + LTV milestones.</li>
+          <li>"What Bondly does for you" admin-disappears checklist.</li>
+        </ul>
+      </div>
+      <div class="box box--attack mb0">
+        <div class="box__h mb0"><span class="chip chip--attack">DON'T</span> Ship yet</div>
+        <ul class="tight mb0" style="font-size:9px">
+          <li>The "3+ banks will compete" claim with <em>zero</em> credit signal — CPA s.41 exposure.</li>
+          <li>SA ID capture before formal-application intent — POPIA data-minimisation.</li>
+          <li>Treating the funnel as the whole product — the median bond can't switch profitably today.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout--gold">
+    <div class="q">"Most of your visitors shouldn't switch this year — and that is the business, not the problem."</div>
+    <div class="src">The break-even math (R30k–R40k friction vs ~R300/mo saved on a small rate gap) means the volume play is "watch &amp; switch later." Build the list; convert the qualified minority now. Full reasoning on p.8.</div>
+  </div>
+
+  <div class="divider-band" style="display:flex;align-items:center;gap:12px;margin:10px 0"><span style="flex:1;height:1px;background:var(--card-border)"></span><span style="font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)">The one big call</span><span style="flex:1;height:1px;background:var(--card-border)"></span></div>
+  <p class="mini mb0"><strong>Reframe Bondly as a switch-readiness engine.</strong> The Verdict screen becomes a sorting machine: it qualifies and converts the high-value "switch-now" segment (large bonds, big rate gaps, low LTV — where a new bank covers most costs), and it captures everyone else into a compounding, compliant rate-watch list that re-engages on prime cuts and equity milestones. That single change turns your structural weakness (thin switch-now inventory) into your durable moat (a proprietary, intent-rich audience no competitor can copy by cloning your funnel).</p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 01 — The Verdict</span></div>
+</section>
+
+<!-- ============ PAGE 2 · REFRAMES + RANKED MOVES ============ -->
+<section class="page">
+  <div class="eyebrow">The Verdict, continued — strategy &amp; ranked moves</div>
+  <h2 class="h-sec">Three reframes, then a ranked build order.</h2>
+
+  <div class="grid3" style="margin-bottom:10px">
+    <div class="box box--neutral mb0">
+      <div class="box__h mb0"><span class="chip chip--play">R1</span></div>
+      <div class="h4" style="margin:2px 0 4px">Product = engine, not funnel</div>
+      <div class="mini mb0">Median sub-R1.5m bond: ~R30–40k friction ÷ ~R300/mo saving on a 0.5% cut = <strong>8–10yr break-even</strong>. So "switch now" is the <em>value</em> business (big bonds, ≥1% gaps, low LTV); "watch &amp; switch later" is the <em>volume</em> business. The rate-watch list is co-equal, not a footnote.</div>
+    </div>
+    <div class="box box--neutral mb0">
+      <div class="box__h mb0"><span class="chip chip--play">R2</span></div>
+      <div class="h4" style="margin:2px 0 4px">Earn the bankability claim</div>
+      <div class="mini mb0">You can't honestly say "3+ banks will compete" with no data — that's a CPA s.41 misleading-representation risk. Keep "no <em>hard</em> credit check," but compute a <strong>soft non-pull signal</strong> (LTV from balance ÷ est. value, affordability band, arrears self-declaration) and calibrate the claim to it.</div>
+    </div>
+    <div class="box box--neutral mb0">
+      <div class="box__h mb0"><span class="chip chip--play">R3</span></div>
+      <div class="h4" style="margin:2px 0 4px">It's a window, not a wall</div>
+      <div class="mini mb0">Funnel mechanics are replicable — MortgageMarket could bolt a switch flow onto direct bank contracts in a quarter, <em>with</em> a credit signal. Bondly's durable edge is switch-specific positioning + CX craft + the compounding nurture asset + "we make the admin disappear."</div>
+    </div>
+  </div>
+
+  <div class="h4" style="margin-bottom:5px">How to win — ranked by impact × effort <span class="cf cf--hi"><span class="dot"></span>★ = AI-enabled</span></div>
+  <table class="dt">
+    <thead><tr><th style="width:4%">#</th><th style="width:30%">Move</th><th style="width:11%">Impact</th><th style="width:9%">Effort</th><th>The competitor weakness it exploits</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td><strong>Net-of-cost Verdict</strong> — break-even months + loss-framing + bank cost-coverage</td><td>Very high</td><td>Low</td><td>Every SA player hides switching costs in the early funnel; honesty here is both a CPA duty and the trust differentiator.</td></tr>
+      <tr><td><strong>2</strong></td><td><strong>Compliant rate-watch nurture ★</strong> — prime-move + LTV-milestone triggers</td><td>Very high</td><td>Low–Med</td><td>No SA player owns the "not yet — we'll tell you when" relationship. Captures the 60%+ who shouldn't switch today.</td></tr>
+      <tr><td><strong>3</strong></td><td><strong>"What Bondly does for you"</strong> admin-disappears checklist + bridging-finance flag</td><td>High</td><td>Low</td><td>Inertia is the #1 killer. Capitec's "Quick Cash" bridge is the only SA answer; no originator names the admin it absorbs.</td></tr>
+      <tr><td><strong>4</strong></td><td><strong>Bankability Switch Score</strong> (soft non-pull signal) + calibrated "banks compete" framing</td><td>High</td><td>Med</td><td>Fear-of-rejection silently kills qualified leads; competitors bury eligibility behind a hard check or a wall.</td></tr>
+      <tr><td><strong>5</strong></td><td><strong>Tighten the data ladder</strong> — email-only at peak intent; ID late; phone optional; non-zero progress; save &amp; resume</td><td>High</td><td>Med</td><td>ooba/MortgageMarket/EasyMortgages gate behind a full registration wall <em>before</em> any value.</td></tr>
+      <tr><td><strong>6</strong></td><td><strong>Cash-out / equity-release</strong> third Verdict framing (conditional on LTV)</td><td>Med</td><td>Low</td><td>SA Home Loans surfaces it; originators bury it. A distinct, high-intent switcher segment.</td></tr>
+      <tr><td><strong>7</strong></td><td><strong>Persona branching</strong> — fixed-rate, high-LTV, recent-bond, self-employed get honest expectations, not a rosy Verdict</td><td>Med</td><td>Med</td><td>Every calculator-led flow sets false expectations the back-end must walk back, burning trust + consultant time.</td></tr>
+      <tr><td><strong>8</strong></td><td><strong>Plain-English consent</strong> + named-banks sharing screen ★</td><td>Med</td><td>Low</td><td>Standard Bank is the only player with legible consent; all others bury it. Transparency is a cheap trust win.</td></tr>
+      <tr class="hl"><td><strong>0</strong></td><td><strong>Pre-build: confirm switch unit-economics</strong> — bank→originator commission % on a switch + clawback terms</td><td>Gating</td><td>Low</td><td>Decides whether to push the funnel hard or lead with the nurture list. The one number not publicly knowable.</td></tr>
+    </tbody>
+  </table>
+  <p class="note mb0">Moves 1–3 are the "ship first" wave (low effort, highest leverage, all compliance-positive). Move 0 is a phone call to your bank partners, not a build — but it sets the strategy.</p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 02 — Strategy</span></div>
+</section>
+
+<!-- ============ PAGE 3 · THE RECOMMENDED FLOW (1) ============ -->
+<section class="page">
+  <div class="eyebrow">The Blueprint — recommended onboarding flow (1 of 2)</div>
+  <h2 class="h-sec">The flow, screen by screen.</h2>
+  <p class="h-sub">Bondly's current ladder is the right architecture. Below is the sharpened version — what to <strong>keep</strong>, what's <strong>new</strong>, and what to <strong>fix</strong>. Ordering is justified by the behavioural evidence on p.7.</p>
+  <div class="legend">
+    <span><i class="dotk" style="background:var(--ok)"></i> KEEP — already best-in-market</span>
+    <span><i class="dotk" style="background:var(--gold)"></i> NEW — net-add</span>
+    <span><i class="dotk" style="background:var(--salmon)"></i> FIX — change vs current</span>
+  </div>
+
+  <div class="flow">
+    <div class="fstep">
+      <div class="fstep__n fstep__n--keep">0</div>
+      <div><div class="fstep__t">Hero calculator <span class="tagk tagk--keep">KEEP</span> <span class="tagk tagk--keep">MOAT</span></div>
+      <div class="fstep__b">Outstanding balance + current rate (term &amp; bank optional), <em>or</em> "upload your bond statement, we'll read it." Sub-3 fields, framed as a tool not a form. This is the strongest opening in the SA market — <em>defend it</em>; A/B-test any new pre-result field before adding it. Trust strip: <em>"No credit check · Free · POPIA-protected,"</em> with the 7 bank logos.</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--keep">1</div>
+      <div><div class="fstep__t">"Reading your details" animation <span class="tagk tagk--keep">KEEP</span></div>
+      <div class="fstep__b">Primes the result as computed-and-personal, not generic — measurably lifts perceived credibility of the number that follows. Keep it short.</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--fix">2</div>
+      <div><div class="fstep__t">The Verdict <span class="tagk tagk--fix">UPGRADE</span> — the single highest-leverage screen</div>
+      <div class="fstep__b">
+        <strong>Keep:</strong> savings <em>range</em> (not false precision); the "lower monthly vs finish sooner" toggle.<br>
+        <strong>Add — loss framing:</strong> <em>"At your rate you're paying ~R1,850 more every month than you need to — about R22,200 over the next year."</em> Losses motivate ~2× gains.<br>
+        <strong>Add — net-of-cost reality:</strong> <em>"Switching costs ≈ R18k–R25k; at your saving you break even in ~13 months — and your new bank may cover R10k–R30k of it."</em> This is the trust differentiator and a CPA s.41 obligation.<br>
+        <strong>Add — bankability Switch Score:</strong> reframe X/100 from "how much you save" to "how likely banks compete for you," computed from a <em>soft non-pull</em> signal (LTV + affordability band). One-line basis + non-advice disclaimer.<br>
+        <strong>Add (conditional):</strong> cash-out/equity line if LTV &lt; ~75%. <strong>Add:</strong> "What Bondly does for you" checklist (appoint attorneys · handle cancellation + 90-day notice · chase the banks · coordinate registration).<br>
+        <strong>CTA:</strong> "Get my bank offers →". Competitive-rate branch → the rate-watch opt-in (step 9).</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--fix">3</div>
+      <div><div class="fstep__t">Capture contact — email only <span class="tagk tagk--fix">FIX</span></div>
+      <div class="fstep__b"><em>"Where should we send your bank offers?"</em> Email is the lowest-anxiety ask and intent peaks right after the Verdict. <em>Remove the phone field here</em> — phone early is a documented conversion leak (~70% are reluctant; making it optional has doubled completion in case studies). POPIA s.18 just-in-time notice sits beneath the field. <strong>Start the progress indicator non-zero ("Step 1 of 4 complete")</strong> — the calculator was already real effort (endowed-progress effect).</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--keep">4</div>
+      <div><div class="fstep__t">Light qualify — income band + employment <span class="tagk tagk--keep">KEEP</span></div>
+      <div class="fstep__b">Bands (not exact rands) + employment type, on one screen, in plain language. Feeds the soft bankability signal. This is already well-judged; keep it. Show bank logos again — trust anxiety peaks here.</div></div>
+    </div>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 03 — The Flow</span></div>
+</section>
+
+<!-- ============ PAGE 4 · THE RECOMMENDED FLOW (2) + PERSONAS ============ -->
+<section class="page">
+  <div class="eyebrow">The Blueprint — recommended onboarding flow (2 of 2)</div>
+  <h2 class="h-sec">…then commit, submit, and sort.</h2>
+
+  <div class="flow" style="margin-bottom:6px">
+    <div class="fstep">
+      <div class="fstep__n fstep__n--fix">5</div>
+      <div><div class="fstep__t">Formal details — <em>split across screens</em> <span class="tagk tagk--fix">FIX</span></div>
+      <div class="fstep__b">Never cluster name + ID + income + address on one screen (the single biggest avoidable abandonment risk). Sequence: <strong>(5a)</strong> full name + optional phone → <strong>(5b)</strong> SA ID on its own screen, gated behind a clear "Yes, submit my application to banks" intent, with lock icon, <em>"why we need this,"</em> POPIA note + "no credit check" copy → <strong>(5c)</strong> property address (autocomplete). Collecting the ID this late satisfies POPIA data-minimisation and de-risks the highest-anxiety field.</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--fix">6</div>
+      <div><div class="fstep__t">Statement upload — optional accelerator, at the end <span class="tagk tagk--fix">FIX</span></div>
+      <div class="fstep__b"><em>"Upload your latest bond statement for a firmer offer (optional — you can do this later)."</em> SA has no mature open banking, so the statement is the only real self-serve income signal — but it belongs <em>after</em> commitment, framed as a bonus, never a gate. Capture the lead first; enrich asynchronously. (Tension noted on p.7: if bank-acceptance rates suffer, move a <em>soft</em> signal earlier — not the full doc.)</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--new">7</div>
+      <div><div class="fstep__t">Named-banks consent + confirm <span class="tagk tagk--new">NEW</span></div>
+      <div class="fstep__b"><em>"Your application will be submitted to: ABSA · FNB · Nedbank … [Confirm &amp; submit]."</em> Naming the recipients is both POPIA best practice (purpose-specific sharing consent) and good UX — and it makes the "banks compete for you" promise concrete. Heads-up here: the 90-day notice to your current bank, and the cost picture.</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--keep">8</div>
+      <div><div class="fstep__t">Confirmation + pipeline tracker <span class="tagk tagk--keep">KEEP</span></div>
+      <div class="fstep__b">Keep the "You're in" success screen, the 6-step pipeline, and the create-account-to-track CTA. Add a clear timeline expectation and a post-switch nurture hook (6-month balance check-in → "shall we re-check your rate?").</div></div>
+    </div>
+    <div class="fstep">
+      <div class="fstep__n fstep__n--new">9</div>
+      <div><div class="fstep__t">Rate-watch — the parallel exit for "not yet" <span class="tagk tagk--new">NEW · the volume play</span></div>
+      <div class="fstep__b">Anyone the Verdict sorts as "not worth it yet" gets a <em>standalone, un-pre-ticked, Form-4-compliant</em> POPIA s.69 opt-in: <em>"We'll tell you the moment switching pays — when prime moves or your equity crosses a threshold."</em> Triggers are prime-rate cuts + LTV milestones (SA bonds are prime-linked, so there is no UK-style fixed-term expiry to wait for). This is the compounding asset.</div></div>
+    </div>
+  </div>
+
+  <div class="band band--blue" style="border-radius:10px;margin:2px 0 0">
+    <div class="h4" style="margin-bottom:5px">Honest persona branching — who the calculator must <em>not</em> over-promise</div>
+    <table class="dt mb0" style="margin-top:2px">
+      <thead><tr><th style="width:20%">Persona</th><th style="width:42%">Why a rosy Verdict misleads</th><th>What the flow should do</th></tr></thead>
+      <tbody>
+        <tr><td><strong>High-LTV / low-equity</strong></td><td>Banks won't compete; switching costs sink the math.</td><td>Route to "improve your profile" + rate-watch, not "apply now."</td></tr>
+        <tr><td><strong>Recently originated (&lt;2–3 yrs)</strong></td><td>Costs not yet amortised; some bonds carry an early-cancellation penalty.</td><td>Show a longer break-even honestly; usually → rate-watch.</td></tr>
+        <tr><td><strong>Self-employed / thin-file</strong></td><td>Income band ≠ bankable; banks need 6–12 months of statements.</td><td>Flag the docs needed; set a human-assisted expectation early.</td></tr>
+        <tr><td><strong>On a fixed rate</strong></td><td>Break penalties make a mid-fix switch punitive (a small minority — fixed is capped at 60 months and uncommon).</td><td>Detect &amp; warn; offer rate-watch for when the fix ends.</td></tr>
+        <tr><td><strong>Access-bond / readvance</strong></td><td>Switching can forfeit a flexible facility they value.</td><td>Surface the trade-off; let a consultant weigh it.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 04 — The Flow</span></div>
+</section>
+
+<!-- ============ PAGE 5 · SA COMPETITIVE LANDSCAPE ============ -->
+<section class="page">
+  <div class="eyebrow">Findings 1 — the SA competitive landscape</div>
+  <h2 class="h-sec">Everyone sells the purchase. Nobody owns the switch.</h2>
+  <p class="h-sub">SA splits into purchase-led <strong>originators</strong> (paid by the bank, credit-checked up front), single-lender <strong>bank switch pages</strong>, and the one genuine switching specialist (<strong>SA Home Loans / Capitec</strong>) — which is single-lender and callback-led. The savings-first, multi-bank, no-hard-check switch lane is empty.</p>
+
+  <table class="dt">
+    <thead><tr><th style="width:15%">Player</th><th style="width:13%">First ask</th><th style="width:15%">Credit check</th><th style="width:16%">Dedicated switch?</th><th>The opening it leaves Bondly</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ooba</strong> <span style="color:var(--muted2)">#1 originator</span></td><td>Registration wall (name→OTP→ID)</td><td>Auto pull after sign-up</td><td>No — refinance = same new-bond flow</td><td>Value is gated behind a wall; switching isn't a product.</td></tr>
+      <tr><td><strong>BetterBond</strong></td><td>Anonymous affordability calc</td><td>At pre-qualification</td><td><strong>No — explicitly excludes</strong> "simple rate negotiations"</td><td>The #2 originator won't even serve pure switchers.</td></tr>
+      <tr class="hl"><td><strong>MortgageMarket</strong> <span style="color:#b45309">▲ threat</span></td><td>Account-first (ID+email+cell)</td><td>Soft Experian, &lt;2 min</td><td>No (purchase framing) — <strong>but now has direct bank contracts</strong></td><td>Closest mover; could add a switch flow fast, with a credit signal.</td></tr>
+      <tr><td><strong>EasyMortgages</strong> <span style="color:var(--muted2)">(EasyEquities)</span></td><td>Profile creation</td><td>Soft check</td><td>No — purchase, 7-bank, R5k cashback</td><td>Brand halo, but no switch wedge.</td></tr>
+      <tr><td><strong>SA Home Loans / Capitec</strong></td><td>"Do you bank with us?" segmenter</td><td>Step 4, post-docs</td><td><strong>Yes — deepest in market</strong> (switch calc, Quick Cash bridge, 10-step)</td><td>Strong but <em>single-lender</em> + callback-led; no competition, more friction.</td></tr>
+      <tr><td><strong>Standard Bank</strong></td><td>Name + SA ID (no calc)</td><td>Explicit, standalone consent ✓</td><td>Yes (single-bank)</td><td>Best consent UX; worst opening (ID first, no hook).</td></tr>
+      <tr><td><strong>Nedbank</strong></td><td>"Ask us to call you back"</td><td>Step 2, post-application</td><td>Yes (single-bank) · covers costs for "qualifying" clients</td><td>Most passive CTA in market.</td></tr>
+      <tr><td><strong>ABSA</strong></td><td>"Switch now" → application</td><td>In portal</td><td>"Great Escape" promo (single-bank)</td><td>Strongest incentive, buried; no self-qualify calculator.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2--wide" style="display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-top:2px">
+    <div class="box box--win mb0">
+      <div class="box__h mb0"><span class="chip chip--win">WHITE SPACE</span> What only Bondly does</div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li><strong>Savings-first hero before any contact capture</strong> — every bank and most originators ask for a form or full registration first.</li>
+        <li><strong>Multi-bank competition for a switch</strong> — the banks' own pages only switch you <em>to them</em>; SA Home Loans is single-lender.</li>
+        <li><strong>Two (soon three) decision framings</strong> — lower monthly / finish sooner / cash-out — as a narrative choice, not buried calculator outputs.</li>
+        <li><strong>A graceful "your rate is fine" path</strong> — competitors dead-end the competitively-priced homeowner; Bondly captures them.</li>
+      </ul>
+    </div>
+    <div class="box box--attack mb0">
+      <div class="box__h mb0"><span class="chip chip--attack">WHERE SA IS STRONGER</span></div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li><strong>SA Home Loans:</strong> documented 10-step roadmap + <strong>Quick Cash bridging</strong> (R75k in 72h) to cover switching costs upfront — a gap no originator fills.</li>
+        <li><strong>Standard Bank:</strong> explicit, legible credit-consent language.</li>
+        <li><strong>ABSA / FNB:</strong> named, time-boxed cost-coverage incentives that create urgency.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 05 — SA Landscape</span></div>
+</section>
+
+<!-- ============ PAGE 6 · INTERNATIONAL TEARDOWN ============ -->
+<section class="page">
+  <div class="eyebrow">Findings 2 — what the world's best switchers do</div>
+  <h2 class="h-sec">The remortgage winners agree on a pattern. Adopt it.</h2>
+  <p class="h-sub">Across the UK, Australia and the US, the services that actually convert switchers — despite inertia — converge on the same spine Bondly already has. The lessons below are adapted for SA (no mature open banking; prime-linked variable rates; switching = full re-registration).</p>
+
+  <table class="dt">
+    <thead><tr><th style="width:13%">Service</th><th style="width:9%">Region</th><th style="width:30%">The single smartest mechanic</th><th>The adapted lesson for Bondly</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Athena</strong></td><td>AU</td><td>"Quote in &lt;5 min, no credit checks yet — we only need your property + current loan." AcceleRATES auto-drops the rate as LVR falls.</td><td>Your no-credit-check savings-first opening is literally Athena's. Borrow their <em>LTV-milestone</em> logic for nurture triggers.</td></tr>
+      <tr><td><strong>Habito</strong></td><td>UK</td><td>Calculator → a few questions → a human expert does <em>all</em> the admin + chasing; tracked in a dashboard.</td><td>Name the admin you absorb. The dashboard = your pipeline tracker. Keep the human in the anxiety moments.</td></tr>
+      <tr><td><strong>Mojo</strong></td><td>UK</td><td>Shows existing-lender rate <em>side-by-side</em> with open-market; found <strong>£50/mo is the switch tipping point</strong>; "Rate Check Promise."</td><td>Find SA's rand tipping point and make it unmissable. Offer a "we'll re-check if rates drop before completion" promise.</td></tr>
+      <tr><td><strong>Sprive</strong></td><td>UK</td><td>Open banking auto-discovers the mortgage; ERC-adjusted <em>daily</em> trigger tells you when switching pays.</td><td>The data-light version: your rate-watch engine computes "is it worth it yet?" continuously and pings on yes.</td></tr>
+      <tr><td><strong>Tembo / L&amp;C</strong></td><td>UK</td><td>No-credit-check eligibility across 100+ lenders; <strong>rate-drop guarantee</strong> inside a 6-month lock.</td><td>Eligibility confidence (bankability) before commitment is the conversion lever — earn it with a soft signal.</td></tr>
+      <tr><td><strong>Joust</strong></td><td>AU</td><td>Anonymous reverse auction — lenders <em>bid</em> for the borrower; reverses the power dynamic.</td><td>"Banks compete for your bond" — fits your commission-from-bank model. Use it <em>only</em> where the signal supports it.</td></tr>
+      <tr><td><strong>Better.com</strong></td><td>US</td><td>Conversational AI ("Betsy") → personalised pre-approval in &lt;3 min; soft pull happens invisibly in-chat.</td><td>Conversational framing lowers perceived friction at each step; a future-state for Bondly's qualify ladder.</td></tr>
+      <tr><td><strong>Lendi</strong></td><td>AU</td><td>"Rate Radar" detects the trigger and an agentic-AI intake starts the refinance — morning alert → evening lodged.</td><td>The endgame for your nurture list: trigger-detected, AI-assisted re-engagement, human for the close.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div class="q">The universal inertia-killer isn't a lower rate — it's "we make the paperwork disappear."</div>
+    <div class="src">Habito ("we do the badgering"), Athena (handles discharge from the old lender), L&amp;C ("we handle all the paperwork"). In SA the admin is heavier (two attorneys, 90-day notice, deeds office) — so naming and absorbing it is an even bigger lever.</div>
+  </div>
+  <p class="note mb0">Where AI is <em>not</em> the answer: the trust to hand over your SA ID and R1.5m bond. That is won with human reassurance, POPIA framing, bank logos and honest cost disclosure — not a chatbot. Pure-AI broking has under-performed everywhere; hybrid human+AI is the converting model.</p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 06 — Global Best Practice</span></div>
+</section>
+
+<!-- ============ PAGE 7 · CX & BEHAVIOURAL PRINCIPLES ============ -->
+<section class="page">
+  <div class="eyebrow">Findings 3 — the CX &amp; behavioural evidence</div>
+  <h2 class="h-sec">Why this ordering, and not another.</h2>
+
+  <div class="grid2" style="margin-bottom:8px">
+    <div>
+      <div class="h4" style="margin-bottom:5px">The principles doing the work</div>
+      <ul class="tight mb0" style="font-size:9.2px">
+        <li><strong>Value before friction.</strong> Show the savings range + Switch Score <em>before</em> any personal ask. Never gate the Verdict — the result is the reason they continue.</li>
+        <li><strong>Field count drives abandonment, not steps.</strong> Multi-step beats single-page (~86% higher completion in lead-gen); 27% abandon a form that merely <em>looks</em> long. Split the asks; show progress.</li>
+        <li><strong>Endowed progress.</strong> A bar that starts at "Step 1 complete" (because the calculator was real work) lifts completion vs one starting at zero.</li>
+        <li><strong>Loss aversion.</strong> "You're paying R1,850 <em>more</em> every month" beats "you could save R1,850" — losses motivate ~2×.</li>
+        <li><strong>Phone is the highest-friction field.</strong> ~70% are reluctant; making it optional has doubled completion. Email first, phone optional &amp; late.</li>
+        <li><strong>Ranges beat false precision.</strong> "R1,600–R2,100/mo" reads as honest; "R1,847" reads as invented. Keep the range; explain its basis.</li>
+        <li><strong>Anxiety is per-field.</strong> Put reassurance <em>next to</em> the scary field (ID, income), not in a generic top banner. ID gets its own screen.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="box box--neutral mb0" style="margin-bottom:8px">
+        <div class="h4" style="margin-bottom:4px">Recommended capture moment</div>
+        <div class="mini mb0">Capture <strong>email the instant the Verdict lands</strong> — intent is at its peak and email is the lowest-anxiety ask. Defer phone (optional) and ID (gated behind apply-intent) to the committed end of the ladder, where sunk-cost makes them small asks. This is the difference between "more leads, lower quality" (capture early) and "fewer, bank-ready leads" (capture value-first) — and for a commission-on-completion model, quality wins.</div>
+      </div>
+      <div class="box box--win mb0">
+        <div class="h4" style="margin-bottom:4px">Already doing well — protect these</div>
+        <ul class="tight mb0" style="font-size:9px">
+          <li>Verdict before contact capture ✓</li>
+          <li>"Reading" animation primes credibility ✓</li>
+          <li>Savings as a <em>range</em> ✓</li>
+          <li>"Lower payment vs finish sooner" choice ✓</li>
+          <li>Optional (not mandatory) statement upload ✓</li>
+          <li>Staged capture via correlationId ✓</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="band band--cream" style="border-radius:10px">
+    <div class="h4" style="margin-bottom:5px">The tension to manage — frictionless vs bank-ready</div>
+    <p class="mini mb0">The whole ladder optimises for completion. But the only revenue event is a bank <em>accepting</em> and the bond <em>registering</em> — so a flood of unscreened leads burns the bank relationships that are the actual moat. Resolution: keep the ladder frictionless, but compute a <strong>soft, non-pull bankability signal early</strong> (LTV + affordability band + arrears self-declaration) so the "banks will compete" claim is earned and the leads you submit are genuinely bank-ready. If acceptance rates still lag, a light Experian-style soft check (MortgageMarket's model) becomes the next lever — added as an <em>optional accelerator</em>, never a gate.</p>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 07 — CX Evidence</span></div>
+</section>
+
+<!-- ============ PAGE 8 · THE ECONOMICS REALITY ============ -->
+<section class="page">
+  <div class="eyebrow">Findings 4 — the economics that reframe the product</div>
+  <h2 class="h-sec">The break-even math is the strategy.</h2>
+  <p class="h-sub">Switching a bond in SA is a <strong>full re-registration</strong>, not a rate tweak. The cost hurdle is why "switch now" is a minority sport — and why the rate-watch list is the real volume business.</p>
+
+  <div class="stats stats--3" style="margin-bottom:10px">
+    <div class="stat"><div class="fig num">R30k–R40k</div><div class="lbl">Realistic switching friction on a ~R1m bond (registration + cancellation + initiation)</div></div>
+    <div class="stat"><div class="fig num">~20 mo</div><div class="lbl">Break-even on a typical 0.75–1% cut (R22k cost ÷ ~R1,100/mo saved)</div></div>
+    <div class="stat"><div class="fig num">8–10 yr</div><div class="lbl">Break-even on a thin 0.5% cut on a small bond — i.e. "don't switch, watch"</div></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:8px">
+    <div>
+      <div class="h4" style="margin-bottom:5px">Who should switch <span style="color:var(--ok)">now</span> (the value segment)</div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li>Larger bonds (≈ R1.5m+) where a 0.5–1% cut is real money.</li>
+        <li>Big rate gaps (1%+ above what they'd get today).</li>
+        <li><strong>Low LTV / seasoned bonds</strong> — banks compete hardest <em>and</em> cover the most cost (Absa up to R30k at the top tier).</li>
+        <li>Long remaining horizon in the home (clears break-even comfortably).</li>
+      </ul>
+      <div class="note">SA's market is shifting to the &gt;R3m band — exactly this segment. That's where to spend acquisition.</div>
+    </div>
+    <div>
+      <div class="h4" style="margin-bottom:5px">Who should <span style="color:#b45309">watch</span> (the volume segment)</div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li>Sub-R1.5m bonds with a modest rate gap — break-even too long today.</li>
+        <li>High-LTV or recently-originated bonds.</li>
+        <li>Anyone where the honest net-of-cost number says "not yet."</li>
+      </ul>
+      <div class="mini" style="margin-top:5px"><strong>The reframe:</strong> these aren't lost leads — they're the compounding asset. A prime cut or a few years of paydown flips them to "switch now," and Bondly is the brand that told them honestly and kept watch.</div>
+    </div>
+  </div>
+
+  <div class="h4" style="margin-bottom:5px">Bank cost-coverage matrix — the lever that shortens break-even (surface it on the Verdict)</div>
+  <table class="dt mb0">
+    <thead><tr><th style="width:14%">Bank</th><th style="width:40%">What they cover for switchers</th><th>The catch (state it honestly)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ABSA "Great Escape"</strong></td><td><strong>Tiered:</strong> R500k–2.5m → up to <strong>R10k</strong>; R2.5–4.5m → <strong>R20k</strong>; R4.5m+ → <strong>R30k</strong>; +50% off registration; +up to R6k cancellation.</td><td>Coverage is thinnest exactly where the median bond sits; the R20k+R6k needs an Absa cheque account + debit order. Valid to 31 Aug 2026.</td></tr>
+      <tr><td><strong>FNB</strong></td><td>Pays cancellation + attorney registration costs; R6,100 initiation back in eBucks.</td><td>Registration coverage conditional on grant ≈ ≥R600k; <em>excludes</em> the old bank's early-termination penalty; eBucks ≠ cash.</td></tr>
+      <tr><td><strong>Nedbank</strong></td><td>Covers switching costs for "qualifying" clients.</td><td>Not surfaced as an instant qualifier; eligibility opaque.</td></tr>
+      <tr><td><strong>SA Home Loans / Capitec</strong></td><td>"Quick Cash" bridging — R75k in 72h + R150k on signing — to fund costs upfront.</td><td>Single-lender; you're switching <em>to</em> them.</td></tr>
+    </tbody>
+  </table>
+  <p class="note mb0">Build this as an <strong>admin-updatable promotions field</strong>, not hardcoded copy — bank incentives change. Naming the right incentive for the right bond size is a concrete, on-your-side differentiator no calculator offers today.</p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 08 — Economics</span></div>
+</section>
+
+<!-- ============ PAGE 9 · COMPLIANCE & DATA ============ -->
+<section class="page">
+  <div class="eyebrow">Findings 5 — compliance &amp; data (NCA · CPA · POPIA · FICA)</div>
+  <h2 class="h-sec">It's not FAIS. Know the real rules.</h2>
+  <p class="h-sub">Home loans are <strong>NCA</strong> credit agreements, not FAIS "financial products" — so a savings comparison/Switch Score needs <em>no FSP licence</em> (FAIS only bites if you bundle insurance). Bondly is an intermediary, not a credit provider, so <strong>no NCR registration is required</strong>. The binding constraints are CPA (honesty), POPIA (consent), and the bank's own duties. <span class="note" style="display:inline">Practitioner checklist — get formal legal sign-off before launch.</span></p>
+
+  <table class="dt">
+    <thead><tr><th style="width:16%">Stage</th><th style="width:26%">Collect</th><th style="width:22%">Lawful basis / consent</th><th>The rule to honour</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Calculator</strong></td><td>Balance, rate (no personal data)</td><td>None yet</td><td>Frame the Switch Score as <em>indicative, not advice</em> (CPA s.41 — no "you will save / you qualify" as fact).</td></tr>
+      <tr><td><strong>Rate-watch opt-in</strong></td><td>Email (for alerts)</td><td><strong>POPIA s.69 explicit opt-in</strong> — un-pre-ticked, Form-4 style, with one-click opt-out</td><td>Electronic direct marketing needs prior consent. The IR issued its first enforcement notice (Feb '24) for exactly this.</td></tr>
+      <tr><td><strong>Email capture</strong></td><td>Email</td><td>s.11 necessity + s.18 just-in-time notice</td><td>State who Bondly is, why, and that data will be shared with banks if they proceed.</td></tr>
+      <tr><td><strong>Light qualify</strong></td><td>Income band, employment</td><td>s.11 necessity</td><td>NCA affordability (s.81) is the <em>bank's</em> job — don't present this as a credit decision.</td></tr>
+      <tr><td><strong>Formal details</strong></td><td>Name, <strong>SA ID</strong>, income, address</td><td>s.11 necessity — ID <em>only</em> at apply-intent</td><td>SA ID is ordinary PI (not "special" under s.26) but high fraud value — data-minimisation = collect late.</td></tr>
+      <tr><td><strong>Submit</strong></td><td>Full package → named banks</td><td><strong>Named-bank sharing consent</strong> (explicit)</td><td>Sharing with multiple lenders must be a disclosed, named purpose — not buried in T&amp;Cs.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2">
+    <div class="box box--win mb0">
+      <div class="box__h mb0"><span class="chip chip--win">MUST DO</span></div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li>Separate <strong>marketing consent</strong> (rate alerts) from service consent — standalone, un-pre-ticked.</li>
+        <li>Just-in-time <strong>s.18 notices</strong> at email, income, and ID stages.</li>
+        <li><strong>Name the banks</strong> before submission; get explicit acknowledgement.</li>
+        <li>Show <strong>break-even + costs</strong> next to savings (CPA s.41 honesty).</li>
+        <li>Non-advice disclaimer on the Switch Score.</li>
+      </ul>
+    </div>
+    <div class="box box--attack mb0">
+      <div class="box__h mb0"><span class="chip chip--attack">MUST NOT</span></div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li>Run <strong>any</strong> credit-bureau enquiry (even "soft") without NCA-compliant consent — keep "no credit check" operationally true.</li>
+        <li>Collect the <strong>SA ID</strong> before apply-intent.</li>
+        <li>Assert a <strong>guaranteed rate/approval</strong> or "3+ banks will compete" without a signal (CPA s.41).</li>
+        <li>Share data with banks before explicit confirmation.</li>
+        <li>Use the rate-alert consent to send <em>general</em> marketing.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note mb0">FICA KYC is the bank's obligation (it is the Accountable Institution), not Bondly's — but handle any ID/address you do collect securely under POPIA. Get a FAIS opinion <em>only if</em> you ever attach insurance to the flow.</p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 09 — Compliance</span></div>
+</section>
+
+<!-- ============ PAGE 10 · AI PLAYBOOK + METRICS ============ -->
+<section class="page">
+  <div class="eyebrow">The plays — AI leverage &amp; what to measure</div>
+  <h2 class="h-sec">Out-execute with AI; prove it with the funnel.</h2>
+
+  <div class="grid3" style="margin-bottom:9px">
+    <div class="box box--neutral mb0">
+      <div class="h4" style="margin-bottom:4px">AI for intelligence</div>
+      <ul class="tight mb0" style="font-size:8.8px">
+        <li>Weekly LLM digest of competitor switch pages, bank incentives, and ad creative — "what changed &amp; why it matters."</li>
+        <li>Cluster SA switching reviews/Reddit complaints into unmet-need themes → differentiation copy.</li>
+        <li>Auto-watch bank cost-coverage promos → feed the admin-updatable promotions field.</li>
+      </ul>
+    </div>
+    <div class="box box--neutral mb0">
+      <div class="h4" style="margin-bottom:4px">AI for go-to-market</div>
+      <ul class="tight mb0" style="font-size:8.8px">
+        <li>Programmatic SEO: "[bank] home loan switch costs," "is it worth switching my bond," city/bank-size pages — honest, calculator-backed.</li>
+        <li>"[Competitor] alternative" + "switch from [bank]" comparison pages capturing branded switch demand.</li>
+        <li>The rate-watch engine itself: AI computes per-user "is it worth it yet?" and personalises the re-engagement.</li>
+      </ul>
+    </div>
+    <div class="box box--neutral mb0">
+      <div class="h4" style="margin-bottom:4px">AI in the product</div>
+      <ul class="tight mb0" style="font-size:8.8px">
+        <li>Statement OCR → instant balance/rate/affordability pre-fill (with an operator agreement, POPIA s.21).</li>
+        <li>Conversational qualify ladder (Better.com's "Betsy" model) to cut perceived friction.</li>
+        <li>Soft bankability scoring from non-pull signals to lift bank-acceptance rates.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="h4" style="margin-bottom:5px">Instrument the funnel — the metrics the draft was missing</div>
+  <table class="dt">
+    <thead><tr><th style="width:34%">Metric</th><th style="width:22%">Why it's the one that matters</th><th>First A/B test to run</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td><strong>Accept → register rate</strong></td><td><strong>The only revenue event.</strong> Everything upstream is vanity until this is tracked.</td><td>Soft bankability signal on vs off — does it lift bank acceptance?</td></tr>
+      <tr><td>Verdict → email CVR</td><td>Tests value-first capture &amp; the Verdict upgrades.</td><td>Net-of-cost Verdict vs gross-savings-only.</td></tr>
+      <tr><td>Email → formal-app CVR</td><td>Health of the data ladder.</td><td>ID-late + split screens vs single formal-details screen.</td></tr>
+      <tr><td>App → bank-accept rate</td><td>Lead quality / relationship health.</td><td>With vs without early soft signal.</td></tr>
+      <tr><td>Rate-watch opt-in rate</td><td>Size of the compounding asset.</td><td>"We'll tell you when it pays" framing vs generic newsletter.</td></tr>
+      <tr><td>Abandonment-recovery rate</td><td>Recovers SA mobile/connectivity drop-offs.</td><td>Recovery email on vs off (from the step-3 email).</td></tr>
+      <tr><td>Claimed-vs-realised savings</td><td>Trust integrity &amp; CPA exposure.</td><td>Range width calibration vs realised offers.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout--salmon">
+    <div class="q">Before any of this: confirm the switch unit-economics.</div>
+    <div class="src">Originators <em>are</em> paid by the bank on switches/refinances (verified) — but the exact bank→originator commission % on a switch, and the clawback on early cancellation/settlement, are not public. That number decides how hard to push the funnel vs the nurture list. It's a conversation with your bank partners, and it's move #0.</div>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 10 — AI &amp; Metrics</span></div>
+</section>
+
+<!-- ============ PAGE 11 · BLINDSPOT / ROUND 2 ADDENDUM ============ -->
+<section class="page">
+  <div class="eyebrow">Round 2 — the blindspot scrutiny &amp; how the recommendation changed</div>
+  <h2 class="h-sec">What the red-team caught — and what we did about it.</h2>
+  <p class="h-sub">After the first research round, a dedicated scrutiny agent attacked the draft. It surfaced three load-bearing weaknesses; a second research round answered each. The recommendation you've just read is the <em>post-scrutiny</em> version. Here is the audit trail.</p>
+
+  <table class="dt">
+    <thead><tr><th style="width:5%">#</th><th style="width:27%">Blindspot raised</th><th style="width:11%">Severity</th><th style="width:30%">Round-2 finding</th><th>How the rec changed</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>Break-even quietly kills the median bond → "qualified lead" inventory is thin</td><td><span class="cf cf--lo"><span class="dot"></span>Critical</span></td><td>Confirmed: ~R30–40k friction vs ~R300/mo on a small cut = 8–10yr break-even.</td><td><strong>Core reframe:</strong> product = switch-readiness <em>engine</em>; nurture list is co-equal, not a footnote.</td></tr>
+      <tr><td><strong>2</strong></td><td>The compliance frame is wrong — it's NCA/CPA, not FAIS</td><td><span class="cf cf--med"><span class="dot"></span>High</span></td><td>Confirmed: home loans sit outside FAIS; originators need no NCR registration; CPA s.41 + POPIA bind.</td><td>Compliance section re-anchored on NCA·CPA·POPIA·FICA; FAIS only if insurance is bundled.</td></tr>
+      <tr><td><strong>3</strong></td><td>MortgageMarket is a <em>present</em> threat, not "emerging"</td><td><span class="cf cf--lo"><span class="dot"></span>Critical</span></td><td>Confirmed: direct bank contracts announced May/Jun '26 + 2-min Experian pre-qual.</td><td>White space downgraded from "moat" to "6–12 month window"; build the compounding asset fast.</td></tr>
+      <tr><td><strong>4</strong></td><td>"No credit check" is sold as pure CX win — it's a lead-quality liability</td><td><span class="cf cf--med"><span class="dot"></span>High</span></td><td>Only an accept-and-register pays; junk leads burn bank relationships (the moat).</td><td>Added the soft non-pull bankability signal; "no <em>hard</em> check" preserved.</td></tr>
+      <tr><td><strong>5</strong></td><td>"3+ banks compete" with no signal = CPA s.41 contradiction</td><td><span class="cf cf--lo"><span class="dot"></span>High</span></td><td>You can't assert bank appetite with no data.</td><td>Claim now <em>calibrated to</em> the soft signal; vague where the signal is thin.</td></tr>
+      <tr><td><strong>6</strong></td><td>Absa "R26k flat" is wrong — coverage is tiered</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td><td>Tiered R10k / R20k / R30k by loan size; thinnest at the median.</td><td>Corrected throughout; cost-coverage now a per-tier matrix (p.8).</td></tr>
+      <tr><td><strong>7</strong></td><td>Whole personas the flow silently fails</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td><td>High-LTV, recent-bond, self-employed, fixed-rate, access-bond each get false hope.</td><td>Added honest persona-branching table (p.4).</td></tr>
+      <tr><td><strong>8</strong></td><td>No metrics / no measurement plan</td><td><span class="cf cf--med"><span class="dot"></span>Med</span></td><td>Without accept→register tracking, nothing is provable.</td><td>Added the funnel-instrumentation + A/B table (p.10).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2">
+    <div class="box box--neutral mb0">
+      <div class="h4" style="margin-bottom:4px">Still open — verify before build</div>
+      <ul class="tight mb0" style="font-size:9px">
+        <li><strong>Switch commission % + clawback</strong> (bank→originator) — the gating unit-economics number.</li>
+        <li><strong>Bank appetite for multi-bank <em>switch</em> submissions</strong> vs purchase origination — confirm parity with each partner.</li>
+        <li>Exact reject-rate threshold that strains a bank relationship.</li>
+        <li>SA fixed-rate &amp; self-employed homeowner prevalence (to size the persona exclusions).</li>
+      </ul>
+    </div>
+    <div class="box box--win mb0">
+      <div class="box__h mb0"><span class="chip chip--win">VERDICT ON THE VERDICT</span></div>
+      <div class="mini mb0">The five sharpening moves and the savings-first / progressive-ladder / human-follow-up spine are <strong>sound</strong>. The draft was overconfident on inventory, regulatory frame, and defensibility — all now corrected. Net: <strong>don't rebuild the flow; do ship the net-of-cost Verdict + compliant nurture first, and treat the white space as a window to exploit fast.</strong></div>
+    </div>
+  </div>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 11 — Scrutiny Round</span></div>
+</section>
+
+<!-- ============ PAGE 12 · METHOD, CONFIDENCE & SOURCES ============ -->
+<section class="page">
+  <div class="eyebrow">Method, confidence &amp; sources</div>
+  <h2 class="h-sec">How this was built; what to trust.</h2>
+  <p class="h-sub">Four parallel research lanes (SA originators · international switching · CX/behavioural · SA regulatory), independently verified, then attacked by a blindspot scrutiny agent, then a second targeted research round. Public sources only. Inferences are flagged; a confident wrong number is worse than an honest "unknown."</p>
+
+  <div class="grid3" style="margin-bottom:9px">
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px"><span class="cf cf--hi"><span class="dot"></span>High confidence</span></div><div class="mini mb0">SA switching mechanics &amp; costs; bank cost-coverage (Absa tiers, FNB); POPIA s.18/s.69; NCA/FAIS applicability &amp; no-NCR-registration; competitor flow structures; CX field-count/phone/loss-aversion evidence; international mechanics.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px"><span class="cf cf--med"><span class="dot"></span>Medium</span></div><div class="mini mb0">Exact registration/cancellation rand figures (vary by bond size &amp; attorney); some competitors' field sequences behind registration walls; the precise rand "switch tipping point" for SA.</div></div>
+    <div class="box box--neutral mb0"><div class="h4" style="margin-bottom:3px"><span class="cf cf--lo"><span class="dot"></span>Unknown — go get it</span></div><div class="mini mb0">Bank→originator commission % on a switch + clawback terms; per-bank appetite for multi-bank switch submissions; SA fixed-rate &amp; thin-file prevalence. All require partner/bank confirmation.</div></div>
+  </div>
+
+  <div class="h4" style="margin-bottom:5px">Key sources</div>
+  <div class="src-list">
+    <div class="s"><b>SA switching costs/mechanics:</b> property24.com (is switching worthwhile); rateweb.co.za (refinance break-even); meridianfinance.co.za (2025 switch trend); capetownlawyer.co.za (bond attorney fees 2025).</div>
+    <div class="s"><b>SA originators:</b> ooba.co.za (Bond Indicator, refinance, oobarometer Q1/Q3 '26); betterbond.co.za (affordability, pre-approval, refinancing excl.); mortgagemarket.co.za + app + techfinancials.co.za (direct bank contracts, May '26); mortgages.easyequities.co.za.</div>
+    <div class="s"><b>SA bank switch journeys:</b> sahomeloans.com (switch calc, 10-step); capitechomeloans.co.za (Quick Cash); standardbank.co.za (switch, consent); personal.nedbank.co.za (switch); absa.co.za (Great Escape, move-your-home-loan); fnb.co.za (switch my home loan); investec.com.</div>
+    <div class="s"><b>International switching:</b> athena.com.au (refi, AcceleRATES); habito.com (remortgage); mojomortgages.com (rate-check, product-transfer); sprive.com; tembomoney.com; landc.co.uk; joust.com.au; better.com; rocketmortgage.com; AWS/Lendi agentic-AI case study.</div>
+    <div class="s"><b>CX &amp; behavioural:</b> Baymard Institute (form UX benchmark); Nielsen Norman Group (single-column, mobile forms); Nunes &amp; Drèze 2006 (endowed progress); Kahneman &amp; Tversky 1979 (loss aversion); vitaldesign/logit (phone-field case studies); outgrow (interactive calculators).</div>
+    <div class="s"><b>SA regulatory:</b> banking.org.za (NCA, FAIS); popia.co.za (s.11/18/26/69); michalsons.com + cliffedekkerhofmeyr.com (IR direct-marketing guidance + first enforcement notice); ooba.co.za (how to become a bond originator — no NCR registration); youverify.co (FICA KYC); ooba.co.za (fixed vs variable).</div>
+  </div>
+
+  <hr class="rule rule--soft">
+  <p class="mini mb0"><strong>One-line close.</strong> Bondly already has the best switching opening in South Africa. Make it <em>honest</em> (net-of-cost Verdict), make it <em>compounding</em> (compliant rate-watch), and make it <em>fast</em> (the window is open now, not forever) — and the switch becomes Bondly's category to lose. <span class="note" style="display:inline">This document is competitive intelligence and practitioner guidance, not legal advice; obtain formal SA financial-services legal sign-off before launch.</span></p>
+
+  <div class="foot"><span><strong>Bondly</strong> · Switching Onboarding Blueprint</span><span>Confidential · 12 — Sources</span></div>
+</section>
+
+</body>
+</html>

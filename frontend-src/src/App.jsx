@@ -470,8 +470,13 @@ function AppContent() {
           <Route path="/terms"          element={<Terms />} />
           <Route path="/paia"           element={<Paia />} />
           <Route path="/get-a-quote"    element={<Navigate to="/preapproval" replace />} />
-          <Route path="/switch"         element={<Switch />} />
-          <Route path="/switch/demo"    element={<Switch demo />} />
+          {/* Distinct keys force a remount between /switch and /switch/apply —
+              without them React reuses the one <Switch> instance and the ladder
+              mode state never resets when the route changes. */}
+          <Route path="/switch"         element={<Switch key="switch" />} />
+          {/* Dedicated info-gathering flow — entered from the verdict's "Lock in my estimate" */}
+          <Route path="/switch/apply"   element={<Switch apply key="switch-apply" />} />
+          <Route path="/switch/demo"    element={<Switch demo key="switch-demo" />} />
           <Route path="/contact"        element={<Contact />} />
           <Route path="/test"           element={<Contact />} />
           <Route path="/guarantee"      element={<Guarantee />} />

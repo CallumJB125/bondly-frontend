@@ -10,6 +10,7 @@ import { publicStats } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import GetAnOfferButton from './GetAnOfferButton.jsx';
 import LandingNav from './LandingNav.jsx';
+import UnderstandYourBond from './UnderstandYourBond.jsx';
 import './Landing.css';
 
 // Env-aware sister-product URL (Bondly Home / origination), mirroring the
@@ -764,6 +765,7 @@ export default function Landing() {
       <LandingNav />
       <Hero />
       <HowItWorks />
+      <UnderstandYourBond />
       <CaseStudy />
       <BanksSaver />
       <FAQ />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { fmt, fmtRange, fmtShort } from '@bondly/ui/lib/format.js';
 import { calcSavingsRange, calcSwitchOutcomes, calcSwitchScore } from '@bondly/ui/lib/finance.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -13,6 +13,44 @@ import './Switch.css';
 
 const PRIME = PRIME_RATE;
 const BANKS = ['ABSA', 'FNB', 'Nedbank', 'Standard Bank', 'Capitec', 'Investec', 'SA Home Loans'];
+
+const ORIGINATION_URL = typeof window !== 'undefined'
+  ? (import.meta.env?.VITE_ORIGINATION_URL || 'http://localhost:5174')
+  : 'http://localhost:5174';
+
+// Landing-grade footer (copied from Landing.jsx so /switch closes like /home)
+function SwitchFooter() {
+  return (
+    <footer className="ls-wrap ls-footer">
+      <div>© 2026 Bondly (Pty) Ltd · Registered bond originator · POPIA compliant · Not a bank; rates indicative.</div>
+      <div className="ls-footer__links">
+        <Link to="/privacy">Privacy</Link>
+        <Link to="/terms">Terms</Link>
+        <Link to="/paia">PAIA</Link>
+        <a href={ORIGINATION_URL} target="_blank" rel="noopener noreferrer">Bondly Home ↗</a>
+      </div>
+    </footer>
+  );
+}
+
+// ── Inline icons (currentColor, hairline) — never emoji ───────────────────────
+const CheckIcon = ({ className = 'switch-ico' }) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M3 8.5l3.2 3.2L13 4.8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const DocIcon = ({ className = 'switch-ico' }) => (
+  <svg className={className} width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+    <path d="M4 1.5h6L14.5 6v10.5h-11V1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    <path d="M10 1.5V6h4.5M6 9.5h6M6 12.5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const UploadIcon = ({ className = 'switch-ico' }) => (
+  <svg className={className} width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+    <path d="M11 14V4m0 0L7 8m4-4l4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4 14v3.5h14V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 // Income bands shown on the lightweight qualify step (no exact rands at first
 // touch). Each maps to a representative midpoint sent as monthlyIncome so the
@@ -46,12 +84,12 @@ function StatementReadingReveal({ onComplete, hasFile = false }) {
   return (
     <div className="switch-reading">
       <div className="switch-reading__icon">
-        {done ? '✓' : <div className="spinner switch-reading__spinner" />}
+        {done ? <CheckIcon className="switch-reading__icon-svg" /> : <div className="spinner switch-reading__spinner" />}
       </div>
       <div className="switch-reading__steps">
         {steps.map((s, i) => (
           <div key={s} className={`switch-reading__step ${i <= step ? 'switch-reading__step--done' : ''} ${i === step && !done ? 'switch-reading__step--active' : ''}`}>
-            <span className="switch-reading__step-dot">{i < step || done ? '✓' : i === step ? '◐' : '○'}</span>
+            <span className="switch-reading__step-dot">{i < step || done ? <CheckIcon /> : i === step ? '◐' : '○'}</span>
             {s}
           </div>
         ))}
@@ -92,7 +130,7 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
             It costs nothing to let Bondly review your home loan with all 7 lenders. A formal assessment sometimes reveals a better outcome than an estimate can show.
           </div>
           <button
-            className="btn btn--lime switch-goodrate__btn"
+            className="ls-btn ls-btn--primary switch-goodrate__btn"
             onClick={() => {
               if (user) { onProceed(); }
               else { navigate('/register?intent=switch'); }
@@ -117,7 +155,7 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
             Drop your email and we'll alert you if prime moves or a bank starts undercutting your rate. No spam, unsubscribe in one click.
           </div>
           {status === 'done' ? (
-            <div className="switch-goodrate__watch-done">✓ You're on the list. We'll be in touch the moment something changes.</div>
+            <div className="switch-goodrate__watch-done"><CheckIcon /> You're on the list. We'll be in touch the moment something changes.</div>
           ) : (
             <form className="switch-goodrate__watch-form" onSubmit={submitWatch}>
               <input
@@ -142,6 +180,49 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
             </form>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Plain-language helper text under each score factor (grade 3–5 reading level)
+const SCORE_COMPONENT_DESC = {
+  rate:    'How much higher your rate is than the best rate.',
+  term:    'How many years you still have left to pay.',
+  balance: 'How much you still owe on your home.',
+};
+
+// "Your bond today" facts — lifted out of the verdict so the hero can show the
+// customer's own numbers on the right, beside the headline.
+function BondTodayFacts({ balance, currentRate, termYears = 20, livePrime }) {
+  const out = calcSwitchOutcomes(balance, currentRate, livePrime, termYears);
+  const rateGap = Math.max(0, currentRate - livePrime);
+  return (
+    <div className="switch-facts">
+      <div className="switch-facts__title">Your bond today</div>
+      <div className="switch-facts__grid">
+        <div className="switch-facts__item">
+          <span className="switch-facts__cap">What you still owe</span>
+          <span className="switch-facts__val">{fmt(balance)}</span>
+        </div>
+        <div className="switch-facts__item">
+          <span className="switch-facts__cap">Your interest rate</span>
+          <span className="switch-facts__val">{currentRate.toFixed(2)}%</span>
+          <span className={`switch-facts__tag ${rateGap > 0 ? 'switch-facts__tag--warn' : 'switch-facts__tag--ok'}`}>
+            {rateGap > 0 ? `${rateGap.toFixed(2)}% above prime` : 'at / below prime'}
+          </span>
+        </div>
+        <div className="switch-facts__item">
+          <span className="switch-facts__cap">What you pay each month</span>
+          <span className="switch-facts__val">≈ {fmt(out.currentPayment)}</span>
+        </div>
+        <div className="switch-facts__item">
+          <span className="switch-facts__cap">Years left to pay</span>
+          <span className="switch-facts__val">{termYears} {termYears === 1 ? 'year' : 'years'}</span>
+        </div>
+      </div>
+      <div className="switch-facts__note">
+        Bondly aims for a rate near prime ({livePrime.toFixed(2)}%) — lower than what you pay now. See how much that could help you below.
       </div>
     </div>
   );
@@ -194,14 +275,14 @@ function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLock
       <div className="switch-verdict__header">
         {saving > 0 ? (
           <>
-            <div className="switch-verdict__pill switch-verdict__pill--green">Based on people like you we've helped save</div>
-            <div className="switch-verdict__headline switch-verdict__headline--range">{fmtRange(range.low, range.high)}<span>/mo</span></div>
+            <div className="switch-verdict__pill"><CheckIcon /> Based on people like you we've helped save</div>
+            <div className="ls-serif switch-verdict__headline switch-verdict__headline--range">{fmtRange(range.low, range.high)}<span>/mo</span></div>
             <div className="switch-verdict__sub">estimated range if you let Bondly handle your switch</div>
           </>
         ) : (
           <>
             <div className="switch-verdict__pill switch-verdict__pill--grey">Looking good</div>
-            <div className="switch-verdict__headline" style={{ fontSize: 'clamp(1.5rem,4vw,2rem)' }}>Your bond looks competitive</div>
+            <div className="ls-serif switch-verdict__headline switch-verdict__headline--text">Your bond looks competitive</div>
             <div className="switch-verdict__sub">A free Bondly review will confirm whether there's room to improve</div>
           </>
         )}
@@ -246,13 +327,16 @@ function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLock
             <div className="switch-score__components">
               {components.map(c => (
                 <div className="switch-score__component" key={c.key}>
-                  <span className={`switch-score__component-key switch-score__seg--${c.key}`} aria-hidden="true" />
-                  <span className="switch-score__component-label">{c.label}</span>
+                  <div className="switch-score__component-head">
+                    <span className={`switch-score__component-key switch-score__seg--${c.key}`} aria-hidden="true" />
+                    <span className="switch-score__component-label">{c.label}</span>
+                    <span className="switch-score__component-meta">{componentValue(c.key)}</span>
+                    <span className="switch-score__component-pts">+{c.points}</span>
+                  </div>
+                  <p className="switch-score__component-desc">{SCORE_COMPONENT_DESC[c.key]}</p>
                   <span className="switch-score__component-track">
                     <span className={`switch-score__component-fill switch-score__seg--${c.key}`} style={{ width: `${Math.round(c.fill * 100)}%` }} />
                   </span>
-                  <span className="switch-score__component-meta">{componentValue(c.key)}</span>
-                  <span className="switch-score__component-pts">+{c.points}</span>
                 </div>
               ))}
             </div>
@@ -263,53 +347,27 @@ function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLock
               aria-expanded={scoreOpen}
               onClick={() => setScoreOpen(o => !o)}
             >
-              How this score is calculated & how to improve it
-              <span className="switch-score__disclose-icon" aria-hidden="true">{scoreOpen ? '–' : '+'}</span>
+              Understand your score better
+              <span className={`switch-score__disclose-icon${scoreOpen ? ' is-open' : ''}`} aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              </span>
             </button>
             {scoreOpen && (
               <div className="switch-score__disclose-body">
-                <p>Your score is built only from the details you gave us — never from the saving itself. Three things move it:</p>
+                <p>Your score comes only from the details you gave us — not from the savings. Three things change it:</p>
                 <ul>
-                  <li><strong>Rate headroom (up to 60):</strong> how far your {currentRate.toFixed(2)}% sits above the ~{livePrime.toFixed(2)}% prime rate Bondly targets. The bigger the gap, the more there is to claw back — anything beyond +2% is already maxed.</li>
-                  <li><strong>Years remaining (up to 25):</strong> the longer you have left, the more months a lower rate works in your favour.</li>
-                  <li><strong>Bond size (up to 15):</strong> the same rate gap is worth more rand on a bigger balance.</li>
+                  <li><strong>Rate headroom:</strong> how much higher your {currentRate.toFixed(2)}% rate is than the ~{livePrime.toFixed(2)}% prime rate Bondly aims for. A bigger gap means more to save.</li>
+                  <li><strong>Years remaining:</strong> the more years you have left to pay, the more a lower rate helps you.</li>
+                  <li><strong>Bond size:</strong> the same drop in rate saves more money on a bigger loan.</li>
                 </ul>
-                <p><strong>To firm up your number:</strong> a clean statement and confirmed income usually let banks offer their sharpest rate — you can add your statement in the next step.</p>
+                <p><strong>To raise your number:</strong> a clean bank statement and proof of income help banks give you their best rate. You can add your statement in the next step.</p>
               </div>
             )}
           </div>
 
-          {/* ② Your bond today — the facts, so they understand where they stand */}
-          <div className="switch-facts">
-            <div className="switch-facts__title">Your bond today</div>
-            <div className="switch-facts__grid">
-              <div className="switch-facts__item">
-                <span className="switch-facts__cap">Outstanding balance</span>
-                <span className="switch-facts__val">{fmt(balance)}</span>
-              </div>
-              <div className="switch-facts__item">
-                <span className="switch-facts__cap">Your interest rate</span>
-                <span className="switch-facts__val">{currentRate.toFixed(2)}%</span>
-                <span className={`switch-facts__tag ${rateGap > 0 ? 'switch-facts__tag--warn' : 'switch-facts__tag--ok'}`}>
-                  {rateGap > 0 ? `${rateGap.toFixed(2)}% above prime` : 'at / below prime'}
-                </span>
-              </div>
-              <div className="switch-facts__item">
-                <span className="switch-facts__cap">Monthly repayment</span>
-                <span className="switch-facts__val">≈ {fmt(out.currentPayment)}</span>
-              </div>
-              <div className="switch-facts__item">
-                <span className="switch-facts__cap">Years remaining</span>
-                <span className="switch-facts__val">{termYears} {termYears === 1 ? 'year' : 'years'}</span>
-              </div>
-            </div>
-            <div className="switch-facts__note">
-              Bondly targets a rate around prime ({livePrime.toFixed(2)}%). Here's what that does to your bond two different ways:
-            </div>
-          </div>
-
-          {/* ③ Two ways the same switch can work for you */}
+          {/* ② Two ways the same switch can work for you */}
           <div className="switch-paths">
+            <h3 className="switch-paths__title">How Bondly can help you</h3>
             <div className="switch-paths__grid">
               {/* Path A — pay less each month */}
               <div className="switch-path switch-path--pay">
@@ -366,7 +424,7 @@ function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLock
       {saving > 0 && (
         <div className="switch-verdict__cta-area">
           <button
-            className="btn btn--lime switch-verdict__cta"
+            className="ls-btn ls-btn--primary switch-verdict__cta"
             onClick={onLockIn}
           >
             Lock in my estimate →
@@ -427,8 +485,8 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
       </button>
 
       <div className="switch-statement__card">
-        <div className="switch-statement__icon">📄</div>
-        <h2 className="switch-statement__title">Want firmer, confirmed numbers?</h2>
+        <div className="switch-statement__icon"><DocIcon className="switch-statement__icon-svg" /></div>
+        <h2 className="ls-serif switch-statement__title">Want firmer, confirmed numbers?</h2>
         <p className="switch-statement__body">
           Optional — add your latest bank statement (PDF) and banks can confirm an exact offer instead of an estimate. You can skip this and a consultant will follow up either way.
         </p>
@@ -449,7 +507,7 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
         >
           {file ? (
             <div className="switch-statement__file-info">
-              <span className="switch-statement__file-icon">✓</span>
+              <span className="switch-statement__file-icon"><CheckIcon /></span>
               <span className="switch-statement__file-name">{file.name}</span>
               <button
                 type="button"
@@ -461,7 +519,7 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
             </div>
           ) : (
             <>
-              <div className="switch-statement__dropzone-icon">⬆</div>
+              <div className="switch-statement__dropzone-icon"><UploadIcon className="switch-statement__dropzone-icon-svg" /></div>
               <div className="switch-statement__dropzone-label">
                 Drag your PDF here, or <span className="switch-statement__dropzone-link">browse</span>
               </div>
@@ -485,7 +543,7 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
           </div>
         ) : (
           <button
-            className="btn btn--lime switch-statement__cta"
+            className="ls-btn ls-btn--primary switch-statement__cta"
             onClick={handleGetOffers}
           >
             {file ? 'Get my real offers →' : 'Upload statement to continue →'}
@@ -507,16 +565,46 @@ function StatementUpload({ onProceed, onBack, onSkip }) {
 // ── Main Switch page ──────────────────────────────────────────────────────────
 const DEMO_VALUES = { balance: '1200000', rate: String(PRIME + 1.75), term: '20', bank: 'ABSA' };
 
-export default function Switch({ demo = false }) {
+// Bond data + correlationId are handed from the verdict's "Lock in my estimate"
+// to the dedicated /switch/apply info-gathering route via sessionStorage so the
+// staged lead keeps stitching across the route change.
+const APPLY_KEY = 'bondly_switch_apply';
+function readApplyPayload() {
+  try {
+    const raw = sessionStorage.getItem(APPLY_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+export default function Switch({ demo = false, apply = false }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { primeRate: livePrime } = useRateSettings();
+
+  // On the dedicated apply route, the bond data is carried from the verdict. If
+  // someone lands here directly (refresh / deep-link) with nothing stored, send
+  // them back to the estimate so they always start from a real number.
+  const applyPayload = apply ? readApplyPayload() : null;
+  useEffect(() => {
+    if (apply && !applyPayload) { navigate('/switch', { replace: true }); return; }
+    if (apply) window.scrollTo(0, 0);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Call getInitialForm exactly once via ref so sessionStorage is only consumed once
   const initialFormRef = useRef(null);
   if (initialFormRef.current === null) {
     initialFormRef.current = (() => {
       if (demo) return { ...DEMO_VALUES, prime: '' };
+      if (apply) {
+        const p = applyPayload || {};
+        return {
+          balance: p.balance != null ? String(p.balance) : '',
+          rate: p.rate != null ? String(p.rate) : String(PRIME + DEFAULT_RATE_SPREAD),
+          term: p.term != null ? String(p.term) : '20',
+          bank: p.bank || '',
+          prime: p.prime != null ? String(p.prime) : '',
+        };
+      }
       const base = { balance: '', rate: String(PRIME + DEFAULT_RATE_SPREAD), term: '20', bank: '', prime: '' };
       try {
         const stored = sessionStorage.getItem('bondly_hero_switch');
@@ -560,7 +648,11 @@ export default function Switch({ demo = false }) {
 
   // Auto-show estimate when user arrives with carried-over numbers
   const prefilled = !demo && parseFloat(initialForm.balance) > 0 && !!initialForm.rate;
-  const initialMode = demo ? 'verdict' : prefilled ? 'verdict' : 'form';
+  // On the apply route the verdict is already behind us — drop straight into the
+  // info-gathering ladder (logged-in users skip the email rung, as before).
+  const initialMode = apply
+    ? (user ? 'qualify' : 'lockin')
+    : demo ? 'verdict' : prefilled ? 'verdict' : 'form';
 
   // Progressive ladder modes:
   // 'form' | 'reading' | 'verdict' | 'lockin' | 'qualify' | 'statement'
@@ -577,6 +669,7 @@ export default function Switch({ demo = false }) {
   const correlationRef = useRef(null);
   if (correlationRef.current === null) {
     correlationRef.current = (() => {
+      if (apply && applyPayload?.correlationId) return applyPayload.correlationId;
       try { return crypto.randomUUID(); } catch { return `lead_${Date.now()}_${Math.round(Math.random() * 1e9)}`; }
     })();
   }
@@ -601,11 +694,22 @@ export default function Switch({ demo = false }) {
     setMode('formal');
   }
 
-  // Primary ladder entry from the verdict. Logged-in users already have an
-  // email on file, so skip the lock-in rung and go straight to qualify.
+  // Primary ladder entry from the verdict. Hand the bond data + correlationId to
+  // the dedicated /switch/apply route, which owns the whole info-gathering flow
+  // (no "is your bank giving you the best rate?" hero — just collect & quote).
   function handleLockIn() {
     trackAction('switch_verdict_lockin_clicked');
-    setMode(user ? 'qualify' : 'lockin');
+    try {
+      sessionStorage.setItem(APPLY_KEY, JSON.stringify({
+        balance: String(balance),
+        rate: String(currentRate),
+        term: String(termYears),
+        bank: form.bank,
+        prime: String(estimatePrime),
+        correlationId: correlationRef.current,
+      }));
+    } catch {}
+    navigate('/switch/apply');
   }
 
   // Optional accelerator — jump straight to the statement step.
@@ -635,6 +739,14 @@ export default function Switch({ demo = false }) {
   const rateOutOfRange = currentRate <= 0 || currentRate > 30;
   const balance      = balanceInput > 0 ? balanceInput : 1_200_000;
 
+  // In verdict mode the hero becomes a 1:2 two-column — headline on the left,
+  // the customer's "Your bond today" facts on the right. Only when there's a
+  // real saving to talk about (the good-rate branch has no facts panel).
+  const heroSaving = Math.round(
+    calcSwitchOutcomes(balance, currentRate, estimatePrime, termYears).monthlySaving
+  );
+  const showHeroFacts = mode === 'verdict' && heroSaving > 0;
+
   // Staged lead capture. Each rung enriches the same lead via correlationId.
   // Demo never posts. Fire-and-forget — an advisor follows up regardless.
   async function postLead(extra) {
@@ -657,21 +769,35 @@ export default function Switch({ demo = false }) {
   }
 
   return (
-    <div className="switch-page">
+    <div className="switch-page ls-page">
       <LandingNav />
       {/* Hero */}
       <section className="switch-hero">
-        <div className="container switch-hero__inner">
+        <div className={`ls-wrap switch-hero__inner${
+          apply
+            ? ' switch-hero__inner--apply'
+            : (mode === 'form' || mode === 'reading' || mode === 'reading-statement')
+              ? ''
+              : showHeroFacts
+                ? ' switch-hero__inner--facts'
+                : ' switch-hero__inner--solo'
+        }`}>
           <div className="switch-hero__copy">
-            <div className="section-pill section-pill--lime">Free bond switch comparison</div>
-            <h1 className="switch-hero__title">Is your bank giving you the best rate?</h1>
-            <p className="switch-hero__sub">
-              Most SA homeowners are on their bank's default rate — not their best. Enter a few details and we'll show you what you could save if we handle the switch for you.
-            </p>
+            {apply ? (
+              <div className="ls-eyebrow switch-hero__eyebrow">Lock in your estimate · get your quote</div>
+            ) : (
+              <>
+                <div className="ls-eyebrow switch-hero__eyebrow">Free bond switch comparison</div>
+                <h1 className="ls-serif switch-hero__title">Is your bank giving you the best rate?</h1>
+                <p className="switch-hero__sub">
+                  Most homeowners could save on their bond rate, but are never given the opportunity. See how much you could save based on your details.
+                </p>
+              </>
+            )}
             <div className="switch-hero__trust">
-              <span>✓ Free for homeowners</span>
-              <span>✓ No credit check</span>
-              <span>✓ 4–8 weeks to switch</span>
+              <span><CheckIcon /> Get pre-approved in minutes</span>
+              <span><CheckIcon /> Paperwork handled for you</span>
+              <span><CheckIcon /> Completely free</span>
             </div>
           </div>
 
@@ -687,7 +813,7 @@ export default function Switch({ demo = false }) {
                 className="switch-form__statement-shortcut"
                 onClick={() => setMode('statement')}
               >
-                <span className="switch-form__statement-shortcut-icon">📄</span>
+                <span className="switch-form__statement-shortcut-icon"><DocIcon /></span>
                 <span>
                   <strong>Upload your bank statement instead</strong>
                   <span className="switch-form__statement-shortcut-sub"> — we'll read your details automatically (90 sec)</span>
@@ -704,9 +830,9 @@ export default function Switch({ demo = false }) {
                     onChange={set('balance')}
                   />
                   <p className="switch-form__field-hint">Roughly what you still owe — check your latest home-loan statement or banking app. An estimate is fine.</p>
-                  {submitTried && !form.balance && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Please enter your outstanding balance.</p>}
-                  {balanceTooHigh && <p style={{ color: '#b45309', background: '#fef3c7', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>That seems high — double-check you haven't added extra zeros.</p>}
-                  {balanceNegative && <p style={{ color: '#dc2626', background: '#fee2e2', borderRadius: 6, padding: '5px 10px', fontSize: '0.8125rem', marginTop: 4 }}>Balance must be a positive amount.</p>}
+                  {submitTried && !form.balance && <p className="switch-form__msg switch-form__msg--err">Please enter your outstanding balance.</p>}
+                  {balanceTooHigh && <p className="switch-form__msg switch-form__msg--warn">That seems high — double-check you haven't added extra zeros.</p>}
+                  {balanceNegative && <p className="switch-form__msg switch-form__msg--err">Balance must be a positive amount.</p>}
                 </div>
                 <div>
                   <label className="switch-form__label">
@@ -725,7 +851,7 @@ export default function Switch({ demo = false }) {
                     </div>
                   </label>
                   <p className="switch-form__field-hint">We've pre-filled a typical rate. Change it if you know yours — check your debit-order letter or bank app.</p>
-                  {rateOutOfRange && form.rate !== '' && <p style={{ color: '#dc2626', fontSize: '0.8125rem', marginTop: 4 }}>SA home loan rates are typically between 8% and 25% — please check your entry.</p>}
+                  {rateOutOfRange && form.rate !== '' && <p className="switch-form__msg switch-form__msg--err">SA home loan rates are typically between 8% and 25% — please check your entry.</p>}
                 </div>
                 <label className="switch-form__label">
                   Years left on your bond <span style={{ fontWeight: 400, fontSize: '0.85em', opacity: 0.65 }}>(optional)</span>
@@ -757,7 +883,7 @@ export default function Switch({ demo = false }) {
 
               {form.balance && parseFloat(form.balance) > 0 && (
                 <div className="switch-form__ready-nudge">
-                  ✓ Balance captured — hit the button below to see your full breakdown
+                  <CheckIcon /> Balance captured — hit the button below to see your full breakdown
                 </div>
               )}
               <div className="switch-form__reassurance">
@@ -771,7 +897,7 @@ export default function Switch({ demo = false }) {
               </div>
               <button
                 type="submit"
-                className="btn btn--lime switch-form__submit"
+                className="ls-btn ls-btn--primary switch-form__submit"
               >
                 Continue →
               </button>
@@ -792,13 +918,24 @@ export default function Switch({ demo = false }) {
               <StatementReadingReveal onComplete={handleStatementReadingDone} hasFile={true} />
             </div>
           )}
+
+          {showHeroFacts && (
+            <div className="switch-hero__facts">
+              <BondTodayFacts
+                balance={balance}
+                currentRate={currentRate}
+                termYears={termYears}
+                livePrime={estimatePrime}
+              />
+            </div>
+          )}
         </div>
       </section>
 
       {/* Verdict / ladder steps / Confirm */}
       {(mode === 'verdict' || mode === 'lockin' || mode === 'qualify' || mode === 'statement' || mode === 'formal' || mode === 'confirm') && (
         <section className="switch-verdict-section">
-          <div className="container">
+          <div className="ls-wrap">
             {mode === 'verdict' && (
               <SwitchVerdict
                 balance={balance}
@@ -855,8 +992,9 @@ export default function Switch({ demo = false }) {
       {/* How it works — always shown below */}
       {mode === 'form' && (
         <section className="switch-how">
-          <div className="container">
-            <h2 className="switch-how__title">How the switch works</h2>
+          <div className="ls-wrap">
+            <div className="switch-how__eyebrow">How it works</div>
+            <h2 className="ls-serif switch-how__title">Switching is simpler than you think</h2>
             <div className="switch-how__steps">
               {[
                 { n: '1', title: 'Compare in 90 seconds', body: 'Upload your statement or enter your bond details. We compare all 7 banks instantly.', time: '90 sec' },
@@ -866,7 +1004,7 @@ export default function Switch({ demo = false }) {
                 <div key={s.n} className="switch-how__step">
                   <div className="switch-how__step-num">{s.n}</div>
                   <div className="switch-how__step-time">{s.time}</div>
-                  <div className="switch-how__step-title">{s.title}</div>
+                  <div className="ls-serif switch-how__step-title">{s.title}</div>
                   <div className="switch-how__step-body">{s.body}</div>
                 </div>
               ))}
@@ -874,6 +1012,8 @@ export default function Switch({ demo = false }) {
           </div>
         </section>
       )}
+
+      <SwitchFooter />
     </div>
   );
 }
@@ -895,7 +1035,7 @@ function LockInStep({ defaultEmail = '', onSubmit }) {
   return (
     <div className="switch-contact switch-step fade-in">
       <div className="switch-step__rung">Step 1 of 3 · Lock in your estimate</div>
-      <h2 className="switch-contact__title">Lock in your estimate</h2>
+      <h2 className="ls-serif switch-contact__title">Lock in your estimate</h2>
       <p className="switch-contact__sub">Just an email or phone number to save your estimate and let a Bondly consultant follow up. No credit check, no obligation.</p>
       <p className="switch-contact__reassurance">Your details are only shared with banks that submit you an offer.</p>
       <form className="switch-contact__form" onSubmit={submit}>
@@ -907,7 +1047,7 @@ function LockInStep({ defaultEmail = '', onSubmit }) {
           Phone number
           <input className="switch-form__input" type="tel" placeholder="e.g. 082 555 1234" value={phone} onChange={e => setPhone(e.target.value)} required={!email} />
         </label>
-        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending' || !canSubmit}>
+        <button type="submit" className="ls-btn ls-btn--primary switch-form__submit" disabled={status === 'sending' || !canSubmit}>
           {status === 'sending' ? 'Saving…' : 'Lock in my estimate →'}
         </button>
         <p className="switch-form__note">No credit check · No obligation · POPIA compliant</p>
@@ -934,7 +1074,7 @@ function QualifyStep({ onSubmit, onSkip }) {
   return (
     <div className="switch-contact switch-step fade-in">
       <div className="switch-step__rung">Step 2 of 3 · A couple of quick questions</div>
-      <h2 className="switch-contact__title">Help us match the right banks</h2>
+      <h2 className="ls-serif switch-contact__title">Help us match the right banks</h2>
       <p className="switch-contact__sub">Two quick questions so we approach the lenders most likely to approve you. No exact figures needed yet.</p>
       <form className="switch-contact__form" onSubmit={submit}>
         <label className="switch-form__label">
@@ -954,7 +1094,7 @@ function QualifyStep({ onSubmit, onSkip }) {
             <option value="retired">Retired</option>
           </select>
         </label>
-        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending' || !canSubmit}>
+        <button type="submit" className="ls-btn ls-btn--primary switch-form__submit" disabled={status === 'sending' || !canSubmit}>
           {status === 'sending' ? 'Saving…' : 'Continue →'}
         </button>
         <button type="button" className="switch-step__skip" onClick={onSkip}>Skip for now →</button>
@@ -985,7 +1125,7 @@ function FormalDetailsStep({ onSubmit, onSkip }) {
   return (
     <div className="switch-contact switch-step fade-in">
       <div className="switch-step__rung">Final step · Ready to submit to banks</div>
-      <h2 className="switch-contact__title">Final details before we submit</h2>
+      <h2 className="ls-serif switch-contact__title">Final details before we submit</h2>
       <p className="switch-contact__sub">Banks legally need these to make you a formal offer. We only share them with lenders that come back with a deal.</p>
       <form className="switch-contact__form" onSubmit={submit}>
         <label className="switch-form__label">
@@ -1004,7 +1144,7 @@ function FormalDetailsStep({ onSubmit, onSkip }) {
           Property address <span className="switch-form__optional">(helps us approach banks faster)</span>
           <input className="switch-form__input" type="text" placeholder="e.g. 14 Main Road, Cape Town" value={form.propertyAddress} onChange={set('propertyAddress')} />
         </label>
-        <button type="submit" className="btn btn--lime switch-form__submit" disabled={status === 'sending'}>
+        <button type="submit" className="ls-btn ls-btn--primary switch-form__submit" disabled={status === 'sending'}>
           {status === 'sending' ? 'Submitting…' : 'Submit to banks →'}
         </button>
         <button type="button" className="switch-step__skip" onClick={onSkip}>I'll send these later →</button>
@@ -1042,8 +1182,8 @@ function SwitchConfirm({ balance, currentRate }) {
 
   return (
     <div className="switch-confirm fade-in">
-      <div className="switch-confirm__icon">✓</div>
-      <h2 className="switch-confirm__title">
+      <div className="switch-confirm__icon"><CheckIcon className="switch-confirm__icon-svg" /></div>
+      <h2 className="ls-serif switch-confirm__title">
         {firstName ? `You're in, ${firstName}.` : "You're in."}
       </h2>
       <p className="switch-confirm__body">
@@ -1094,11 +1234,11 @@ function SwitchConfirm({ balance, currentRate }) {
       </div>
 
       {user ? (
-        <button className="btn btn--lime" onClick={() => navigate('/dashboard', { state: { tab: 'bond', bondSubTab: 'switch' } })}>
+        <button className="ls-btn ls-btn--primary" onClick={() => navigate('/dashboard', { state: { tab: 'bond', bondSubTab: 'switch' } })}>
           Track progress in dashboard →
         </button>
       ) : (
-        <button className="btn btn--lime" onClick={() => navigate('/register?intent=switch')}>
+        <button className="ls-btn ls-btn--primary" onClick={() => navigate('/register?intent=switch')}>
           Create a free account to track progress →
         </button>
       )}

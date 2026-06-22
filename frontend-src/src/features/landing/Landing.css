@@ -21,7 +21,13 @@
   --ls-heading: #06143b;    /* headings over white/light bands */
   --ls-ink: #000000;        /* hairline borders + structural ink */
   --ls-muted: #5a5a5a;
-  --ls-radius: 4px;
+  --ls-radius: 4px;          /* structural: frames, dividers, bands, buttons, inputs */
+  /* Soft content-card recipe (calc card, bank chips, step/info cards). Cards
+     get a soft hairline + gentle rounding + a near-zero lift — never the hard
+     black 4px outline used for structural frames. */
+  --ls-card-border: #e3e9f1;
+  --ls-card-radius: 16px;
+  --ls-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   --ls-subtext: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 

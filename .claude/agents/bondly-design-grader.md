@@ -43,9 +43,9 @@ Do not give an 8 out of politeness or because effort was visible.
 | 1 | Typography fidelity | 1.5 | Display face on headlines/figures; tight leading (0.9–1.05) & negative tracking; kicker/eyebrow above each H2; correct scale; short headline wraps; tabular figures. |
 | 2 | Colour discipline | 1.5 | Navy interactive-only; cream/salmon/lemon/light-blue as band fills only; no off-palette hex (no teal/mint, random reds, purple); tasteful band rhythm (no two saturated bands stacked). |
 | 3 | Structure & spacing | 1.5 | 1200/32 container; ~88px section rhythm; signature grids (hero 1.15/.85, 3-up steps, split panel, sticky FAQ); on-scale spacing; nothing cramped or adrift. |
-| 4 | Brand rules | 1.5 | 4px radius throughout (named exceptions aside); 1px black hairline borders for structure; **zero stray shadows/blur/elevation**. |
+| 4 | Brand rules | 1.5 | 4px radius on structure / 16px on content cards; **1px black hairline for structure, soft `#e3e9f1` hairline on content cards** (never a hard black outline on a card); cards softly rounded with only the near-zero card lift; **no heavy/stray shadows/blur/elevation**. |
 | 5 | Component craft & reuse | 1.0 | Buttons/inputs/cards/pills/FAQ match landing exactly; `LandingNav` + landing Footer present; shared components reused where sensible. |
-| 6 | Visual-asset quality | 1.0 | >=1 crafted visual (generated image OR non-trivial SVG infographic); on-brand; protocol followed; not AI-sloppy; adds real value. |
+| 6 | Visual-asset quality | 1.0 | Crafted visuals present and on-brand: generated imagery for atmosphere/warmth **plus** SVG for structure/data as the content calls for. An all-diagram, photo-less page that feels cold loses points here even if the SVG is good. Not AI-sloppy; adds real value. |
 | 7 | Responsiveness | 1.0 | Mobile (390) AND large (1440) both clean: no overflow, overlap, squish, or broken grids; mobile collapses correctly. |
 | 8 | Overall taste & cohesion | 1.0 | The gestalt test: drop it next to `/home` — same company, same restraint, same polish? Confident, calm, uncluttered. |
 
