@@ -49,7 +49,11 @@ function getHeadlineReason(a) {
 
 function isExpiringSoon(expiresAt) {
   if (!expiresAt) return false;
-  return (new Date(expiresAt) - Date.now()) < 48 * 3600 * 1000;
+  // Must be in the FUTURE and within 48h. A past deadline is closed, not
+  // "expiring soon" — the old check returned true for past dates too, which
+  // made cards show "Closed" AND "expires soon" at once.
+  const diff = new Date(expiresAt) - Date.now();
+  return diff > 0 && diff < 48 * 3600 * 1000;
 }
 
 function expectedValue(a) {
@@ -503,8 +507,11 @@ export default function BankApplications() {
           const lStyle   = ltv != null ? ltvStyle(ltv) : null;
           const deadline = a.bidDeadline || a.expiresAt;
           const expiring = isExpiringSoon(deadline);
-          const expLabel = deadline
-            ? (timeUntil(deadline) === 'closed' ? 'Closed' : `Closes ${timeUntil(deadline)}`)
+          // The queue only lists biddable (open) deals, so a past nominal
+          // deadline is not "Closed" here — suppress the misleading label and
+          // only show genuine future-deadline pressure.
+          const expLabel = (deadline && timeUntil(deadline) !== 'closed')
+            ? `Closes ${timeUntil(deadline)}`
             : null;
 
           const hasFlags = a.fraudFlag || expiring || a.verifiedIncome || a.coApplicant;

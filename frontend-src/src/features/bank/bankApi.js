@@ -45,6 +45,7 @@ async function bankFetch(path, opts = {}) {
 
 export const bankApi = {
   login:   (email, password) => bankFetch('/api/bank/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  ssoLogin:(email)           => bankFetch('/api/bank/sso/simulated', { method: 'POST', body: JSON.stringify({ email }) }),
   logout:  ()                => bankFetch('/api/bank/logout', { method: 'POST' }).catch(() => {}),
   me:      ()                => bankFetch('/api/bank/me'),
   dashboard:    ()           => bankFetch('/api/bank/dashboard'),

@@ -37,6 +37,7 @@ export default function BankBids() {
 
   const filtered = bids.filter(b =>
     tab === 'active'   ? b.status === 'active' :
+    tab === 'pending'  ? b.status === 'pending_approval' :
     tab === 'won'      ? b.status === 'accepted' :
     tab === 'lost'     ? ['lost','rejected'].includes(b.status) :
     tab === 'expired'  ? b.status === 'expired' :
@@ -46,6 +47,7 @@ export default function BankBids() {
 
   const counts = {
     active:   bids.filter(b => b.status === 'active').length,
+    pending:  bids.filter(b => b.status === 'pending_approval').length,
     won:      bids.filter(b => b.status === 'accepted').length,
     lost:     bids.filter(b => ['lost','rejected'].includes(b.status)).length,
     expired:  bids.filter(b => b.status === 'expired').length,
@@ -106,6 +108,7 @@ export default function BankBids() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
         {[
           { id: 'active',    label: 'Active',    n: counts.active },
+          { id: 'pending',   label: 'Pending approval', n: counts.pending },
           { id: 'won',       label: 'Won',        n: counts.won },
           { id: 'lost',      label: 'Lost',       n: counts.lost },
           { id: 'expired',   label: 'Expired',    n: counts.expired },

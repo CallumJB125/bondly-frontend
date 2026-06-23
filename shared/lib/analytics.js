@@ -234,8 +234,9 @@ function flushReplay(reason) {
 // ── Keydown handler ───────────────────────────────────────────────────────────
 function handleKeydown(e) {
   resetInactivityTimer();
-  // Printable character typed = user engaged with what they clicked — not a dead click
-  if (e.key.length === 1) _pendingClick = null;
+  // Printable character typed = user engaged with what they clicked — not a dead click.
+  // e.key is undefined for some synthetic/autofill/IME keydown events → guard it.
+  if (e.key && e.key.length === 1) _pendingClick = null;
 }
 
 // ── Inactivity timer ──────────────────────────────────────────────────────────
