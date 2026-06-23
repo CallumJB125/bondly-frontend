@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
-import { bankApi, getBankToken, clearBankToken, getDecodedBankToken } from './bankApi.js';
+import { bankApi, getBankToken, clearBankToken, getDecodedBankToken, alertTypeEnabled } from './bankApi.js';
 import './bank.css';
 
 function OnboardingTour() {
@@ -70,9 +70,10 @@ export default function BankShell() {
     bankApi.standup().then(s => {
       const now = new Date().toISOString();
       const seed = [];
-      if (s.awaitingMyMilestone > 0) seed.push({ id: 'cm',    type: 'milestone',       text: `${s.awaitingMyMilestone} conveyancing milestone${s.awaitingMyMilestone > 1 ? 's' : ''} awaiting your action`, at: now, read: false });
-      if (s.fraudFlaggedActive > 0)  seed.push({ id: 'fraud', type: 'risk_alert',      text: `${s.fraudFlaggedActive} live application${s.fraudFlaggedActive > 1 ? 's' : ''} linked to a flagged fraud network`, at: now, read: false });
-      if (s.newApplications > 0)     seed.push({ id: 'new',   type: 'new_application',  text: `${s.newApplications} new application${s.newApplications > 1 ? 's' : ''} in the last 24h`, at: now, read: false });
+      // #36 respect per-type alert preferences (muted types are not surfaced).
+      if (s.awaitingMyMilestone > 0 && alertTypeEnabled('milestone'))      seed.push({ id: 'cm',    type: 'milestone',       text: `${s.awaitingMyMilestone} conveyancing milestone${s.awaitingMyMilestone > 1 ? 's' : ''} awaiting your action`, at: now, read: false });
+      if (s.fraudFlaggedActive > 0 && alertTypeEnabled('risk_alert'))      seed.push({ id: 'fraud', type: 'risk_alert',      text: `${s.fraudFlaggedActive} live application${s.fraudFlaggedActive > 1 ? 's' : ''} linked to a flagged fraud network`, at: now, read: false });
+      if (s.newApplications > 0 && alertTypeEnabled('new_application'))     seed.push({ id: 'new',   type: 'new_application',  text: `${s.newApplications} new application${s.newApplications > 1 ? 's' : ''} in the last 24h`, at: now, read: false });
       if (seed.length) setNotifications(prev => [...seed, ...prev.filter(p => !['cm','fraud','new'].includes(p.id))]);
     }).catch(() => {});
     bankApi.openEventSource().then(src => {
@@ -80,7 +81,7 @@ export default function BankShell() {
       src.onmessage = e => {
         try {
           const d = JSON.parse(e.data);
-          if (['new_application','outbid','risk_alert','tier_change'].includes(d.type)) {
+          if (['new_application','outbid','risk_alert','tier_change'].includes(d.type) && alertTypeEnabled(d.type)) {
             setNotifications(prev => [{
               id: Date.now(),
               type: d.type,
@@ -164,8 +165,9 @@ export default function BankShell() {
           {(me?.role === 'bank_admin') && (
             <>
               <SectionLabel>Admin</SectionLabel>
-              <NavLink to="/bank/team"     className={({isActive}) => isActive ? 'active' : ''}>Team</NavLink>
-              <NavLink to="/bank/settings" className={({isActive}) => isActive ? 'active' : ''}>Settings</NavLink>
+              <NavLink to="/bank/team"      className={({isActive}) => isActive ? 'active' : ''}>Team</NavLink>
+              <NavLink to="/bank/audit-log" className={({isActive}) => isActive ? 'active' : ''}>Access log</NavLink>
+              <NavLink to="/bank/settings"  className={({isActive}) => isActive ? 'active' : ''}>Settings</NavLink>
             </>
           )}
         </nav>

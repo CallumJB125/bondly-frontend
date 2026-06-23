@@ -157,6 +157,7 @@ const BankApplicationDetail = lazy(() => import('./features/bank/BankApplication
 const BankBids              = lazy(() => import('./features/bank/BankBids.jsx'));
 const BankAcceptInvite      = lazy(() => import('./features/bank/BankAcceptInvite.jsx'));
 const BankTeam              = lazy(() => import('./features/bank/BankTeam.jsx'));
+const BankAuditLog          = lazy(() => import('./features/bank/BankAuditLog.jsx'));
 const BankDeals             = lazy(() => import('./features/bank/BankDeals.jsx'));
 const BankAutoBid           = lazy(() => import('./features/bank/BankAutoBid.jsx'));
 const BankAnalytics         = lazy(() => import('./features/bank/BankAnalytics.jsx'));
@@ -521,6 +522,7 @@ function AppContent() {
             <Route path="intelligence"            element={<BankIntelligence />} />
             <Route path="settings"                element={<BankSettings />} />
             <Route path="team"                    element={<BankTeam />} />
+            <Route path="audit-log"               element={<BankAuditLog />} />
           </Route>
 
           {/* Share / invite */}

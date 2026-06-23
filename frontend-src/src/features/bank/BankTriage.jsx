@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { bankApi, bankFmtR, bankFmtPct } from './bankApi.js';
+import { bankApi, bankFmtR, bankFmtPct, downloadCsv } from './bankApi.js';
 
 const daysSince = (iso) => iso ? Math.floor((Date.now() - new Date(iso)) / 86400000) : null;
 
@@ -168,8 +168,29 @@ export default function BankTriage() {
 
   return (
     <>
-      <h2>Pipeline triage</h2>
-      <p className="lede">Your active bids ranked by winnability and value. Pursue the green, sharpen the amber, consider walking from the red.</p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2>Pipeline triage</h2>
+          <p className="lede">Your active bids ranked by winnability and value. Pursue the green, sharpen the amber, consider walking from the red.</p>
+        </div>
+        {sorted.length > 0 && (
+          <button
+            onClick={() => downloadCsv('bondly-triage', [
+              { key: 'ref', label: 'ref' },
+              { label: 'type', get: b => b.type === 'swap' ? 'Switch' : 'New bond' },
+              { label: 'amount', get: b => b.requestedAmount },
+              { label: 'qualityScore', get: b => b.qualityScore },
+              { label: 'yourRate', get: b => b.yourRate },
+              { label: 'lowestRate', get: b => b.trueLowest },
+              { key: 'winnability', label: 'winnability' },
+              { label: 'estLifetimeMargin', get: b => b.estLifetimeMargin },
+              { label: 'daysInPipeline', get: b => daysSince(b.submittedAt) },
+            ], sorted)}
+            style={{ padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, background: '#fff', border: '1px solid #d1d5db', color: '#0b1e2d', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            ↓ Export CSV
+          </button>
+        )}
+      </div>
 
       <TypologyGuidePanel />
 

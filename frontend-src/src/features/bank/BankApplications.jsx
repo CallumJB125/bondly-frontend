@@ -210,18 +210,27 @@ export default function BankApplications() {
     });
   }
 
-  function applyBulk(kind) {
+  async function applyBulk(kind) {
     const refs = selectedVisible;
     if (refs.length === 0) return;
-    if (kind === 'declined' && !window.confirm(`Decline ${refs.length} application${refs.length === 1 ? '' : 's'}? This can't be undone.`)) return;
+    const verb = kind === 'declined' ? 'Decline' : 'Refer to credit';
+    if (!window.confirm(`${verb} ${refs.length} application${refs.length === 1 ? '' : 's'}?${kind === 'declined' ? ' This withdraws any active bids on them.' : ''}`)) return;
+    // Optimistic local update.
+    const prevDecisions = decisions;
     setDecisions(prev => {
       const next = { ...prev };
       refs.forEach(ref => { next[ref] = kind; });
       return next;
     });
     setSelected(new Set());
-    const verb = kind === 'declined' ? 'Declined' : 'Referred to credit';
-    showToast(`${verb} ${refs.length} application${refs.length === 1 ? '' : 's'}.`, kind === 'declined' ? 'decline' : 'refer');
+    try {
+      const r = await bankApi.bulkDecide(refs, kind);
+      const pastTense = kind === 'declined' ? 'Declined' : 'Referred to credit';
+      showToast(`${pastTense} ${r.applied}/${r.total} application${r.total === 1 ? '' : 's'}.`, kind === 'declined' ? 'decline' : 'refer');
+    } catch (e) {
+      setDecisions(prevDecisions); // roll back on failure
+      showToast(`Could not ${verb.toLowerCase()}: ${e.message || 'error'}`, 'decline');
+    }
   }
 
   return (

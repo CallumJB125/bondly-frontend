@@ -50,6 +50,7 @@ function DecisionHeader({ a, d, ins }) {
 
   async function handleRefer() {
     if (!a?.ref) return;
+    if (!window.confirm('Refer this application to the credit committee for review?')) return;
     const prev = decision; setDecision('referred'); // optimistic
     try { await bankApi.refer(a.ref); showToast('Referred to the credit desk — the committee will review this file.', 'refer'); }
     catch (e) { setDecision(prev); showToast('Could not refer: ' + (e.message || 'error'), 'decline'); }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { bankApi, bankFmtPct, bankFmtR } from './bankApi.js';
+import { bankApi, bankFmtPct, bankFmtR, downloadCsv } from './bankApi.js';
 import LineChart from '../../components/LineChart.jsx';
 
 /**
@@ -21,8 +21,22 @@ export default function BankAnalytics() {
 
   return (
     <>
-      <h2>Portfolio &amp; risk</h2>
-      <p className="lede">How you're doing across the Bond Desk — what's working, what's not.</p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2>Portfolio &amp; risk</h2>
+          <p className="lede">How you're doing across the Bond Desk — what's working, what's not.</p>
+        </div>
+        <button
+          onClick={() => downloadCsv('bondly-analytics-win-rate-by-band', [
+            { key: 'band', label: 'qualityBand' },
+            { key: 'won', label: 'won' },
+            { key: 'lost', label: 'lost' },
+            { label: 'winRatePct', get: r => r.winRate == null ? '' : r.winRate },
+          ], data.winRateByScore || [])}
+          style={{ padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, background: '#fff', border: '1px solid #d1d5db', color: '#0b1e2d', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          ↓ Export CSV
+        </button>
+      </div>
 
       <div className="bank-kpis">
         <Kpi label="Total bids" v={s.totalBids} />

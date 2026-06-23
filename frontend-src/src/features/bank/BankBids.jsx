@@ -70,6 +70,13 @@ export default function BankBids() {
     ? Math.round(wonWithMargin.reduce((s, b) => s + b.spreadBps, 0) / wonWithMargin.length)
     : null;
 
+  // #45 Active bids expiring within 48h — needs attention before they lapse.
+  const expiringSoon = bids.filter(b => {
+    if (b.status !== 'active') return false;
+    const hrs = hoursUntil(b.expiresAt);
+    return hrs != null && hrs > 0 && hrs < 48;
+  }).length;
+
   return (
     <>
       <h2>My bids</h2>
@@ -81,6 +88,7 @@ export default function BankBids() {
           { label: 'Total bids', value: bids.length, sub: 'all time' },
           { label: 'Avg days to decision', value: avgDays != null ? avgDays + 'd' : '—', sub: 'won + lost bids' },
           { label: 'Avg spread (won)', value: avgMargin != null ? avgMargin + ' bps' : '—', sub: 'above prime rate' },
+          { label: 'Expiring ≤48h', value: expiringSoon, sub: 'active bids — act soon', bad: expiringSoon > 0 },
         ].map(s => (
           <div key={s.label} style={{
             flex: '1 1 120px', padding: '10px 14px',
