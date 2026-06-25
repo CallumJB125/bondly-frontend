@@ -849,12 +849,55 @@ function SectorHeatmap({ heatmaps, exposure }) {
         })}
       </div>
 
+      {/* Model validated on real data (A5) — surface the genuine Freddie Mac backtest */}
+      {ncrData?.freddie && (() => {
+        const f = ncrData.freddie;
+        const oot = f.out_of_time;                       // present after the out-of-time recompute
+        const pp = oot?.per_period;
+        // Headline = out-of-time loan-level AUC if available, else legacy in-sample CV
+        const headlineAuc = oot?.loan_level?.auc_roc ?? f.mean_auc_roc;
+        const inSampleAuc  = f.in_sample_random_cv?.mean_auc_roc ?? (oot ? null : f.mean_auc_roc);
+        const cells = oot ? [
+          ['AUC-ROC (OOT)', oot.loan_level?.auc_roc, v => v.toFixed(3)],
+          ['AUC-PR', pp?.auc_pr, v => `${v.toFixed(3)} · ${pp?.auc_pr_lift_vs_baseline}×`],
+          ['Brier skill', pp?.brier_skill_score, v => v.toFixed(3)],
+        ] : [
+          ['AUC-ROC', f.mean_auc_roc, v => v.toFixed(3)],
+          ['AUC-PR', f.mean_auc_pr, v => v.toFixed(3)],
+          ['Brier', f.mean_brier, v => v.toFixed(4)],
+        ];
+        return (
+        <div style={{ marginBottom: 28, background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 18px' }}>
+          <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+            Model Validated on Real Data <ProvenanceBadge kind="benchmark" />
+          </h3>
+          <p style={{ margin: '0 0 12px', color: C.muted, fontSize: '0.82rem' }}>
+            {oot
+              ? `Freddie Mac loan-level panel, honest out-of-time split — trained on loans originated ${oot.train_years?.[0]}–${oot.train_years?.slice(-1)[0]} (${(oot.train_loans||0).toLocaleString()} loans), tested on ${oot.test_years?.[0]}–${oot.test_years?.slice(-1)[0]} (${(oot.test_loans||0).toLocaleString()} loans). No loan or future period in training.`
+              : `Hazard model back-tested on the Freddie Mac loan-level panel — ${(f.total_loans||0).toLocaleString()} loans, grouped cross-validation (no loan in both train and test).`}
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+            {cells.map(([label, val, fmt]) => val != null && (
+              <div key={label} style={{ textAlign: 'center', padding: '10px 6px', background: '#0d1b2a', borderRadius: 6 }}>
+                <div style={{ fontSize: '0.62rem', color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{label}</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: C.text }}>{fmt(val)}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontFamily: SANS, fontSize: '0.68rem', color: C.faint, marginTop: 10, lineHeight: 1.4 }}>
+            {oot && inSampleAuc != null && <>Out-of-time AUC-ROC {headlineAuc?.toFixed(3)} vs {inSampleAuc.toFixed(3)} in-sample — discrimination holds across time. AUC-PR is a {pp?.auc_pr_lift_vs_baseline}× lift over the {((pp?.auc_pr_baseline||0)*100).toFixed(1)}% default base rate; Brier skill is near-zero (weak calibration at low prevalence). </>}
+            Real US benchmark (Freddie Mac). South African distress is structurally different — treat as a directional prior, not SA performance (SA synthetic out-of-time ≈ 0.63).
+          </div>
+        </div>
+        );
+      })()}
+
       {/* NCR calibration table */}
-      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1rem', fontWeight: 700 }}>
-        NCR Calibration Comparison
+      <h3 style={{ margin: '0 0 4px', color: C.text, fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+        NCR Calibration Comparison <ProvenanceBadge kind="illustrative" />
       </h3>
       <p style={{ margin: '0 0 12px', color: C.muted, fontSize: '0.82rem' }}>
-        Our sector default rates vs NCR targets from the backtest report
+        Modelled sector default rates (synthetic SA cohort) vs NCR sector targets — a directional calibration check, not a regulatory backtest.
       </p>
       {ncrData?.sectorCalibration ? (
         <div style={{ overflowX: 'auto' }}>
@@ -894,7 +937,7 @@ function SectorHeatmap({ heatmaps, exposure }) {
         </div>
       ) : (
         <div style={{ padding: '12px 16px', background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, color: C.muted, fontSize: '0.82rem' }}>
-          NCR calibration data not available — run backend/scripts/run-intelligence.mjs to generate model health data.
+          Sector calibration data is not available for this view.
         </div>
       )}
     </div>
@@ -1799,11 +1842,11 @@ function TrendsTab({ data }) {
 const CX = 270, CY = 178;
 function buildFanio() {
   const mY = [58,118,178,238,298];
-  return { nodes:[{id:'SRC',x:80,y:178,r:20,lab:'SRC'},...mY.map((y,i)=>({id:'M'+i,x:270,y,r:13,lab:'M·'+(i+1)})),{id:'COL',x:470,y:178,r:20,lab:'COL'}], edges:[...mY.map((_,i)=>({a:'SRC',b:'M'+i,w:2})),...mY.map((_,i)=>({a:'M'+i,b:'COL',w:2}))] };
+  return { nodes:[{id:'SRC',x:80,y:178,r:20,lab:'EMP'},...mY.map((y,i)=>({id:'M'+i,x:270,y,r:13,lab:'APP·'+(i+1)})),{id:'COL',x:470,y:178,r:20,lab:'PAYER'}], edges:[...mY.map((_,i)=>({a:'SRC',b:'M'+i,w:2})),...mY.map((_,i)=>({a:'M'+i,b:'COL',w:2}))] };
 }
 function buildCycle() {
   const n=6,R=110,nodes=[],edges=[];
-  for(let i=0;i<n;i++){const ang=(-90+i*360/n)*Math.PI/180;nodes.push({id:'S'+i,x:CX+R*Math.cos(ang),y:CY+R*Math.sin(ang),r:15,lab:'E·'+(i+1)});edges.push({a:'S'+i,b:'S'+((i+1)%n),w:2.2});}
+  for(let i=0;i<n;i++){const ang=(-90+i*360/n)*Math.PI/180;nodes.push({id:'S'+i,x:CX+R*Math.cos(ang),y:CY+R*Math.sin(ang),r:15,lab:'APP·'+(i+1)});edges.push({a:'S'+i,b:'S'+((i+1)%n),w:2.2});}
   return {nodes,edges};
 }
 function buildStar() {
@@ -1816,13 +1859,70 @@ function buildLoose() {
   return { nodes:pts.map((p,i)=>({id:'L'+i,x:p[0],y:p[1],r:i===7?17:12,lab:i===7?'AGT':'C·'+(i+1)})), edges:[0,1,2,3,4,5,6].map(i=>({a:'L7',b:'L'+i,w:1.4})) };
 }
 
+// Mortgage-origination linkage typologies — what is actually detectable from the
+// data Bondly holds (statements, payslips, KYC, application, aggregator flow).
+// NOT payments/AML mule rings: there is no inter-account settlement data here.
 const FRAUD_NETS = [
-  { id:'mule',   label:'Mule consolidation network', typ:'Mule network',        risk:88, status:'Open',          exp:4.2, apps:2, fatf:'Layering · mule network',      why:'Funds fan out from one source to 5 pass-through accounts and reconsolidate to a single collector within 72 h. Retention ≈ 0 — textbook layering.',                   action:'Hold bids · enhanced due diligence · STR review', g:buildFanio() },
-  { id:'shell',  label:'Round-trip / shell chain',   typ:'Shell & round-tripping',risk:74,status:'Open',         exp:6.8, apps:0, fatf:'Integration · round-tripping',  why:'Value cycles through 6 entities with no operational footprint and returns to origin — a closed money cycle.',                                                           action:'Refer · verify beneficial ownership',            g:buildCycle() },
-  { id:'synth',  label:'Synthetic-identity cluster', typ:'Synthetic identity',   risk:69, status:'Open',         exp:3.1, apps:4, fatf:'Fraud · synthetic ID',          why:'6 applications share one device fingerprint, address and employer string while presenting distinct identities.',                                                            action:'Manual KYC · biometric verification',            g:buildStar()  },
-  { id:'legit',  label:'Normal referral cluster',    typ:'No typology detected', risk:18, status:'Cleared',      exp:5.4, apps:7, fatf:'—',                             why:'Organic cluster from one estate-agent branch; relationships explained by a shared broker, not illicit linkage.',                                                        action:'No action — monitor only',                       g:buildLoose() },
+  { id:'employer', label:'Shared-employer application cluster', typ:'Employer / income linkage',     risk:84, status:'Open',     exp:4.2, apps:3, fatf:'Income misrepresentation · shared employer', why:'5 applications cite the same employer with near-identical payslip layouts, and salary "deposits" originate from a single personal account rather than a payroll run — consistent with fabricated or shared income documents.', action:'Verify employer independently · request payroll confirmation', g:buildFanio() },
+  { id:'broker',   label:'Broker-steered valuation cluster',    typ:'Broker / conveyancer linkage',   risk:71, status:'Open',     exp:6.8, apps:0, fatf:'Collateral inflation · single broker',       why:'6 applications routed through one broker–conveyancer pair show purchase prices above comparable Deeds Office transfers for the same suburbs — possible coordinated valuation inflation.', action:'Independent valuation · review broker history', g:buildCycle() },
+  { id:'synth',    label:'Duplicate-identity cluster',          typ:'Synthetic / duplicate identity', risk:66, status:'Open',     exp:3.1, apps:4, fatf:'Identity fraud · shared attributes',       why:'6 applications share an address, employer string and bank-account beneficiary while presenting distinct identities — a synthetic-identity or duplicate-application signature.', action:'Manual KYC · cross-application identity check', g:buildStar()  },
+  { id:'legit',    label:'Normal referral cluster',             typ:'No linkage detected',            risk:18, status:'Cleared',  exp:5.4, apps:7, fatf:'—',                                       why:'Organic cluster from one estate-agent branch; relationships explained by a shared broker, not illicit linkage.', action:'No action — monitor only', g:buildLoose() },
 ];
 const ST_COLOR = { Open: C.high, Investigating: C.medium, Cleared: C.low };
+
+// Income Integrity (A5) — the REAL income-fraud signal: declared payslip income
+// vs verified bank-statement deposits, aggregated from /api/bank/income-integrity.
+function IncomeIntegrityCard() {
+  const [d, setD]     = useState(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    const t = localStorage.getItem('bondly_bank_token');
+    fetch('/api/bank/income-integrity', { headers: { Authorization: t ? `Bearer ${t}` : '' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(j => j?.success ? setD(j.data) : setErr(true))
+      .catch(() => setErr(true));
+  }, []);
+  if (err || !d) return null;
+  const v = d.verdicts || {};
+  const cells = [
+    ['Consistent',   v.consistent   ?? 0, C.low,    'Declared income matches bank deposits'],
+    ['Discrepancy',  v.inconsistent ?? 0, C.high,   'Declared income materially exceeds deposits (salaried)'],
+    ['Ambiguous',    v.ambiguous    ?? 0, C.medium, 'Borderline / gross-estimate — needs review'],
+    ['Unverifiable', v.unverifiable ?? 0, '#8b9bb4', 'Variable/commission/informal income — one month is not enough to judge'],
+    ['No data',      v.unverified   ?? 0, C.muted,  'Missing payslip or statement'],
+  ];
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px', marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <h3 style={{ margin: 0, fontFamily: DISP, fontSize: '1.05rem', fontWeight: 600, color: C.text }}>Income Integrity</h3>
+        <ProvenanceBadge kind="real" />
+      </div>
+      <p style={{ margin: '0 0 12px', color: C.muted, fontSize: '0.8rem' }}>
+        Declared payslip income vs verified bank-statement deposits across {d.total} open application{d.total === 1 ? '' : 's'} ({d.checked} cross-checked). Computed from live platform data — the primary income-fraud signal for mortgage origination. Variable/commission/informal earners are held back as <em>Unverifiable</em> (a single month can't fairly judge lumpy deposits), never flagged as a discrepancy.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8, marginBottom: d.flagged?.length ? 14 : 0 }}>
+        {cells.map(([label, n, col, tip]) => (
+          <div key={label} title={tip} style={{ textAlign: 'center', padding: '10px 6px', background: '#0d1b2a', borderRadius: 6 }}>
+            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: col }}>{n}</div>
+            <div style={{ fontSize: '0.58rem', color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+      {d.flagged?.length > 0 && (
+        <div>
+          <div style={{ fontFamily: MONO, fontSize: 9.5, textTransform: 'uppercase', color: C.faint, marginBottom: 6 }}>Largest income mismatches</div>
+          {d.flagged.slice(0, 5).map((f, i) => (
+            <div key={f.ref || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < Math.min(d.flagged.length, 5) - 1 ? `1px solid ${C.border}` : 'none', fontSize: '0.78rem' }}>
+              <span style={{ fontFamily: MONO, color: C.body, flexShrink: 0 }}>{f.ref}</span>
+              <span style={{ color: C.muted, flex: 1, textAlign: 'center' }}>declared {randShort(f.declaredMonthly)} · bank {randShort(f.bankMonthly)}</span>
+              <span style={{ color: C.high, fontWeight: 700, flexShrink: 0 }}>{f.deltaPct != null ? (f.deltaPct > 0 ? '+' : '') + Math.round(f.deltaPct) + '%' : '—'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function FraudNetworksTab({ heatmaps }) {
   const [sel, setSel]         = useState(FRAUD_NETS[0]);
@@ -1839,6 +1939,15 @@ function FraudNetworksTab({ heatmaps }) {
 
   // Real counts from heatmaps if available
   const typo = heatmaps?.fraudTypologies || {};
+  // Map backend typology keys to mortgage-origination-appropriate labels
+  // (reframing leftover AML/mule terms to application-linkage equivalents).
+  const TYPO_LABELS = {
+    syntheticIdentity: 'Synthetic / duplicate identity',
+    muleConsolidation: 'Shared-beneficiary cluster',
+    shellRoundTrip:    'Broker / conveyancer round-trip',
+    incomeInflation:   'Income inflation',
+    documentForgery:   'Document forgery',
+  };
 
   return (
     <div style={{ padding: '20px 28px', overflowY: 'auto', flex: 1 }}>
@@ -1848,7 +1957,7 @@ function FraudNetworksTab({ heatmaps }) {
           <Flag size={15} color={C.high} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 13, color: C.high }}>{urgentApps} live application{urgentApps > 1 ? 's' : ''} in your active bids</span>
-            <span style={{ fontFamily: SANS, fontSize: 12, color: '#e07070', marginLeft: 6 }}>are linked to flagged fraud networks — review before bidding closes.</span>
+            <span style={{ fontFamily: SANS, fontSize: 12, color: '#e07070', marginLeft: 6 }}>are linked to flagged application clusters — review before bidding closes.</span>
           </div>
           <button style={{ flexShrink: 0, padding: '5px 12px', background: C.high, border: 'none', borderRadius: 6, color: '#fff', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer' }}>Review now</button>
         </div>
@@ -1856,9 +1965,12 @@ function FraudNetworksTab({ heatmaps }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(70,197,146,0.05)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 14px', marginBottom: 18 }}>
         <Lock size={14} color={C.low} />
-        <span style={{ fontFamily: SANS, fontSize: 12, color: C.body, flex: 1 }}>Anonymised network intelligence. Node colours = risk score (green low → red high). Arrows show fund flow direction. Identities resolve only inside <strong style={{ color: C.text }}>your own bid review</strong>; cross-market stays k-anonymised (POPIA/FIC compliant).</span>
+        <span style={{ fontFamily: SANS, fontSize: 12, color: C.body, flex: 1 }}>Anonymised application-linkage intelligence. Node colours = risk score (green low → red high). Links show shared attributes between applications (employer, address, bank-account beneficiary, broker/conveyancer) — not money flow. Identities resolve only inside <strong style={{ color: C.text }}>your own bid review</strong>; cross-market stays k-anonymised (POPIA/FIC compliant).</span>
         <ProvenanceBadge kind="illustrative" />
       </div>
+
+      {/* Income Integrity — REAL signal, shown above the illustrative linkage clusters */}
+      <IncomeIntegrityCard />
 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
@@ -1907,7 +2019,7 @@ function FraudNetworksTab({ heatmaps }) {
               <GitBranch size={12} />{sel.g.nodes.length} entities · {sel.g.edges.length} links
             </span>
           </div>
-          <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginBottom: 6 }}>tap a node to inspect · arrows show flow direction</div>
+          <div style={{ fontFamily: SANS, fontSize: 11.5, color: C.faint, marginBottom: 6 }}>tap a node to inspect · links = shared attributes between applications</div>
           <svg viewBox="0 0 560 360" style={{ width: '100%', height: 'auto' }}>
             <defs>
               <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
@@ -1950,7 +2062,7 @@ function FraudNetworksTab({ heatmaps }) {
               <span style={{ fontFamily: DISP, fontSize: 44, fontWeight: 600, color: riskColor(sel.risk), lineHeight: 0.9 }}>{sel.risk}</span>
               <span style={{ fontFamily: SANS, fontSize: 13, color: C.body }}>{sel.typ}</span>
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, marginBottom: 14 }}>FATF: {sel.fatf}</div>
+            <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, marginBottom: 14 }}>Typology: {sel.fatf}</div>
             <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase', color: C.faint, marginBottom: 6 }}>Why it flagged</div>
             <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.body, lineHeight: 1.55, marginBottom: 14 }}>{sel.why}</div>
             <div style={{ display: 'flex', gap: 18, marginBottom: 14 }}>
@@ -1988,7 +2100,7 @@ function FraudNetworksTab({ heatmaps }) {
               <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase', color: C.faint, marginBottom: 10 }}>Live typology counts</div>
               {Object.entries(typo).map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SANS, fontSize: 12, color: C.body, marginBottom: 6 }}>
-                  <span>{k.replace(/_/g,' ')}</span>
+                  <span>{TYPO_LABELS[k] || k.replace(/([A-Z])/g,' $1').replace(/_/g,' ')}</span>
                   <span style={{ fontFamily: MONO, color: C.text, fontWeight: 600 }}>{v.count ?? '—'}</span>
                 </div>
               ))}
@@ -2247,7 +2359,7 @@ export default function BankIntelligence() {
   const TABS = [
     { id: 'overview',  label: 'Overview',       icon: <Sparkles   size={13} /> },
     { id: 'trends',    label: 'Trends',          icon: <TrendingUp size={13} /> },
-    { id: 'networks',  label: 'Networks',        icon: <ShieldAlert size={13} />, badge: FRAUD_NETS.filter(n=>n.status!=='Cleared').length },
+    { id: 'networks',  label: 'Linkage',         icon: <ShieldAlert size={13} />, badge: FRAUD_NETS.filter(n=>n.status!=='Cleared').length },
     { id: 'geo',       label: 'Geo Risk',        icon: <MapPin     size={13} /> },
     { id: 'sector',    label: 'Sector Heatmap',  icon: <LayoutGrid size={13} /> },
     { id: 'market',    label: 'Market Rates',    icon: <BarChart3  size={13} /> },
@@ -2293,6 +2405,14 @@ export default function BankIntelligence() {
             </span>
           )}
         </div>
+      </div>
+
+      {/* ── Data-provenance banner (A5) — set honest expectations before any tile ── */}
+      <div style={{ position: 'relative', zIndex: 1, margin: '14px 28px 0', padding: '9px 14px', background: 'rgba(88,166,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, rowGap: 6, flexWrap: 'wrap', fontFamily: SANS, fontSize: 11.5, color: C.body }}>
+        <span style={{ marginRight: 2 }}>This panel blends data sources — every tile is tagged:</span>
+        <ProvenanceBadge kind="real" /> <span style={{ color: C.muted, marginRight: 6 }}>your live platform data</span>
+        <ProvenanceBadge kind="benchmark" /> <span style={{ color: C.muted, marginRight: 6 }}>validated on real US benchmark data</span>
+        <ProvenanceBadge kind="illustrative" /> <span style={{ color: C.muted }}>synthetic SA sample — directional only</span>
       </div>
 
       {/* ── Tab bar ─────────────────────────────────────────────────── */}
@@ -2533,13 +2653,16 @@ export default function BankIntelligence() {
           {/* Accuracy (if available) */}
           {accuracy && (
             <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 18px' }}>
-              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: C.muted, fontWeight: 700, marginBottom: 4 }}>
-                Engine Accuracy
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: C.muted, fontWeight: 700 }}>
+                  Engine Accuracy
+                </span>
+                <ProvenanceBadge kind="illustrative" />
               </div>
               <div style={{ fontFamily: SANS, fontSize: '0.68rem', color: C.faint, marginBottom: 10, lineHeight: 1.4 }}>
-                F1 = harmonic mean of precision &amp; recall. Production benchmark for fraud detection is 0.70.
+                Measured on a synthetic SA cohort — directional, not validated production performance. Fraud flags are a triage signal to review, never a standalone decision.
                 {accuracy.fraudF1 != null && accuracy.fraudF1 < 70 && (
-                  <span style={{ color: C.medium }}> Current F1 of {accuracy.fraudF1}% is below that benchmark — treat fraud flags as triage signals to review, not standalone decisions.</span>
+                  <span style={{ color: C.medium }}> Current fraud F1 of {accuracy.fraudF1}% is below the 0.70 detection benchmark — review every flag manually.</span>
                 )}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -2700,7 +2823,7 @@ export default function BankIntelligence() {
               <span style={{ color: C.gold, fontWeight: 700, fontSize: '0.82rem' }}>Live Network Graph Intelligence</span>
             </div>
             <p style={{ fontSize: '0.75rem', color: C.muted, margin: '0 0 12px', lineHeight: 1.5 }}>
-              Real-time contagion tracing, mule-network mapping and cross-bank fraud signal sharing — available on Enterprise.
+              Real-time application-linkage mapping (shared employer, address, beneficiary, conveyancer) and cross-bank fraud signal sharing — available on Enterprise.
             </p>
             <button style={{ width: '100%', padding: '8px 14px', background: 'rgba(200,168,75,0.12)', border: `1px solid rgba(200,168,75,0.3)`, borderRadius: 7, color: C.gold, fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
               Request access →

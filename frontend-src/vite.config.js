@@ -17,6 +17,9 @@ export default defineConfig({
     outDir: '../frontend',
     emptyOutDir: true,
     sourcemap: true,
+    // Single CSS bundle — matches the proven anti-reload-loop prod config
+    // (avoids stale cached index referencing missing hashed CSS chunks).
+    cssCodeSplit: false,
   },
   server: {
     fs: { allow: [projectPath, sharedPath] },

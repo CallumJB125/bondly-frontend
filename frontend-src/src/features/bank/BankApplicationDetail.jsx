@@ -660,13 +660,22 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
               <div className="spending-bars">
                 {(() => {
                   const max = Math.max(...d.topCategories.map(c => c.amount), 1);
-                  return d.topCategories.map(c => (
-                    <div key={c.category} className="row">
-                      <div className="name">{c.category}</div>
-                      <div className="bar" style={{ width: Math.round((c.amount / max) * 100) + '%' }} />
-                      <div className="v">{bankFmtR(c.amount)}</div>
-                    </div>
-                  ));
+                  const income = Number(d.incomeAvg) || 0;
+                  return d.topCategories.map(c => {
+                    const pct = income > 0 ? Math.round((c.amount / income) * 100) : null;
+                    // light verdict: flag a single category eating an outsized share
+                    const heavy = pct != null && pct >= 30;
+                    return (
+                      <div key={c.category} className="row">
+                        <div className="name">{c.category}</div>
+                        <div className="bar" style={{ width: Math.round((c.amount / max) * 100) + '%' }} />
+                        <div className="v">
+                          {bankFmtR(c.amount)}
+                          {pct != null && <span style={{ color: heavy ? '#b45309' : '#6b7280', fontWeight: heavy ? 700 : 500, marginLeft: 6, fontSize: '0.75rem' }}>{pct}% of income{heavy ? ' ⚠' : ''}</span>}
+                        </div>
+                      </div>
+                    );
+                  });
                 })()}
               </div>
             </div>
@@ -1304,6 +1313,53 @@ function useBidState({ application, insights, mine, lowestCompetingRate, onChang
   };
 }
 
+// Phase 2 — win-probability pricing curve. Fetches the calibrated curve for
+// this deal once, then shows win% + lifetime margin at the officer's current
+// rate, with a slider to explore the win-vs-margin trade-off live.
+function WinProbabilityCurve({ appRef, rate, setRate }) {
+  const [curve, setCurve] = useState(null);
+  const [model, setModel] = useState(null);
+  const [cof, setCof] = useState(10.75);
+  useEffect(() => {
+    if (!appRef) return;
+    const t = getBankToken();
+    fetch(`/api/bank/win-probability?ref=${encodeURIComponent(appRef)}`, { headers: { Authorization: `Bearer ${t}` } })
+      .then(r => (r.ok && (r.headers.get('content-type') || '').includes('json')) ? r.json() : null)
+      .then(j => { if (j?.success) { setCurve(j.data.curve); setModel(j.data.model); setCof(j.data.costOfFunds ?? 10.75); } })
+      .catch(() => {});
+  }, [appRef]);
+  if (!curve || !curve.length) return null;
+  const r = parseFloat(rate);
+  const nearest = Number.isFinite(r) ? curve.reduce((a, b) => Math.abs(b.rate - r) < Math.abs(a.rate - r) ? b : a) : null;
+  const winPct = nearest ? Math.round(nearest.winProb * 100) : null;
+  const margin = nearest ? nearest.lifetimeMargin : null;
+  const lo = curve[0].rate, hi = curve[curve.length - 1].rate;
+  const W = 260, H = 60, maxP = Math.max(...curve.map(c => c.winProb), 0.01);
+  const pts = curve.map((c, i) => `${(i / (curve.length - 1)) * W},${H - (c.winProb / maxP) * H}`).join(' ');
+  const markX = Number.isFinite(r) ? Math.max(0, Math.min(W, ((r - lo) / (hi - lo)) * W)) : null;
+  return (
+    <div style={{ background: '#0d1b2a', borderRadius: 8, padding: '12px 14px', marginBottom: 12, color: '#e2e8f0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Win probability at your rate</span>
+        {model?.thinSample && <span title={model?.note} style={{ fontSize: '0.58rem', color: '#d29922', border: '1px solid #d29922', borderRadius: 5, padding: '1px 6px' }}>thin sample · n={model?.n ?? 0}</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'baseline', marginBottom: 8 }}>
+        <div><span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#3fb950' }}>{winPct != null ? winPct + '%' : '—'}</span> <span style={{ fontSize: '0.7rem', color: '#8b9bb4' }}>win @ {Number.isFinite(r) ? r.toFixed(2) : '—'}%</span></div>
+        {margin != null && <div style={{ fontSize: '0.78rem', color: '#8b9bb4' }}>lifetime margin <b style={{ color: '#e2e8f0' }}>{bankFmtR(margin)}</b></div>}
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }} preserveAspectRatio="none">
+        <polyline points={pts} fill="none" stroke="#3fb950" strokeWidth="2" />
+        {markX != null && <line x1={markX} y1="0" x2={markX} y2={H} stroke="#c8a84b" strokeWidth="1.5" strokeDasharray="3 3" />}
+      </svg>
+      <input type="range" min={lo} max={hi} step="0.01" value={Number.isFinite(r) ? r : lo}
+        onChange={e => setRate(e.target.value)} style={{ width: '100%', marginTop: 6 }} />
+      <div style={{ fontSize: '0.64rem', color: '#6b7280', marginTop: 4 }}>
+        Drag to explore the win-vs-margin trade-off. Win% calibrated on {model?.n ?? 0} decided bids; margin vs {cof}% cost of funds (directional).
+      </div>
+    </div>
+  );
+}
+
 function BidBox({ application, insights, mine, lowestCompetingRate, bid }) {
   const {
     rate, setRate, term, setTerm, conditions, setCond, notes, setNotes,
@@ -1372,6 +1428,8 @@ function BidBox({ application, insights, mine, lowestCompetingRate, bid }) {
             </div>
           )}
         </div>
+
+        <WinProbabilityCurve appRef={application.ref} rate={rate} setRate={setRate} />
 
         <div style={{ marginBottom: 10 }}>
           <label style={{ display:'block', fontSize: '0.75rem', color: '#6b7280', fontWeight: 700, marginBottom: 4 }}>Add-ons (optional)</label>
