@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { bankApi, bankFmtR, bankFmtPct, getBankToken } from './bankApi.js';
 import LineChart from '../../components/LineChart.jsx';
 
@@ -28,10 +28,12 @@ function DealList() {
   const [deals, setDeals] = useState(null);
   const [err, setErr]     = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const navigate = useNavigate();
   useEffect(() => { bankApi.deals().then(d => setDeals(d.deals)).catch(e => setErr(e.message)); }, []);
 
   async function advance(deal, e) {
-    // The card is a <Link>; don't navigate when the banker clicks the control.
+    // The card navigates on click; stopPropagation keeps this control from
+    // triggering that navigation (button is a real child, not nested in an <a>).
     e.preventDefault();
     e.stopPropagation();
     const next = deal.nextStage;
@@ -120,8 +122,9 @@ function DealList() {
         const pct    = Math.round((done / total) * 100);
         const next   = d.nextStage;
         return (
-          <Link key={d.cappId} to={`/bank/deals/${d.cappId}`}
-            className="bank-card" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 200px', display: 'grid', alignItems: 'center', gap: 14, marginBottom: 10, padding: 16, textDecoration: 'none', color: 'inherit', border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff' }}>
+          <div key={d.cappId} onClick={() => navigate(`/bank/deals/${d.cappId}`)} role="link" tabIndex={0}
+            onKeyDown={e => { if (e.key === 'Enter') navigate(`/bank/deals/${d.cappId}`); }}
+            className="bank-card" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 200px', display: 'grid', alignItems: 'center', gap: 14, marginBottom: 10, padding: 16, textDecoration: 'none', color: 'inherit', border: '1px solid #e5e7eb', borderRadius: 10, background: '#fff', cursor: 'pointer' }}>
             <div>
               <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.95rem' }}>{d.ref}</div>
               <div className="type-tag" style={{ background: 'rgba(30,58,95,0.15)', color: '#152d4a', display: 'inline-block', padding: '2px 8px', borderRadius: 99, fontSize: '0.7rem', fontWeight: 700, marginTop: 2 }}>
@@ -161,7 +164,7 @@ function DealList() {
                 <div style={{ marginTop: 8, fontSize: '0.72rem', color: '#15803d', fontWeight: 700 }}>✓ Complete</div>
               ) : null}
             </div>
-          </Link>
+          </div>
         );
       })}
     </>

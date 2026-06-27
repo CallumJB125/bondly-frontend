@@ -4,7 +4,11 @@
 
 .bank-shell {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  /* minmax(0, 1fr): without the 0 floor the content track grows to its widest
+     child (a dense table/KPI row), pushing the whole page — sidebar included —
+     into horizontal scroll at ~1324px. The 0 floor lets the track shrink and
+     contains overflow to the inner scroller below. */
+  grid-template-columns: 240px minmax(0, 1fr);
   min-height: 100vh;
   background: #f5f6f8;
   color: #0f1a24;
