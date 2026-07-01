@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { bankApi, getBankToken, clearBankToken, getDecodedBankToken, alertTypeEnabled } from './bankApi.js';
 import './bank.css';
 
@@ -61,6 +61,13 @@ export default function BankShell() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const unread = notifications.filter(n => !n.read).length;
+  const loc = useLocation();
+  // Real-usage telemetry beacon — records genuine navigation so the improvement loop can
+  // weight real behaviour. navigator.webdriver flags Playwright (sim) vs human traffic.
+  useEffect(() => {
+    fetch('/api/bank/usage', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: loc.pathname, action: 'view', sim: !!navigator.webdriver }) }).catch(() => {});
+  }, [loc.pathname]);
 
   useEffect(() => {
     if (!getBankToken()) return;
@@ -157,6 +164,10 @@ export default function BankShell() {
           <NavLink to="/bank/analytics"    className={({isActive}) => isActive ? 'active' : ''}>Portfolio &amp; risk</NavLink>
           <NavLink to="/bank/intelligence" className={({isActive}) => isActive ? 'active' : ''}>Market intelligence</NavLink>
           <NavLink to="/bank/triage"       className={({isActive}) => isActive ? 'active' : ''}>Triage</NavLink>
+          <NavLink to="/bank/simulation"   className={({isActive}) => isActive ? 'active' : ''}>
+            Simulation
+            <span style={{ marginLeft: 6, fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#86efac', border: '1px solid rgba(134,239,172,0.5)', borderRadius: 999, padding: '1px 5px' }}>Live</span>
+          </NavLink>
           <NavLink to="/bank/roadmap"      className={({isActive}) => isActive ? 'active' : ''}>
             Retention radar
             <span style={{ marginLeft: 6, fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#c4b5fd', border: '1px solid rgba(196,181,253,0.5)', borderRadius: 999, padding: '1px 5px' }}>Roadmap</span>

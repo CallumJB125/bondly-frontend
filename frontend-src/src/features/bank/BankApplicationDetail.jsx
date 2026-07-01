@@ -38,6 +38,188 @@ const REC_STYLES = {
   decline: { bg: '#fee2e2', color: '#991b1b', label: 'Decline' },
 };
 
+// ── Consolidated Decision Intelligence panel ────────────────────────────────
+// The 10 signals banks said they need to decide, each with a value + status + the
+// one-line WHY ("show the math"), grouped, ending in a clear recommendation with
+// a confidence the banker can trust. Data is assembled server-side (d.decisionIntelligence).
+const DI_REC = {
+  lend:       { bg: '#dcfce7', bd: '#86efac', color: '#166534', icon: '✓', label: 'LEND' },
+  'price-up': { bg: '#dbeafe', bd: '#93c5fd', color: '#1e40af', icon: '↗', label: 'LEND · PRICE UP' },
+  refer:      { bg: '#fef3c7', bd: '#fcd34d', color: '#92400e', icon: '⏸', label: 'REFER TO CREDIT' },
+  decline:    { bg: '#fee2e2', bd: '#fca5a5', color: '#991b1b', icon: '✕', label: 'DECLINE' },
+};
+const DI_STATUS = {
+  good:    { dot: '#16a34a', text: '#166534' },
+  caution: { dot: '#d97706', text: '#92400e' },
+  risk:    { dot: '#dc2626', text: '#991b1b' },
+  na:      { dot: '#cbd5e1', text: '#94a3b8' },
+};
+const DI_GROUPS = [
+  ['affordability', 'Can they afford it?'],
+  ['risk', 'Should we worry?'],
+  ['moat', 'Competitive context'],
+];
+function DiDetail({ d }) {
+  if (!d) return null;
+  if (d.kind === 'series' && d.points?.length) {
+    const max = Math.max(...d.points, 1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 34 }}>
+          {d.points.map((p, i) => (
+            <div key={i} title={'R ' + p.toLocaleString('en-ZA')} style={{ flex: 1, height: `${Math.max(8, Math.round(p / max * 100))}%`, background: 'linear-gradient(180deg,#6366f1,#818cf8)', borderRadius: '2px 2px 0 0' }} />
+          ))}
+        </div>
+        <div style={{ fontSize: '0.58rem', color: '#94a3b8', marginTop: 3 }}>{d.note}</div>
+      </div>
+    );
+  }
+  if (d.kind === 'categories' && d.items?.length) {
+    const max = Math.max(...d.items.map(i => i.pct), 1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        {d.items.map((it, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{ fontSize: '0.62rem', color: '#475569', width: 78, textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.label}</span>
+            <div style={{ flex: 1, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round(it.pct / max * 100)}%`, height: '100%', background: '#0d9488' }} />
+            </div>
+            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#475569', width: 56, textAlign: 'right' }}>{it.pct}% · R{(it.amount || 0).toLocaleString('en-ZA')}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (d.kind === 'scenarios' && d.rows?.length) {
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        {d.rows.map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, fontSize: '0.62rem' }}>
+            <span style={{ width: 16, color: r.ok ? '#16a34a' : '#dc2626', fontWeight: 800 }}>{r.ok ? '✓' : '✗'}</span>
+            <span style={{ flex: 1, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
+            <span style={{ color: r.surplus >= 0 ? '#475569' : '#dc2626', width: 96, textAlign: 'right' }}>R{(r.surplus || 0).toLocaleString('en-ZA')}/mo</span>
+            <span style={{ color: '#94a3b8', width: 54, textAlign: 'right' }}>DSCR {r.dscr ?? '—'}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (d.kind === 'factors' && d.factors?.length) {
+    const max = Math.max(...d.factors.map(f => Math.abs(f.impact)), 0.1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label} · {d.base}</div>
+        {d.factors.map((f, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{ fontSize: '0.62rem', color: '#475569', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.label}</span>
+            <div style={{ width: 70, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round(Math.abs(f.impact) / max * 100)}%`, height: '100%', background: '#f59e0b' }} />
+            </div>
+            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#b45309', width: 30, textAlign: 'right' }}>+{f.impact}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+function DiSignal({ s }) {
+  const st = DI_STATUS[s.status] || DI_STATUS.na;
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: '9px 12px', borderRadius: 8, background: s.live ? '#fff' : '#f8fafc', border: '1px solid #eef2f7', alignItems: 'flex-start' }}>
+      <span style={{ width: 9, height: 9, borderRadius: 99, background: st.dot, marginTop: 5, flexShrink: 0 }} />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0f1a24' }}>
+            {s.label}
+            {s.detail && <button onClick={() => setOpen(o => !o)} style={{ marginLeft: 6, fontSize: '0.58rem', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{open ? '▾ hide' : '▸ detail'}</button>}
+          </span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 800, color: st.text, whiteSpace: 'nowrap' }}>{s.value}</span>
+        </div>
+        <div style={{ fontSize: '0.68rem', color: '#64748b', lineHeight: 1.35, marginTop: 2 }}>{s.why}</div>
+        {open && <DiDetail d={s.detail} />}
+        {!s.live && <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#6d28d9', background: '#ede9fe', borderRadius: 99, padding: '1px 6px', marginTop: 3, display: 'inline-block' }}>simulated · wiring pending</span>}
+      </div>
+    </div>
+  );
+}
+function DecisionIntelligence({ di, type }) {
+  if (!di || !di.signals) return null;
+  const rec = di.recommendation || {};
+  const r = DI_REC[rec.call] || DI_REC.refer;
+  const conf = rec.confidence ?? 0;
+  return (
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      {/* Recommendation banner */}
+      <div style={{ background: r.bg, borderBottom: `1px solid ${r.bd}`, padding: '14px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: '1.5rem' }}>{r.icon}</span>
+            <div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: r.color, letterSpacing: '0.02em' }}>{r.label}</div>
+              <div style={{ fontSize: '0.74rem', color: r.color, opacity: 0.85 }}>{rec.headline}</div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: r.color, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 90, height: 7, background: 'rgba(0,0,0,0.08)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ width: `${conf}%`, height: '100%', background: r.color, opacity: 0.8 }} />
+              </div>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: r.color }}>{conf}%</span>
+            </div>
+          </div>
+        </div>
+        {rec.reasons?.length > 0 && (
+          <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {rec.reasons.map((reason, i) => (
+              <li key={i} style={{ fontSize: '0.74rem', color: r.color, display: 'flex', gap: 6 }}><span style={{ opacity: 0.6 }}>›</span>{reason}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {/* The 10 signals, grouped */}
+      <div style={{ padding: 14, background: '#fafbfc' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.06em' }}>The evidence — show the math</span>
+          {di.coverage && <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>{di.coverage.live}/{di.coverage.total} signals live</span>}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14, alignItems: 'start' }}>
+          {DI_GROUPS.map(([key, title]) => {
+            const items = di.signals.filter(s => s.group === key);
+            if (!items.length) return null;
+            return (
+              <div key={key}>
+                <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b', marginBottom: 6 }}>{title}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {items.map(s => <DiSignal key={s.key} s={s} />)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {di.provenance?.length > 0 && (
+          <div style={{ marginTop: 14, borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
+            <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#334155', marginBottom: 6 }}>🔬 Model provenance — how each score is built &amp; back-tested</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 8 }}>
+              {di.provenance.map((m, i) => (
+                <div key={i} style={{ fontSize: '0.64rem', color: '#475569', lineHeight: 1.4, background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 8, padding: '7px 10px' }}>
+                  <b style={{ color: '#0f1a24' }}>{m.model}</b><br />{m.method}<br />
+                  <span style={{ color: '#15803d', fontWeight: 700 }}>{m.backtest}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DecisionHeader({ a, d, ins }) {
   const [whyOpen, setWhyOpen] = useState(false);
   const [decision, setDecision] = useState(a?.myDecision || null); // 'referred' | 'declined' (seeded from backend)
@@ -362,6 +544,8 @@ function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompeti
       </div>
 
       <DecisionHeader a={a} d={d} ins={ins} />
+
+      <DecisionIntelligence di={d?.decisionIntelligence} type={a.type} />
 
       <div className="bank-detail-grid">
         <div className="col-main">

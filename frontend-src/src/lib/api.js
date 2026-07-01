@@ -670,6 +670,7 @@ export const finances = {
   readinessScore:    ()              => apiFetch('/api/readiness-score'),
   scoreHistory:      ()              => apiFetch('/api/readiness-score/history'),
   bankDossier:       ()              => apiFetch('/api/readiness-score/dossier', { method: 'POST' }),
+  getLiveTips:       ()              => apiFetch('/api/financial-fitness/live-tips'),
 };
 
 // ── Behavioural Analytics (admin) ─────────────────────────

@@ -148,6 +148,7 @@ const FirstTimeBuyer      = lazy(() => import('./features/firstTimeBuyer/FirstTi
 const Guarantee      = lazy(() => import('./features/guarantee/Guarantee.jsx'));
 const Letter         = lazy(() => import('./features/letter/Letter.jsx'));
 const Switch         = lazy(() => import('./features/switch/Switch.jsx'));
+const FIReport       = lazy(() => import('./features/fi-report/FIReport.jsx'));
 
 const BankLogin             = lazy(() => import('./features/bank/BankLogin.jsx'));
 const BankShell             = lazy(() => import('./features/bank/BankShell.jsx'));
@@ -165,6 +166,7 @@ const BankIntelligence      = lazy(() => import('./features/bank/BankIntelligenc
 const BankSettings          = lazy(() => import('./features/bank/BankSettings.jsx'));
 const BankTriage            = lazy(() => import('./features/bank/BankTriage.jsx'));
 const BankRoadmap           = lazy(() => import('./features/bank/BankRoadmap.jsx'));
+const BankSimulation        = lazy(() => import('./features/bank/BankSimulation.jsx'));
 
 // Redirect to the origination app (localhost:5174 in dev, real domain in prod)
 const ORIGINATION_BASE = import.meta.env.VITE_ORIGINATION_URL || 'http://localhost:5174';
@@ -496,6 +498,7 @@ function AppContent() {
           <Route path="/tools/financial-check" element={<Navigate to="/tools" replace />} />
           <Route path="/profile"     element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/application" element={<PrivateRoute><Application /></PrivateRoute>} />
+          <Route path="/fi-report"   element={<PrivateRoute><FIReport /></PrivateRoute>} />
 
           {/* Admin */}
           <Route path="/admin"             element={<AdminRoute><Admin /></AdminRoute>} />
@@ -518,6 +521,7 @@ function AppContent() {
             <Route path="auto-bid"                element={<BankAutoBid />} />
             <Route path="triage"                  element={<BankTriage />} />
             <Route path="roadmap"                 element={<BankRoadmap />} />
+            <Route path="simulation"              element={<BankSimulation />} />
             <Route path="analytics"               element={<BankAnalytics />} />
             <Route path="intelligence"            element={<BankIntelligence />} />
             <Route path="settings"                element={<BankSettings />} />

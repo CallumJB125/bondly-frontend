@@ -1,6 +1,6 @@
 // Bondly Service Worker — cache assets, never cache HTML
 // Bump CACHE_NAME on every deploy to evict stale old-bundle references.
-const CACHE_NAME = 'bondly-v8';
+const CACHE_NAME = 'bondly-v16';
 
 self.addEventListener('install', e => {
   // Pre-cache nothing on install — assets are cached on first fetch below.

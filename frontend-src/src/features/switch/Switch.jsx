@@ -259,13 +259,30 @@ function SwitchVerdict({ income, balance, currentRate, termYears = 20, onProceed
 
       {saving > 0 && (
         <div className="switch-verdict__cta-area">
+          <div className="switch-verdict__what-next">
+            <div className="switch-verdict__what-next-title">What happens next</div>
+            <div className="switch-verdict__what-next-steps">
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">1</span>
+                <span>Upload your statement <span className="switch-verdict__what-next-dim">(30 sec, optional)</span></span>
+              </div>
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">2</span>
+                <span>We get offers from all 7 banks <span className="switch-verdict__what-next-dim">(48 hrs)</span></span>
+              </div>
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">3</span>
+                <span>You choose — <strong>nothing moves without your say-so</strong></span>
+              </div>
+            </div>
+          </div>
           <button
             className="btn btn--lime switch-verdict__cta"
             onClick={onSeeOffers}
           >
-            Let Bondly negotiate for me →
+            Get real offers from all 7 banks →
           </button>
-          <div className="switch-verdict__cta-note">Upload your bank statement · No obligation · Free to homeowners</div>
+          <div className="switch-verdict__cta-note">No obligation · No credit check · Free to homeowners</div>
           <button
             type="button"
             className="switch-verdict__cta-secondary"

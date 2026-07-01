@@ -1462,3 +1462,10 @@
 [data-theme="dark"] .insight-bank-text { background: rgba(255,255,255,0.05); }
 [data-theme="dark"] .insight-card__impact { background: rgba(255,255,255,0.05); }
 [data-theme="dark"] .goal-template-card { background: rgba(255,255,255,0.03); }
+
+/* Personalised tips card */
+.fi-tips-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-top: 16px; }
+.fi-tips-heading { font-size: 0.85rem; font-weight: 600; color: #15803d; margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.fi-tips-loading { font-size: 0.82rem; color: #6b7280; font-style: italic; }
+.fi-tips-list { margin: 0; padding: 0 0 0 16px; }
+.fi-tips-item { font-size: 0.85rem; color: #374151; margin-bottom: 6px; line-height: 1.45; }

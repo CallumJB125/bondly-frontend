@@ -6,6 +6,14 @@ import { bankApi, bankFmtR, timeUntil } from './bankApi.js';
 // --- Decision helpers ---
 
 function getRecommendation(a) {
+  // Prefer server-computed listCall — mirrors the DI panel logic (dti, tier, verification).
+  // Falls back to client-side heuristic for older API responses.
+  if (a.listCall) {
+    if (a.listCall === 'lend')     return 'Bid';
+    if (a.listCall === 'price-up') return 'Hold';
+    if (a.listCall === 'refer')    return 'Refer';
+    if (a.listCall === 'decline')  return 'Decline';
+  }
   if (a.riskTier === 'critical' || a.qualityScore < 30) return 'Decline';
   if (a.riskTier === 'red') return 'Refer';
   if (a.riskTier === 'amber' || (a.riskTier === 'green' && a.qualityScore < 70)) return 'Hold';
@@ -212,6 +220,21 @@ export default function BankApplications() {
       }
       return new Set([...prev, ...visibleRefs]);
     });
+  }
+
+  async function quickDecide(ref, kind, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const prevDecisions = decisions;
+    setDecisions(prev => ({ ...prev, [ref]: kind }));
+    try {
+      const r = await bankApi.bulkDecide([ref], kind);
+      const pastTense = kind === 'declined' ? 'Declined' : 'Referred to credit';
+      showToast(`${pastTense} ${ref}.`, kind === 'declined' ? 'decline' : 'refer');
+    } catch (e) {
+      setDecisions(prevDecisions);
+      showToast(`Could not update ${ref}: ${e.message || 'error'}`, 'decline');
+    }
   }
 
   async function applyBulk(kind) {
@@ -682,6 +705,31 @@ export default function BankApplications() {
                       + co-applicant
                     </span>
                   )}
+                </div>
+              )}
+
+              {/* Quick-action row — triage without opening the deal */}
+              {!decision && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
+                  {rec === 'Bid' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#14532d', background: '#dcfce7', borderRadius: 6, padding: '5px 14px', border: '1.5px solid #86efac' }}>
+                      ↗ Strong file — open to bid
+                    </span>
+                  )}
+                  {rec === 'Hold' && a.listCall === 'price-up' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#78350f', background: '#fef3c7', borderRadius: 6, padding: '5px 14px', border: '1.5px solid #fcd34d' }}>
+                      ↗ Biddable — price in a risk premium
+                    </span>
+                  )}
+                  <span style={{ flex: 1 }} />
+                  <button
+                    onClick={e => quickDecide(a.ref, 'referred', e)}
+                    style={{ padding: '5px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, background: '#ede9fe', color: '#5b21b6', border: '1px solid #ddd6fe', cursor: 'pointer' }}
+                  >Refer to credit</button>
+                  <button
+                    onClick={e => quickDecide(a.ref, 'declined', e)}
+                    style={{ padding: '5px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', cursor: 'pointer' }}
+                  >Decline</button>
                 </div>
               )}
             </Link>

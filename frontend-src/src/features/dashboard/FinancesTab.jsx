@@ -299,6 +299,16 @@ function SpendingSubTab({ showToast }) {
   const [txns, setTxns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState(null);
+  const [liveTips, setLiveTips] = useState(null);
+  const [tipsLoading, setTipsLoading] = useState(false);
+
+  useEffect(() => {
+    setTipsLoading(true);
+    financesApi.getLiveTips()
+      .then(data => setLiveTips(data))
+      .catch(() => setLiveTips(null))
+      .finally(() => setTipsLoading(false));
+  }, []); // fetch once on mount
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -440,6 +450,22 @@ function SpendingSubTab({ showToast }) {
             </div>
           </CardBody>
         </Card>
+      )}
+
+      {/* Personalised tips */}
+      {(tipsLoading || liveTips?.tips?.length > 0) && (
+        <div className="fi-tips-card">
+          <h4 className="fi-tips-heading">Personalised tips</h4>
+          {tipsLoading ? (
+            <div className="fi-tips-loading">Generating tips…</div>
+          ) : (
+            <ul className="fi-tips-list">
+              {liveTips.tips.map((tip, i) => (
+                <li key={i} className="fi-tips-item">{tip}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   );

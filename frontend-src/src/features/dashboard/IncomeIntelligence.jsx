@@ -52,8 +52,17 @@ export default function IncomeIntelligence() {
         <StabilityRing score={data.stabilityScore ?? 0} />
         <div className="ii-hero__stats">
           <div className="ii-hero__stat">
-            <div className="ii-hero__label">Avg monthly income</div>
+            <div className="ii-hero__label">
+              Avg monthly income
+              <span className="income-gross-badge">Gross estimate</span>
+            </div>
             <div className="ii-hero__val">{fmt(data.avgMonthlyIncome)}</div>
+            <div className="ii-hero__sub">Est. net: {fmt(data.estimatedNet || Math.round((data.avgMonthlyIncome || 0) * 0.85))}</div>
+            {(data.caveat || data.singleMonthAdjusted) && (
+              <div className="income-caveat-notice">
+                ⚠ {data.caveat || 'Based on 1 month of data — upload 2+ months for a verified figure.'}
+              </div>
+            )}
           </div>
           <div className="ii-hero__stat">
             <div className="ii-hero__label">YTD income</div>

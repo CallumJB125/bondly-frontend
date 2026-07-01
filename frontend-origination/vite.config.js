@@ -14,6 +14,7 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    allowedHosts: ['demo.bondly.co.za'],
     fs: { allow: [projectPath, sharedPath] },
     proxy: {
       '/api': {

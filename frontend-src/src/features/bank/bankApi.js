@@ -48,6 +48,8 @@ export const bankApi = {
   ssoLogin:(email)           => bankFetch('/api/bank/sso/simulated', { method: 'POST', body: JSON.stringify({ email }) }),
   logout:  ()                => bankFetch('/api/bank/logout', { method: 'POST' }).catch(() => {}),
   me:      ()                => bankFetch('/api/bank/me'),
+  simStatus: ()              => bankFetch('/api/bank/sim-status'),
+  simEvents: (since = 0)     => bankFetch('/api/bank/sim-events?since=' + Number(since)),
   dashboard:    ()           => bankFetch('/api/bank/dashboard'),
   applications: (params={})  => {
     const q = new URLSearchParams();
