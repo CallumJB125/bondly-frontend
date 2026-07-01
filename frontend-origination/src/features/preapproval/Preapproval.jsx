@@ -8,7 +8,9 @@ import { Smartphone, Briefcase, BarChart2, Target, CheckCircle } from 'lucide-re
 import { applications, leads, parseStatementForPreapproval, qualifyManual, profile as profileApi } from '../../lib/api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '@bondly/ui/components/Toast.jsx';
-import { PRIME_RATE, STRESS_RATE } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, STRESS_RATE, START_APPLICATION } from '@bondly/ui/lib/constants.js';
+import StepProgress from '@bondly/ui/components/StepProgress.jsx';
+import { useApplicationDraft } from '@bondly/ui/lib/applicationDraft.jsx';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import RatesExplained from '@bondly/ui/components/RatesExplained.jsx';
 import { calcMaxBond, calcMonthly } from '@bondly/ui/lib/finance.js';
@@ -170,6 +172,7 @@ export default function Preapproval() {
   const [aiConsent, setAiConsent]   = useState(false);
   const [uploadStage, setUploadStage] = useState(0);
   const [isOcrScan, setIsOcrScan]   = useState(false);
+  const [parseProgress, setParseProgress] = useState(null); // server-sent progress message
   const [parseError, setParseError] = useState(null);
   const [analysis, setAnalysis]     = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -189,7 +192,7 @@ export default function Preapproval() {
     purchasePrice:   '',
     propertyType:    'freehold',
     otpSigned:       false,
-    banks:           ['ABSA', 'FNB', 'Nedbank', 'Standard Bank', 'Capitec', 'Investec', 'SA Home Loans'],
+    banks:           [], // default none selected → certificate path; user opts in to full bond submission
   });
   const [submittingApp, setSubmittingApp] = useState(false);
   const exitFiredRef        = useRef(false);
@@ -221,6 +224,42 @@ export default function Preapproval() {
   const { isLoggedIn, user } = useAuth();
   const showToast = useToast();
   const navigate  = useNavigate();
+  const draft     = useApplicationDraft();
+  // True once the user returns from the account gate (post-register) — drives the
+  // "Continue to application" CTA shown on the now-unlocked profile.
+  const [unlockedFromGate, setUnlockedFromGate] = useState(false);
+
+  // Persist full form/analysis so state survives the register round-trip.
+  const TEASER_RESTORE_KEY = 'bondly_preapproval_teaser_restore';
+  function persistForTeaserGate() {
+    try {
+      sessionStorage.setItem(TEASER_RESTORE_KEY, JSON.stringify({ form, analysis, empType, propType }));
+    } catch {}
+    draft.set({
+      income:        parseNum(form.income) || null,
+      debt:          parseNum(form.debt) || null,
+      savings:       parseNum(form.deposit) || null,
+      affordability: (parseNum(form.income) > 0 ? calcQualifyingBond(parseNum(form.income), parseNum(form.debt)) : null),
+      source:        'preapproval',
+    });
+  }
+
+  // Restore on mount if we have a teaser-gate snapshot (post-register return).
+  useEffect(() => {
+    let snap = null;
+    try {
+      const raw = sessionStorage.getItem(TEASER_RESTORE_KEY);
+      if (raw) { snap = JSON.parse(raw); sessionStorage.removeItem(TEASER_RESTORE_KEY); }
+    } catch {}
+    if (snap?.form) {
+      setForm(f => ({ ...f, ...snap.form }));
+      if (snap.analysis) setAnalysis(snap.analysis);
+      if (snap.empType) setEmpType(snap.empType);
+      if (snap.propType) setPropType(snap.propType);
+      setStep(3);
+      setUnlockedFromGate(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track funnel entry once on mount
   useEffect(() => { track('preapproval_started', 'preapproval'); }, []);
@@ -229,9 +268,15 @@ export default function Preapproval() {
   useEffect(() => {
     const prev = stepEnteredAt.current;
     stepEnteredAt.current = Date.now();
-    if (typeof step === 'number' && step > 0) {
-      aTrack('preapproval_step_enter', { step, prevDurationMs: Date.now() - prev });
-    }
+    // entry_source: hero_statement = came via homepage statement upload fast-path;
+    //               url_income     = came via ?income= URL param (e.g. from landing calc);
+    //               cold_start     = direct navigation with no pre-fill.
+    const entry_source = statementSource === 'statement'
+      ? 'hero_statement'
+      : (skippedSteps.has(1) && new URLSearchParams(window.location.search).get('income'))
+        ? 'url_income'
+        : 'cold_start';
+    aTrack('preapproval_step_enter', { step, prevDurationMs: Date.now() - prev, entry_source });
     // When step 3 (financial profile) renders, start a result-abandon timer
     if (step === 3) {
       const zone = analysis?.affordabilityZone?.zone;
@@ -402,6 +447,7 @@ export default function Preapproval() {
     }
     setUploading(true);
     setIsOcrScan(false);
+    setParseProgress(null);
     setParseError(null);
     setAnalysis(null);
     setIncomeVerified(false);
@@ -414,7 +460,8 @@ export default function Preapproval() {
     trackAction('statement_parse_started', { step: 1 });
     try {
       const res = await parseStatementForPreapproval(file, {
-        onWillOcr: () => setIsOcrScan(true),
+        onWillOcr:  () => setIsOcrScan(true),
+        onProgress: (msg) => setParseProgress(msg),
       });
       if (!res.success) throw new Error(res.error || 'Could not analyse statement');
       const d = res.data;
@@ -470,6 +517,7 @@ export default function Preapproval() {
       }
     } finally {
       setUploading(false);
+      setParseProgress(null);
       if (e.target) e.target.value = '';
     }
   }
@@ -547,7 +595,7 @@ export default function Preapproval() {
               ≈ {fmt(monthly)}/month at prime ({livePrime}%) · 20-year term
             </div>
             <div style={{ marginTop: 16, padding: '10px 16px', background: 'rgba(255,255,255,0.1)', borderRadius: 8, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
-              This is an estimate using the SA NCA stress-rate formula. Upload your bank statement below for a confirmed figure.
+              This is an estimate using the SA NCA stress-rate formula. Upload your bank statement for a more precise, lender-ready figure.
             </div>
           </div>
         )}
@@ -565,14 +613,22 @@ export default function Preapproval() {
             onClick={() => {
               const incomeVal = parseFloat(form.income) || 0;
               if (incomeVal <= 0) { setIncomeError(true); showToast('Please enter your gross monthly income', 'error'); return; }
-              setIncomeError(false); setForm(f => ({ ...f })); setStep(1);
+              setIncomeError(false); setForm(f => ({ ...f })); setSkippedSteps(new Set([1])); setStep(2);
             }}
           >
-            {estimate > 0 ? 'Confirm with bank statement — 90 sec →' : 'Continue →'}
+            {estimate > 0 ? 'See my full affordability →' : 'Continue →'}
           </Button>
           {estimate > 0 && (
-            <Button variant="ghost" full onClick={() => { setSkippedSteps(new Set([1])); setStep(2); }}>
-              Skip upload — enter details manually instead
+            <Button
+              variant="ghost"
+              full
+              onClick={() => {
+                const incomeVal = parseFloat(form.income) || 0;
+                if (incomeVal <= 0) { setIncomeError(true); showToast('Please enter your gross monthly income', 'error'); return; }
+                setIncomeError(false); setForm(f => ({ ...f })); setStep(1);
+              }}
+            >
+              Upload bank statement for a more accurate result →
             </Button>
           )}
         </div>
@@ -689,8 +745,11 @@ export default function Preapproval() {
           {uploading ? (
             <>
               <div className="pa-upload-zone__spinner" />
-              <strong>{UPLOAD_STAGES[uploadStage]}</strong>
-              <span>No credit check · usually under 30 seconds</span>
+              <strong>{parseProgress?.message || (isOcrScan ? UPLOAD_STAGES_OCR[uploadStage] : UPLOAD_STAGES[uploadStage])}</strong>
+              {parseProgress?.percent != null
+                ? <span>No credit check · {parseProgress.percent}% complete — up to 8 minutes for scanned PDFs</span>
+                : <span>No credit check · {isOcrScan ? 'OCR scan — up to 4 minutes' : 'usually 30 seconds to 4 minutes'}</span>
+              }
             </>
           ) : (
             <>
@@ -1103,6 +1162,28 @@ export default function Preapproval() {
           </div>
         )}
 
+        {/* ── Deeper-insight teaser gate ──────────────────────────────────────
+            For anonymous users, lock the deeper insights (statement summary +
+            spending breakdown + risk/red-flag cards) behind a free-account gate.
+            The affordability number + ScoreGauge above stay fully visible. */}
+        <div className={!isLoggedIn ? 'pa-teaser-lock' : undefined}>
+          {!isLoggedIn && (
+            <div className="pa-teaser-gate">
+              <div className="pa-teaser-gate__icon">🔒</div>
+              <div className="pa-teaser-gate__title">Unlock your full Financial Profile</div>
+              <div className="pa-teaser-gate__sub">
+                See your spending breakdown, peer comparison and bank red-flag analysis — free.
+              </div>
+              <Button variant="lime" full onClick={() => {
+                trackAction('preapproval_cta_clicked', { step: 3 });
+                persistForTeaserGate();
+                navigate('/register?intent=preapproval');
+              }}>
+                Create a free account &amp; continue
+              </Button>
+            </div>
+          )}
+          <div className={!isLoggedIn ? 'pa-teaser-lock__content' : undefined} aria-hidden={!isLoggedIn || undefined}>
         {/* No-income statement summary */}
         {d && !d.income?.detected && (d.expenses?.breakdown || d.debts?.totalMonthly > 0 || d.accountBalance > 0) && (
           <div className="pa-statement-found fade-in" style={{ marginBottom: 'var(--space-4)' }}>
@@ -1171,6 +1252,8 @@ export default function Preapproval() {
             </div>
           </div>
         )}
+          </div>
+        </div>
 
         {/* Simple bond summary when no full analysis */}
         {!readiness && bondAmt > 0 && (
@@ -1299,13 +1382,13 @@ export default function Preapproval() {
 
         <div className="pa-results-sticky-cta">
           <Button variant="lime" full onClick={() => { trackAction('preapproval_cta_clicked', { step: 3 }); setStep(4); }}>
-            Get pre-approved — it's free →
+            {unlockedFromGate ? 'Continue to application →' : "Get pre-approved — it's free →"}
           </Button>
         </div>
 
         <div className="pa-results-cta pa-results-cta--desktop">
           <Button variant="lime" full onClick={() => { trackAction('preapproval_cta_clicked', { step: 3 }); setStep(4); }}>
-            Get pre-approved — it's free →
+            {unlockedFromGate ? 'Continue to application →' : "Get pre-approved — it's free →"}
           </Button>
           {bondAmt > 0 && (
             <button
@@ -1386,11 +1469,30 @@ export default function Preapproval() {
     }
   }
 
+  // Unified Submit — routes by intent (Step 2.3 reconciliation rule):
+  //  • banks selected  → submitBondApp() (bond_application payload, → 'app_done')
+  //  • no banks         → submit() (preapproval payload, routed by isLoggedIn, → 'done')
+  // Both functions stay logically distinct; payload shapes preserved byte-for-byte.
+  function submitApplication() {
+    if (bondApp.banks.length > 0) return submitBondApp();
+    return submit();
+  }
+
+  const APPLICATION_STEPS = ['Affordability', 'Property', 'Details', 'Documents', 'Submit'];
+  const ALL_BANKS = ['ABSA', 'FNB', 'Nedbank', 'Standard Bank', 'Capitec', 'Investec', 'SA Home Loans'];
+
   function renderStep4() {
     const bondAmt = qualifyingBond || analysis?.qualification?.maxBond || 0;
+    function toggleBank(bank) {
+      setBondApp(a => ({
+        ...a,
+        banks: a.banks.includes(bank) ? a.banks.filter(b => b !== bank) : [...a.banks, bank],
+      }));
+    }
     return (
       <div className="fade-in">
-        <h1 className="preapproval-title">Almost done</h1>
+        <StepProgress steps={APPLICATION_STEPS} current={2} />
+        <h1 className="preapproval-title">{START_APPLICATION}</h1>
         <p className="preapproval-sub">
           A Bondly advisor will contact you with competing offers from all 7 SA banks — free of charge.
         </p>
@@ -1479,16 +1581,16 @@ export default function Preapproval() {
             {form.hasProperty && (
               <div style={{ display: 'grid', gap: 'var(--space-3)' }} className="fade-in">
                 <Input label="Property address" id="pa-addr" type="text" value={form.propertyAddress}
-                  onChange={set('propertyAddress')} placeholder="12 Main Road, Cape Town" />
+                  onChange={e => { setForm(f => ({ ...f, propertyAddress: e.target.value })); setBondApp(a => ({ ...a, propertyAddress: e.target.value })); }} placeholder="12 Main Road, Cape Town" />
                 <Input label="Purchase price (R)" id="pa-price" type="number" value={form.purchasePrice}
-                  onChange={set('purchasePrice')} placeholder="1500000" />
+                  onChange={e => { setForm(f => ({ ...f, purchasePrice: e.target.value })); setBondApp(a => ({ ...a, purchasePrice: e.target.value })); }} placeholder="1500000" />
                 <div>
                   <div className="field__label">Offer to Purchase (OTP) signed?</div>
                   <div className="pa-contact-chips">
                     {['Yes', 'Not yet'].map(v => (
                       <button key={v} type="button"
                         className={`pa-chip ${(v === 'Yes') === form.hasOtp ? 'pa-chip--active' : ''}`}
-                        onClick={() => setForm(f => ({ ...f, hasOtp: v === 'Yes' }))}>
+                        onClick={() => { setForm(f => ({ ...f, hasOtp: v === 'Yes' })); setBondApp(a => ({ ...a, otpSigned: v === 'Yes' })); }}>
                         {v}
                       </button>
                     ))}
@@ -1496,6 +1598,40 @@ export default function Preapproval() {
                 </div>
               </div>
             )}
+          </CardBody>
+        </Card>
+
+        {/* Documents (optional) — no hard blocker; Submit reachable without docs */}
+        <Card style={{ marginBottom: 'var(--space-4)' }}>
+          <CardBody>
+            <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: 'var(--space-2)', color: 'var(--text-primary)' }}>
+              Supporting documents <span className="pa-field__optional">(optional)</span>
+            </div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+              You can submit now and add documents later — your advisor will request anything still needed (ID, payslips, bank statements) when they contact you.
+            </p>
+          </CardBody>
+        </Card>
+
+        {/* Banks — selecting banks switches this into a full bond-application submission */}
+        <Card style={{ marginBottom: 'var(--space-4)' }}>
+          <CardBody>
+            <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: 'var(--space-2)' }}>Submit to these banks</div>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 var(--space-4)' }}>
+              Select banks to submit a full application now, or leave all unselected to just get your pre-qualification certificate.
+            </p>
+            <div style={{ display: 'grid', gap: 'var(--space-2)' }}>
+              {ALL_BANKS.map(bank => (
+                <label key={bank} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', cursor: 'pointer', padding: 'var(--space-3)', borderRadius: 8, border: bondApp.banks.includes(bank) ? '1px solid var(--lime)' : '1px solid var(--border-color)', background: bondApp.banks.includes(bank) ? 'rgba(163,230,53,0.06)' : 'transparent', transition: 'all 0.15s' }}>
+                  <input type="checkbox" checked={bondApp.banks.includes(bank)} onChange={() => toggleBank(bank)}
+                    style={{ width: 16, height: 16, accentColor: 'var(--lime)', cursor: 'pointer' }} />
+                  <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{bank}</span>
+                </label>
+              ))}
+            </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 'var(--space-3) 0 0' }}>
+              {bondApp.banks.length} bank{bondApp.banks.length !== 1 ? 's' : ''} selected
+            </p>
           </CardBody>
         </Card>
 
@@ -1510,8 +1646,10 @@ export default function Preapproval() {
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
           <Button variant="ghost" onClick={() => setStep(3)}>← Back</Button>
-          <Button variant="lime" full loading={submitting} onClick={submit}>
-            Submit &amp; get my certificate →
+          <Button variant="lime" full loading={submitting || submittingApp} onClick={submitApplication}>
+            {bondApp.banks.length > 0
+              ? `Submit to ${bondApp.banks.length} bank${bondApp.banks.length !== 1 ? 's' : ''} →`
+              : 'Submit & get my certificate →'}
           </Button>
         </div>
         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.5, margin: 0 }}>
@@ -1931,7 +2069,7 @@ export default function Preapproval() {
 
         {/* "Step 2 of 4 · About your finances" header — plain-English so a
             first-time buyer knows where they are and what's coming. */}
-        {step !== 'apply' && (
+        {step !== 'apply' && step !== 4 && (
           <div className="pa-progress-header">
             <div className="pa-progress-header__label">
               Step {progressIdx + 1} of {STEPS.length}
@@ -1942,14 +2080,16 @@ export default function Preapproval() {
           </div>
         )}
 
-        <div className="pa-progress">
-          {STEPS.map((label, i) => (
-            <div key={label} className={`pa-progress__step ${progressIdx > i && !skippedSteps.has(i) ? 'completed' : progressIdx === i ? 'active' : ''}`}>
-              <div className="pa-progress__dot">{progressIdx > i && !skippedSteps.has(i) ? '✓' : skippedSteps.has(i) && progressIdx > i ? '–' : i + 1}</div>
-              <span>{label}</span>
-            </div>
-          ))}
-        </div>
+        {step !== 4 && (
+          <div className="pa-progress">
+            {STEPS.map((label, i) => (
+              <div key={label} className={`pa-progress__step ${progressIdx > i && !skippedSteps.has(i) ? 'completed' : progressIdx === i ? 'active' : ''}`}>
+                <div className="pa-progress__dot">{progressIdx > i && !skippedSteps.has(i) ? '✓' : skippedSteps.has(i) && progressIdx > i ? '–' : i + 1}</div>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {step === 0 && renderStep0()}
         {step === 1 && renderStep1()}

@@ -92,11 +92,23 @@ export default function BankRoadmap() {
       {/* Share of wallet */}
       <div style={{ ...card, marginBottom: 20 }}>
         <div style={{ ...lbl, marginBottom: 10 }}>Share of wallet — where the book actually banks</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {primaryEntries.map(([bank, n]) => (
-            <span key={bank} style={chip('#f3f4f6', C.text)}>{bank} · {n}</span>
-          ))}
-        </div>
+        {(() => {
+          const totalSow = primaryEntries.reduce((s, [, n]) => s + n, 0) || 1;
+          const maxSow = primaryEntries.length ? primaryEntries[0][1] : 1;
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {primaryEntries.map(([bank, n]) => (
+                <div key={bank} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 110, fontSize: '0.8rem', color: C.text, fontWeight: 600, textAlign: 'right', flexShrink: 0 }}>{bank}</span>
+                  <div style={{ flex: 1, background: '#f3f4f6', borderRadius: 4, height: 18, overflow: 'hidden' }}>
+                    <div style={{ width: Math.max(2, (n / maxSow) * 100) + '%', height: '100%', background: C.purple, borderRadius: 4 }} />
+                  </div>
+                  <span style={{ width: 78, fontSize: '0.74rem', color: C.faint, flexShrink: 0 }}>{n} · {Math.round((n / totalSow) * 100)}%</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Sector competitiveness — cross-bank market share by sector */}
@@ -149,9 +161,15 @@ export default function BankRoadmap() {
       <div style={{ ...card, marginBottom: 20, padding: 0, overflow: 'hidden' }}>
         <div style={{ ...lbl, padding: '14px 16px 6px' }}>Top switch-risk customers <span style={chip(C.purpleBg, C.purple)}>simulated</span></div>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr><th style={th}>Ref</th><th style={th}>Region</th><th style={th}>Propensity</th><th style={th}>Signals</th><th style={th}>~Days to switch</th><th style={th}>Bond</th></tr></thead>
+          <thead><tr><th style={th}>Ref</th><th style={th}>Region</th><th style={th}>Propensity</th><th style={th}>Signals</th><th style={th}>~Days to switch</th><th style={th}>Bond</th><th style={th}>Suggested action</th></tr></thead>
           <tbody>
-            {(radar.topAtRisk || []).map((r) => (
+            {(radar.topAtRisk || []).map((r) => {
+              // Recommended retention play scales with propensity + urgency.
+              const action = r.score >= 70
+                ? (r.daysToSwitch != null && r.daysToSwitch <= 30 ? 'Call now · proactive rate review' : 'Proactive rate review')
+                : r.score >= 50 ? 'Monitor · pre-emptive retention offer'
+                : 'Watch';
+              return (
               <tr key={r.ref}>
                 <td style={td}><Link to={`/bank/applications/${r.ref}`}>{r.ref}</Link></td>
                 <td style={td}>{r.region}</td>
@@ -159,8 +177,10 @@ export default function BankRoadmap() {
                 <td style={{ ...td, color: C.faint }}>{(r.signals || []).join(', ') || '—'}</td>
                 <td style={td}>{r.daysToSwitch}</td>
                 <td style={td}>{bankFmtR(r.requestedAmount)}</td>
+                <td style={{ ...td, fontWeight: 600, color: r.score >= 70 ? C.red : C.text }}>{action}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

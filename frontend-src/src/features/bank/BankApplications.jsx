@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { RefreshCw, Home, Search, Download } from 'lucide-react';
 import { bankApi, bankFmtR, timeUntil } from './bankApi.js';
 
 // --- Decision helpers ---
 
 function getRecommendation(a) {
+  // Prefer server-computed listCall — mirrors the DI panel logic (dti, tier, verification).
+  // Falls back to client-side heuristic for older API responses.
+  if (a.listCall) {
+    if (a.listCall === 'lend')     return 'Bid';
+    if (a.listCall === 'price-up') return 'Hold';
+    if (a.listCall === 'refer')    return 'Refer';
+    if (a.listCall === 'decline')  return 'Decline';
+  }
   if (a.riskTier === 'critical' || a.qualityScore < 30) return 'Decline';
   if (a.riskTier === 'red') return 'Refer';
   if (a.riskTier === 'amber' || (a.riskTier === 'green' && a.qualityScore < 70)) return 'Hold';
@@ -48,11 +57,15 @@ function getHeadlineReason(a) {
 
 function isExpiringSoon(expiresAt) {
   if (!expiresAt) return false;
-  return (new Date(expiresAt) - Date.now()) < 48 * 3600 * 1000;
+  // Must be in the FUTURE and within 48h. A past deadline is closed, not
+  // "expiring soon" — the old check returned true for past dates too, which
+  // made cards show "Closed" AND "expires soon" at once.
+  const diff = new Date(expiresAt) - Date.now();
+  return diff > 0 && diff < 48 * 3600 * 1000;
 }
 
 function expectedValue(a) {
-  const urgency = isExpiringSoon(a.expiresAt) ? 10 : 0;
+  const urgency = isExpiringSoon(a.bidDeadline || a.expiresAt) ? 10 : 0;
   return (a.qualityScore + urgency) * a.requestedAmount / 1_000_000;
 }
 
@@ -60,6 +73,56 @@ function ltvStyle(ltv) {
   if (ltv <= 80) return { bg: '#dcfce7', color: '#166534' };
   if (ltv <= 100) return { bg: '#fef3c7', color: '#92400e' };
   return { bg: '#fee2e2', color: '#991b1b' };
+}
+
+const TYPE_TAG = {
+  swap:        { label: 'Switch',   bg: '#ede9fe', color: '#5b21b6', Icon: RefreshCw },
+  origination: { label: 'New bond', bg: '#dbeafe', color: '#1e40af', Icon: Home },
+};
+function typeMeta(type) {
+  return type === 'swap' ? TYPE_TAG.swap : TYPE_TAG.origination;
+}
+
+// CSV export (#21) — client-side generation + download of the filtered list.
+function csvCell(v) {
+  if (v == null) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function exportCsv(rows) {
+  const cols = ['ref', 'type', 'amount', 'region', 'qualityScore', 'riskTier', 'recommendation', 'bidDeadline', 'submittedAt'];
+  const lines = [cols.join(',')];
+  rows.forEach(a => {
+    lines.push([
+      csvCell(a.ref),
+      csvCell(a.type === 'swap' ? 'Switch' : 'New bond'),
+      csvCell(a.requestedAmount),
+      csvCell(a.region),
+      csvCell(a.qualityScore),
+      csvCell(a.riskTier),
+      csvCell(getRecommendation(a)),
+      csvCell(a.bidDeadline || a.expiresAt || ''),
+      csvCell(a.submittedAt || ''),
+    ].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bondly-deal-queue-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+// Date-range filter (#20) — preset windows over submittedAt.
+function withinDateRange(submittedAt, preset) {
+  if (!preset) return true;
+  if (!submittedAt) return false;
+  const days = preset === '7' ? 7 : preset === '30' ? 30 : preset === '90' ? 90 : 0;
+  if (!days) return true;
+  return (Date.now() - new Date(submittedAt).getTime()) <= days * 86400000;
 }
 
 // --- Component ---
@@ -70,13 +133,20 @@ export default function BankApplications() {
   const [type, setType]         = useState('');
   const [minScore, setMin]      = useState('');
   const [region, setRegion]     = useState('');
-  const [sort, setSort]         = useState('newest');
+  const [sort, setSort]         = useState('value');
   const [riskTier, setRiskTier] = useState('');
   const [maxLtv, setMaxLtv]     = useState('');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [sector, setSector]       = useState('');
+  const [dateRange, setDateRange] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [search, setSearch]       = useState('');
+  const [selected, setSelected]   = useState(() => new Set());
+  const [toast, setToast]         = useState(null);
+  // Locally-applied bulk decisions (mirrors the per-app detail flow, which is
+  // also client-side only — there is no decline/refer backend endpoint).
+  const [decisions, setDecisions] = useState(() => ({})); // { [ref]: 'declined' | 'referred' }
 
   function refresh() {
     setApps(null);
@@ -88,10 +158,107 @@ export default function BankApplications() {
 
   const sorted = useMemo(() => {
     if (!apps) return [];
-    return [...apps].sort((a, b) => expectedValue(b) - expectedValue(a));
-  }, [apps]);
+    const q = search.trim().toLowerCase();
+    return [...apps]
+      .filter(a => withinDateRange(a.submittedAt, dateRange))
+      .filter(a => {
+        if (!q) return true;
+        const ref    = (a.ref || '').toLowerCase();
+        const reg    = (a.region || '').toLowerCase();
+        const amount = String(a.requestedAmount ?? '');
+        return ref.includes(q) || reg.includes(q) || amount.includes(q);
+      })
+      .sort((a, b) => {
+        if (sort === 'newest') return new Date(b.submittedAt) - new Date(a.submittedAt);
+        if (sort === 'score')  return (b.qualityScore || 0) - (a.qualityScore || 0);
+        if (sort === 'amount') return (b.requestedAmount || 0) - (a.requestedAmount || 0);
+        return expectedValue(b) - expectedValue(a); // 'value' (default) = expected value
+      });
+  }, [apps, search, dateRange, sort]);
 
-  const activeFilterCount = [type, minScore, region, riskTier, maxLtv, minAmount, maxAmount, sector].filter(Boolean).length;
+  const activeFilterCount = [type, minScore, region, riskTier, maxLtv, minAmount, maxAmount, sector, dateRange].filter(Boolean).length;
+
+  // Region dropdown options (#16) — distinct regions present in the loaded
+  // applications, replacing the brittle free-text box (typing 'GP' vs 'Gauteng'
+  // vs lowercase used to fail). Keep the current selection visible even if the
+  // backend-filtered list no longer contains it.
+  const regionOptions = useMemo(() => {
+    const set = new Set();
+    (apps || []).forEach(a => { if (a.region) set.add(a.region); });
+    if (region) set.add(region);
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [apps, region]);
+
+  // Keep the selection valid as the filtered list changes.
+  const visibleRefs = useMemo(() => new Set(sorted.map(a => a.ref)), [sorted]);
+  const selectedVisible = useMemo(
+    () => [...selected].filter(ref => visibleRefs.has(ref)),
+    [selected, visibleRefs],
+  );
+  const allSelected = sorted.length > 0 && selectedVisible.length === sorted.length;
+
+  function showToast(text, kind) {
+    setToast({ text, kind });
+    setTimeout(() => setToast(t => (t && t.text === text ? null : t)), 5000);
+  }
+
+  function toggleRow(ref, e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(ref)) next.delete(ref); else next.add(ref);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected(prev => {
+      if (allSelected) {
+        const next = new Set(prev);
+        visibleRefs.forEach(ref => next.delete(ref));
+        return next;
+      }
+      return new Set([...prev, ...visibleRefs]);
+    });
+  }
+
+  async function quickDecide(ref, kind, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const prevDecisions = decisions;
+    setDecisions(prev => ({ ...prev, [ref]: kind }));
+    try {
+      const r = await bankApi.bulkDecide([ref], kind);
+      const pastTense = kind === 'declined' ? 'Declined' : 'Referred to credit';
+      showToast(`${pastTense} ${ref}.`, kind === 'declined' ? 'decline' : 'refer');
+    } catch (e) {
+      setDecisions(prevDecisions);
+      showToast(`Could not update ${ref}: ${e.message || 'error'}`, 'decline');
+    }
+  }
+
+  async function applyBulk(kind) {
+    const refs = selectedVisible;
+    if (refs.length === 0) return;
+    const verb = kind === 'declined' ? 'Decline' : 'Refer to credit';
+    if (!window.confirm(`${verb} ${refs.length} application${refs.length === 1 ? '' : 's'}?${kind === 'declined' ? ' This withdraws any active bids on them.' : ''}`)) return;
+    // Optimistic local update.
+    const prevDecisions = decisions;
+    setDecisions(prev => {
+      const next = { ...prev };
+      refs.forEach(ref => { next[ref] = kind; });
+      return next;
+    });
+    setSelected(new Set());
+    try {
+      const r = await bankApi.bulkDecide(refs, kind);
+      const pastTense = kind === 'declined' ? 'Declined' : 'Referred to credit';
+      showToast(`${pastTense} ${r.applied}/${r.total} application${r.total === 1 ? '' : 's'}.`, kind === 'declined' ? 'decline' : 'refer');
+    } catch (e) {
+      setDecisions(prevDecisions); // roll back on failure
+      showToast(`Could not ${verb.toLowerCase()}: ${e.message || 'error'}`, 'decline');
+    }
+  }
 
   return (
     <>
@@ -108,6 +275,57 @@ export default function BankApplications() {
         <span title="Expected value = quality score × loan amount ÷ 1M, boosted +10 for deals expiring within 48 hours. Higher = more valuable and likely to close." style={{ borderBottom: '1px dashed #9ca3af', cursor: 'help' }}>expected value ⓘ</span>.
         {' '}Every application is anonymised — customer name revealed on bid acceptance.
       </p>
+
+      {/* Search bar (#19) + Export (#21) */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by reference, amount, or region…"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '9px 12px 9px 36px', borderRadius: 8,
+              border: '1.5px solid #d1d5db', fontSize: '0.86rem',
+              background: '#fff', color: '#0b1e2d',
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', color: '#9ca3af', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, padding: 4 }}
+            >×</button>
+          )}
+        </div>
+        <button
+          onClick={() => exportCsv(sorted)}
+          disabled={sorted.length === 0}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 7,
+            padding: '9px 16px', borderRadius: 8, fontSize: '0.82rem', fontWeight: 700,
+            background: sorted.length === 0 ? '#f3f4f6' : '#fff',
+            color: sorted.length === 0 ? '#9ca3af' : '#1e3a5f',
+            border: '1.5px solid ' + (sorted.length === 0 ? '#e5e7eb' : '#1e3a5f'),
+            cursor: sorted.length === 0 ? 'not-allowed' : 'pointer',
+          }}
+        >
+          <Download size={15} /> Export CSV
+        </button>
+      </div>
+
+      {/* Recommendation chip legend (#17) */}
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14, fontSize: '0.72rem', color: '#6b7280' }}>
+        <span style={{ fontWeight: 600 }}>Bondly recommendation:</span>
+        {Object.entries(REC_STYLE).map(([label, s]) => (
+          <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: s.bg, display: 'inline-block' }} />
+            {label}
+          </span>
+        ))}
+        <span style={{ color: '#9ca3af' }}>· derived from risk tier × quality score</span>
+      </div>
 
       {/* Filter toggle */}
       <div style={{ marginBottom: 12 }}>
@@ -151,13 +369,27 @@ export default function BankApplications() {
             </select>
           </label>
           <label>Region
-            <input value={region} onChange={e => setRegion(e.target.value)} placeholder="e.g. Gauteng" />
+            <select value={region} onChange={e => setRegion(e.target.value)}>
+              <option value="">All regions</option>
+              {regionOptions.map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
           </label>
           <label>Sort
             <select value={sort} onChange={e => setSort(e.target.value)}>
+              <option value="value">Expected value</option>
               <option value="newest">Newest</option>
               <option value="score">Highest quality</option>
               <option value="amount">Largest amount</option>
+            </select>
+          </label>
+          <label>Submitted
+            <select value={dateRange} onChange={e => setDateRange(e.target.value)}>
+              <option value="">All time</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+              <option value="90">Last 90 days</option>
             </select>
           </label>
           <label>Max LTV
@@ -223,6 +455,49 @@ export default function BankApplications() {
         ))}
       </div>
 
+      {/* Select-all + bulk action bar (#10) */}
+      {apps && sorted.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 12 }}>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: '0.8rem', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={allSelected}
+              ref={el => { if (el) el.indeterminate = selectedVisible.length > 0 && !allSelected; }}
+              onChange={toggleSelectAll}
+              style={{ width: 16, height: 16, cursor: 'pointer' }}
+            />
+            {selectedVisible.length > 0 ? `${selectedVisible.length} selected` : 'Select all'}
+          </label>
+          {selectedVisible.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => applyBulk('referred')}
+                style={{ padding: '5px 14px', borderRadius: 7, fontSize: '0.8rem', fontWeight: 700, background: '#ede9fe', color: '#5b21b6', border: '1.5px solid #ddd6fe', cursor: 'pointer' }}
+              >Refer {selectedVisible.length} to credit</button>
+              <button
+                onClick={() => applyBulk('declined')}
+                style={{ padding: '5px 14px', borderRadius: 7, fontSize: '0.8rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', border: '1.5px solid #fecaca', cursor: 'pointer' }}
+              >Decline {selectedVisible.length}</button>
+              <button
+                onClick={() => setSelected(new Set())}
+                style={{ padding: '5px 12px', borderRadius: 7, fontSize: '0.8rem', fontWeight: 600, background: 'transparent', color: '#6b7280', border: '1.5px solid #e5e7eb', cursor: 'pointer' }}
+              >Clear</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {toast && (
+        <div style={{
+          marginBottom: 12, padding: '10px 14px', borderRadius: 8, fontSize: '0.82rem', fontWeight: 600,
+          background: toast.kind === 'decline' ? '#fee2e2' : '#ede9fe',
+          color: toast.kind === 'decline' ? '#991b1b' : '#5b21b6',
+          border: `1px solid ${toast.kind === 'decline' ? '#fecaca' : '#ddd6fe'}`,
+        }}>
+          {toast.text}
+        </div>
+      )}
+
       {err && <div className="bank-section" style={{ color: '#991b1b' }}>{err}</div>}
       {!apps && !err && <div className="bank-section">Loading…</div>}
       {apps && sorted.length === 0 && (
@@ -253,22 +528,55 @@ export default function BankApplications() {
           const reason   = getHeadlineReason(a);
           const ltv      = a.propertyContext?.ltv;
           const lStyle   = ltv != null ? ltvStyle(ltv) : null;
-          const expiring = isExpiringSoon(a.expiresAt);
-          const expLabel = a.expiresAt
-            ? (timeUntil(a.expiresAt) === 'closed' ? 'Closed' : `Expires ${timeUntil(a.expiresAt)}`)
+          const deadline = a.bidDeadline || a.expiresAt;
+          const expiring = isExpiringSoon(deadline);
+          // The queue only lists biddable (open) deals, so a past nominal
+          // deadline is not "Closed" here — suppress the misleading label and
+          // only show genuine future-deadline pressure.
+          const expLabel = (deadline && timeUntil(deadline) !== 'closed')
+            ? `Closes ${timeUntil(deadline)}`
             : null;
 
           const hasFlags = a.fraudFlag || expiring || a.verifiedIncome || a.coApplicant;
+          const tMeta    = typeMeta(a.type);
+          const TIcon    = tMeta.Icon;
+          const isSel    = selected.has(a.ref);
+          const decision = decisions[a.ref];
 
           return (
             <Link
               key={a.ref}
               to={`/bank/applications/${a.ref}`}
               className="bank-card"
-              style={{ textDecoration: 'none', display: 'block', padding: '16px 20px' }}
+              style={{
+                textDecoration: 'none', display: 'block', padding: '16px 20px',
+                ...(isSel ? { outline: '2px solid #1e3a5f', outlineOffset: -1 } : {}),
+                ...(decision ? { opacity: 0.62 } : {}),
+              }}
             >
-              {/* Top row: recommendation badge + grade chip + ref + type */}
+              {/* Top row: select + recommendation badge + grade chip + ref + type */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                {/* Row select (#10) */}
+                <input
+                  type="checkbox"
+                  checked={isSel}
+                  onClick={e => toggleRow(a.ref, e)}
+                  onChange={() => {}}
+                  aria-label={`Select ${a.ref}`}
+                  style={{ width: 16, height: 16, cursor: 'pointer' }}
+                />
+
+                {decision && (
+                  <span style={{
+                    background: decision === 'declined' ? '#fee2e2' : '#ede9fe',
+                    color: decision === 'declined' ? '#991b1b' : '#5b21b6',
+                    borderRadius: 99, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 800,
+                    textTransform: 'uppercase', letterSpacing: '0.04em',
+                  }}>
+                    {decision === 'declined' ? 'Declined' : 'Referred'}
+                  </span>
+                )}
+
                 {/* Recommendation — dominant element */}
                 <span style={{
                   background: recStyle.bg, color: recStyle.color,
@@ -294,8 +602,14 @@ export default function BankApplications() {
 
                 {/* Ref + type */}
                 <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontFamily: 'monospace' }}>{a.ref}</span>
-                <span className={'type-tag ' + a.type} style={{ fontSize: '0.72rem' }}>
-                  {a.type === 'swap' ? 'Switch' : 'New bond'}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  background: tMeta.bg, color: tMeta.color,
+                  borderRadius: 99, padding: '3px 10px',
+                  fontSize: '0.72rem', fontWeight: 700,
+                }}>
+                  <TIcon size={12} strokeWidth={2.5} />
+                  {tMeta.label}
                 </span>
               </div>
 
@@ -350,7 +664,7 @@ export default function BankApplications() {
                   <div style={{
                     fontSize: '0.85rem', fontWeight: 700,
                     color: !expLabel ? '#9ca3af'
-                      : timeUntil(a.expiresAt) === 'closed' ? '#991b1b'
+                      : timeUntil(deadline) === 'closed' ? '#991b1b'
                       : expiring ? '#c8a84b' : '#6b7280',
                   }}>
                     {expLabel || '—'}
@@ -391,6 +705,31 @@ export default function BankApplications() {
                       + co-applicant
                     </span>
                   )}
+                </div>
+              )}
+
+              {/* Quick-action row — triage without opening the deal */}
+              {!decision && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid #f1f5f9' }}>
+                  {rec === 'Bid' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#14532d', background: '#dcfce7', borderRadius: 6, padding: '5px 14px', border: '1.5px solid #86efac' }}>
+                      ↗ Strong file — open to bid
+                    </span>
+                  )}
+                  {rec === 'Hold' && a.listCall === 'price-up' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#78350f', background: '#fef3c7', borderRadius: 6, padding: '5px 14px', border: '1.5px solid #fcd34d' }}>
+                      ↗ Biddable — price in a risk premium
+                    </span>
+                  )}
+                  <span style={{ flex: 1 }} />
+                  <button
+                    onClick={e => quickDecide(a.ref, 'referred', e)}
+                    style={{ padding: '5px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, background: '#ede9fe', color: '#5b21b6', border: '1px solid #ddd6fe', cursor: 'pointer' }}
+                  >Refer to credit</button>
+                  <button
+                    onClick={e => quickDecide(a.ref, 'declined', e)}
+                    style={{ padding: '5px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', cursor: 'pointer' }}
+                  >Decline</button>
                 </div>
               )}
             </Link>

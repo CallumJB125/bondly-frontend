@@ -15,10 +15,12 @@ export default function BankDashboard() {
   const [feed,     setFeed]     = useState([]);
   const feedRef = useRef([]);
   const [err, setErr] = useState(null);
+  const [me, setMe] = useState(null);
 
   useEffect(() => {
     bankApi.standup().then(setStandup).catch(e => setErr(e.message));
     bankApi.pipelineForecast().then(setForecast).catch(() => {});
+    bankApi.me().then(setMe).catch(() => {});
   }, []);
 
   // Live SSE — show new applications + bids as they happen
@@ -62,7 +64,7 @@ export default function BankDashboard() {
           <a href="/bank/intelligence" style={{ padding: '7px 14px', background: '#dc2626', color: '#fff', borderRadius: 7, fontSize: '0.78rem', fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' }}>Review now →</a>
         </div>
       )}
-      <h2>{greeting}, {standup.bankName}</h2>
+      <h2>{greeting}, {((me?.user?.name || me?.name) || '').trim().split(/\s+/)[0] || standup.bankName}</h2>
       <p className="lede">Here's what's happened since this time yesterday.</p>
 
       {/* Standup KPIs — last-24h snapshot */}
@@ -122,7 +124,7 @@ export default function BankDashboard() {
 
       {/* Live event ticker */}
       <div className="bank-section">
-        <h3>Live · last {feed.length} event{feed.length === 1 ? '' : 's'} <span style={{ fontSize: '0.7rem', color: '#16a34a', marginLeft: 6 }}>● connected</span></h3>
+        <h3>{feed.length === 0 ? 'Live feed' : `Live · last ${feed.length} event${feed.length === 1 ? '' : 's'}`} <span style={{ fontSize: '0.7rem', color: '#16a34a', marginLeft: 6 }}>● connected</span></h3>
         {feed.length === 0 ? (
           <div style={{ fontSize: '0.82rem', color: '#6b7280' }}>Listening for new applications and bids… they'll appear here in real time.</div>
         ) : (
@@ -153,15 +155,17 @@ function ExecSummary({ standup, forecast }) {
   let marketLabel, marketColor;
   if (total === 0) {
     if (standup.avgGapBps != null) {
-      marketLabel = `Last 5 losses: avg ${standup.avgGapBps}bp off winning rate`;
+      marketLabel = `Quiet day — recent losses ran ${standup.avgGapBps}bp off the winner; sharpen pricing to convert`;
     } else {
-      marketLabel = 'No bids resolved today';
+      marketLabel = 'No bids resolved today — review open deals to stay in the running';
     }
     marketColor = '#6b7280';
   } else {
     const pct = Math.round((standup.wonToday / total) * 100);
     marketLabel = `Winning ${pct}% of bids this week`;
     if (standup.avgGapBps != null) marketLabel += ` · ${standup.avgGapBps}bp avg gap`;
+    if (pct < 30) marketLabel += ' — sharpen to compete';
+    else if (pct < 50) marketLabel += ' — room to push';
     marketColor = pct >= 50 ? '#15803d' : pct >= 30 ? '#b45309' : '#b91c1c';
   }
   const marketDot = total === 0 ? '#9ca3af' : marketColor;
@@ -230,7 +234,9 @@ function TargetPlanner() {
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
         <label style={{ flex: 1 }}>
           <div style={{ fontSize: '0.72rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Booked target (R)</div>
-          <input type="number" value={target} onChange={e => setTarget(e.target.value)}
+          <input type="text" inputMode="numeric"
+            value={target ? 'R ' + Number(target).toLocaleString('en-ZA').replace(/,/g, ' ') : ''}
+            onChange={e => setTarget(e.target.value.replace(/[^\d]/g, ''))}
             style={{ width: '100%', padding: '8px 10px', border: '1px solid #ddd6fe', borderRadius: 6, fontSize: '0.9rem' }} />
         </label>
         <button onClick={compute} disabled={busy}

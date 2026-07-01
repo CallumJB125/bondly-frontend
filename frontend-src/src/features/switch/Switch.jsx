@@ -5,7 +5,7 @@ import { calcSavingsRange, calcSwitchOutcomes, calcSwitchScore } from '@bondly/u
 import { useAuth } from '../../context/AuthContext.jsx';
 import { CurrencyInput } from '@bondly/ui/components/Input.jsx';
 import { publicAlerts, parseStatementForPreapproval } from '../../lib/api.js';
-import { PRIME_RATE, DEFAULT_RATE_SPREAD } from '@bondly/ui/lib/constants.js';
+import { PRIME_RATE, DEFAULT_RATE_SPREAD, START_APPLICATION } from '@bondly/ui/lib/constants.js';
 import { useRateSettings } from '@bondly/ui/lib/usePrimeRate.js';
 import { trackAction } from '@bondly/ui/lib/session.js';
 import LandingNav from '../landing/LandingNav.jsx';
@@ -136,7 +136,7 @@ function GoodRateBlock({ onProceed, onSeeOffers }) {
               else { navigate('/register?intent=switch'); }
             }}
           >
-            Apply for a free review →
+            {START_APPLICATION} →
           </button>
           {onSeeOffers && (
             <button
@@ -423,11 +423,36 @@ function SwitchVerdict({ balance, currentRate, termYears = 20, livePrime, onLock
 
       {saving > 0 && (
         <div className="switch-verdict__cta-area">
+          <div className="switch-verdict__what-next">
+            <div className="switch-verdict__what-next-title">What happens next</div>
+            <div className="switch-verdict__what-next-steps">
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">1</span>
+                <span>Upload your statement <span className="switch-verdict__what-next-dim">(30 sec, optional)</span></span>
+              </div>
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">2</span>
+                <span>We get offers from all 7 banks <span className="switch-verdict__what-next-dim">(48 hrs)</span></span>
+              </div>
+              <div className="switch-verdict__what-next-step">
+                <span className="switch-verdict__what-next-num">3</span>
+                <span>You choose — <strong>nothing moves without your say-so</strong></span>
+              </div>
+            </div>
+          </div>
           <button
             className="ls-btn ls-btn--primary switch-verdict__cta"
             onClick={onLockIn}
           >
-            Lock in my estimate →
+            Get real offers from all 7 banks →
+          </button>
+          <div className="switch-verdict__cta-note">No obligation · No credit check · Free to homeowners</div>
+          <button
+            type="button"
+            className="switch-verdict__cta-secondary"
+            onClick={onLockIn}
+          >
+            Skip upload — just apply →
           </button>
           <div className="switch-verdict__cta-note">Takes 20 seconds · email or phone only · no credit check</div>
         </div>

@@ -1,0 +1,2 @@
+const s=11.25,A=13.25,c=1,S=["ABSA","FNB","Nedbank","Standard Bank","Capitec","Investec","SA Home Loans"],e={ABSA:0,FNB:0,Nedbank:.25,"Standard Bank":0,Capitec:.5,Investec:-.25,"SA Home Loans":.5};(()=>{const t=Object.entries(e).filter(([a])=>a!=="Investec");return Math.round(t.reduce((a,[,n])=>a+n,0)/t.length*100)/100})();const o="Start application process";export{S as B,c as D,s as P,A as S,e as a,o as b};
+//# sourceMappingURL=constants-BUWfgHr3.js.map

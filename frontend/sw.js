@@ -1,6 +1,6 @@
 // Bondly Service Worker — cache assets, never cache HTML
 // Bump CACHE_NAME on every deploy to evict stale old-bundle references.
-const CACHE_NAME = 'bondly-v6';
+const CACHE_NAME = 'bondly-v17';
 
 self.addEventListener('install', e => {
   // Pre-cache nothing on install — assets are cached on first fetch below.
@@ -22,6 +22,13 @@ self.addEventListener('fetch', e => {
   if (e.request.url.includes('/api/')) return; // never cache API calls
 
   const url = new URL(e.request.url);
+
+  // Only handle same-origin requests. Cross-origin CDNs (unpkg/Leaflet, Google
+  // Fonts, analytics) often 302-redirect; re-fetching them in no-cors mode
+  // yields an opaqueredirect response that respondWith() rejects → ERR_FAILED,
+  // which previously blocked Leaflet and left the distress map blank. Let the
+  // browser load cross-origin resources directly.
+  if (url.origin !== self.location.origin) return;
 
   // Never cache HTML — always fetch fresh so JS chunk references are current.
   if (url.pathname === '/' || url.pathname.endsWith('.html')) {

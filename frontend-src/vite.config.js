@@ -17,13 +17,20 @@ export default defineConfig({
     outDir: '../frontend',
     emptyOutDir: true,
     sourcemap: true,
+    // Single CSS bundle — matches the proven anti-reload-loop prod config
+    // (avoids stale cached index referencing missing hashed CSS chunks).
     cssCodeSplit: false,
   },
   server: {
     fs: { allow: [projectPath, sharedPath] },
+    // Allow the public demo hostname when served through the Cloudflare tunnel
+    // (Vite blocks unknown Host headers by default).
+    allowedHosts: ['demo.bondly.co.za', 'localhost', '127.0.0.1'],
     proxy: {
       '/api': {
-        target: 'https://bondly.co.za',
+        // Override with VITE_API_TARGET (e.g. http://localhost:3000 for the
+        // local bondly_demo backend); defaults to production.
+        target: process.env.VITE_API_TARGET || 'https://bondly.co.za',
         changeOrigin: true,
       },
     },

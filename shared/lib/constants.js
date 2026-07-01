@@ -30,3 +30,6 @@ export const MARKET_AVG_SPREAD = (() => {
 })();
 
 export const APP_NAME = 'Bondly';
+
+// ── CTA tokens ────────────────────────────────────────────
+export const START_APPLICATION = 'Start application process';

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { bankApi, bankFmtPct, bankFmtR } from './bankApi.js';
+import { bankApi, bankFmtPct, bankFmtR, downloadCsv } from './bankApi.js';
+import LineChart from '../../components/LineChart.jsx';
 
 /**
  * Win/loss analytics — the feedback loop banks need to improve pricing.
@@ -20,8 +21,22 @@ export default function BankAnalytics() {
 
   return (
     <>
-      <h2>Analytics</h2>
-      <p className="lede">How you're doing across the Bond Desk — what's working, what's not.</p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2>Portfolio &amp; risk</h2>
+          <p className="lede">How you're doing across the Bond Desk — what's working, what's not.</p>
+        </div>
+        <button
+          onClick={() => downloadCsv('bondly-analytics-win-rate-by-band', [
+            { key: 'band', label: 'qualityBand' },
+            { key: 'won', label: 'won' },
+            { key: 'lost', label: 'lost' },
+            { label: 'winRatePct', get: r => r.winRate == null ? '' : r.winRate },
+          ], data.winRateByScore || [])}
+          style={{ padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, background: '#fff', border: '1px solid #d1d5db', color: '#0b1e2d', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          ↓ Export CSV
+        </button>
+      </div>
 
       <div className="bank-kpis">
         <Kpi label="Total bids" v={s.totalBids} />
@@ -34,8 +49,12 @@ export default function BankAnalytics() {
           v={s.medianTimeToBidMins == null ? '—' : s.medianTimeToBidMins + ' min'}
           sub={s.speedPercentile != null
             ? `faster than ${s.speedPercentile}% of banks`
-            : 'from application submit'}
-          good={s.speedPercentile != null && s.speedPercentile >= 75}
+            : s.medianTimeToBidMins == null ? 'from application submit'
+            : s.medianTimeToBidMins <= 30 ? 'competitive — under 30 min'
+            : s.medianTimeToBidMins <= 120 ? 'from application submit'
+            : 'slow — faster bids win materially more'}
+          good={(s.speedPercentile != null && s.speedPercentile >= 75) || (s.speedPercentile == null && s.medianTimeToBidMins != null && s.medianTimeToBidMins <= 30)}
+          bad={(s.speedPercentile != null && s.speedPercentile < 25) || (s.speedPercentile == null && s.medianTimeToBidMins != null && s.medianTimeToBidMins > 120)}
         />
       </div>
 
@@ -75,9 +94,17 @@ export default function BankAnalytics() {
           const highBand = bands.find(b => b.band && b.band.toString().startsWith('85'));
           const highRate = highBand?.winRate;
           if (best.band && best.winRate != null) {
-            return highRate != null
-              ? `Your strongest band is ${best.band} (${best.winRate}% win rate). High-quality (85+) deals close faster and default less — you win ${highRate}% of those, so prioritise them.`
-              : `Your strongest win rate is in the ${best.band} quality band (${best.winRate}%). High-quality deals close faster and default less — lean into these.`;
+            // High-quality (85+) files close faster and default less, so they're
+            // the ones to want. But only recommend "prioritise" when you're
+            // actually winning them — otherwise the honest read is that you're
+            // being outbid on the deals everyone wants (#22).
+            if (highRate != null && highRate >= 40) {
+              return `Your strongest band is ${best.band} (${best.winRate}% win rate). You win ${highRate}% of high-quality (85+) deals — they close faster and default less, so keep prioritising them.`;
+            }
+            if (highRate != null) {
+              return `You win only ${highRate}% of high-quality (85+) deals — the files everyone wants. They close faster and default less, so this likely means you're being outbid there. Sharpen pricing on 85+ files to capture more of them. (Your strongest band today is ${best.band} at ${best.winRate}%.)`;
+            }
+            return `Your strongest win rate is in the ${best.band} quality band (${best.winRate}%). High-quality deals close faster and default less — lean into these.`;
           }
           if (bands.length === 0 || bands.every(b => !b.won && !b.lost)) {
             return 'No bid data yet — place your first bids to see which quality bands you win most.';
@@ -164,6 +191,32 @@ export default function BankAnalytics() {
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'inline-block', width: 12, height: 12, background: '#e5e7eb', borderRadius: 2 }} /> Bids</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ display: 'inline-block', width: 12, height: 3, background: '#c8a84b', borderRadius: 2, marginBottom: 1 }} /> Win rate</span>
         </div>
+
+        {/* Banded win-rate trend (A4.3) — overall vs fast-response win-rate over
+            the same weeks, rendered with the shared multi-series LineChart.
+            Both series are real, derived from bidsPerWeek; no synthetic curve. */}
+        {weeks.length > 1 && (() => {
+          const labels = weeks.map((w, i) => w.week || w.weekStartISO || `2000-W${i + 1}`);
+          const overall = weeks.map(w => w.bidCount > 0 ? Math.round((w.wonCount / w.bidCount) * 100) : null);
+          const fast = weeks.map(w => (w.fastCount > 0) ? Math.round(((w.fastWonCount ?? 0) / w.fastCount) * 100) : null);
+          const series = [{ values: overall, color: '#c8a84b', label: 'Overall' }];
+          if (fast.some(v => v != null)) series.push({ values: fast, color: '#16a34a', label: 'Fast-response' });
+          return (
+            <div style={{ marginTop: 18 }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+                Win-rate trend (%)
+              </div>
+              <LineChart series={series} labels={labels} height={150} yLabel="Win rate %" />
+              <div style={{ display: 'flex', gap: 14, marginTop: 4, fontSize: '0.72rem' }}>
+                {series.map(s => (
+                  <span key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ display: 'inline-block', width: 12, height: 3, background: s.color, borderRadius: 2 }} /> {s.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {data.winRateByProvince && data.winRateByProvince.length > 0 && (

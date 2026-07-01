@@ -45,8 +45,11 @@ async function bankFetch(path, opts = {}) {
 
 export const bankApi = {
   login:   (email, password) => bankFetch('/api/bank/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  ssoLogin:(email)           => bankFetch('/api/bank/sso/simulated', { method: 'POST', body: JSON.stringify({ email }) }),
   logout:  ()                => bankFetch('/api/bank/logout', { method: 'POST' }).catch(() => {}),
   me:      ()                => bankFetch('/api/bank/me'),
+  simStatus: ()              => bankFetch('/api/bank/sim-status'),
+  simEvents: (since = 0)     => bankFetch('/api/bank/sim-events?since=' + Number(since)),
   dashboard:    ()           => bankFetch('/api/bank/dashboard'),
   applications: (params={})  => {
     const q = new URLSearchParams();
@@ -55,6 +58,9 @@ export const bankApi = {
     return bankFetch('/api/bank/applications' + (qs ? '?' + qs : ''));
   },
   application: (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref)),
+  decline:     (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/decline', { method: 'POST' }),
+  refer:       (ref)         => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/refer',   { method: 'POST' }),
+  bulkDecide:  (refs, decision) => bankFetch('/api/bank/applications/bulk-decide', { method: 'POST', body: JSON.stringify({ refs, decision }) }),
   submitBid:   (ref, body)   => bankFetch('/api/bank/applications/' + encodeURIComponent(ref) + '/bid', { method: 'POST', body: JSON.stringify(body) }),
   updateBid:   (bidId, body) => bankFetch('/api/bank/bids/' + encodeURIComponent(bidId), { method: 'PATCH', body: JSON.stringify(body) }),
   withdrawBid: (bidId)       => bankFetch('/api/bank/bids/' + encodeURIComponent(bidId), { method: 'DELETE' }),
@@ -64,6 +70,7 @@ export const bankApi = {
   requestAccess: (body)              => bankFetch('/api/bank/request-access', { method: 'POST', body: JSON.stringify(body) }),
   validateInvite: (token)            => bankFetch('/api/bank/accept-invite/' + encodeURIComponent(token)),
   acceptInvite:   (body)             => bankFetch('/api/bank/accept-invite', { method: 'POST', body: JSON.stringify(body) }),
+  auditLog:       ()                 => bankFetch('/api/bank/audit-log'),
   teamInvites:    ()                 => bankFetch('/api/bank/invites'),
   inviteColleague:(body)             => bankFetch('/api/bank/invites', { method: 'POST', body: JSON.stringify(body) }),
   cancelInvite:   (token)            => bankFetch('/api/bank/invites/' + encodeURIComponent(token), { method: 'DELETE' }),
@@ -100,6 +107,15 @@ export const bankApi = {
 
   // Roadmap (SIMULATED) — book-level cross-bank intelligence preview
   roadmapPortfolio: ()                     => bankFetch('/api/bank/roadmap/portfolio'),
+
+  // Risk-committee exposure overlay (this bank's book × geo distress; illustrative)
+  exposure:       ()                       => bankFetch('/api/bank/intelligence/exposure'),
+
+  // Market-wide winning-rate benchmarks (#31) — anonymised, all banks
+  marketBenchmark:()                       => bankFetch('/api/bank/market-benchmark'),
+
+  // Anonymised per-borrower risk timeline (real snapshots; empty if none)
+  borrowerTimeline:(userId)                => bankFetch('/api/bank/borrower/' + encodeURIComponent(userId) + '/timeline'),
 
   // ML Models — backtest results
   mlModels:       ()                       => bankFetch('/api/bank/ml-models'),
@@ -186,4 +202,50 @@ export function timeUntil(iso) {
   if (days >= 1) return `${days}d ${hours}h`;
   const mins = Math.floor((ms % 3600000) / 60000);
   return `${hours}h ${mins}m`;
+}
+
+// #36 Alert preferences — per-browser mute toggles by alert type. A type is
+// shown unless explicitly set to false. Kept client-side (no PII, no backend
+// rules engine needed); persists across sessions via localStorage.
+export const ALERT_TYPES = [
+  { key: 'milestone',       label: 'Conveyancing milestones awaiting action' },
+  { key: 'risk_alert',      label: 'Fraud / risk alerts' },
+  { key: 'new_application', label: 'New applications' },
+  { key: 'outbid',          label: 'Outbid notifications' },
+  { key: 'tier_change',     label: 'Borrower risk-tier changes' },
+];
+const ALERT_PREFS_KEY = 'bond_desk_alert_prefs';
+export function getAlertPrefs() {
+  try { return JSON.parse(localStorage.getItem(ALERT_PREFS_KEY)) || {}; }
+  catch { return {}; }
+}
+export function setAlertPrefs(prefs) {
+  try { localStorage.setItem(ALERT_PREFS_KEY, JSON.stringify(prefs || {})); } catch { /* ignore */ }
+}
+export function alertTypeEnabled(type) {
+  return getAlertPrefs()[type] !== false;
+}
+
+// Shared CSV export (#43). `columns` is [{ key, label, get? }]; `get(row)`
+// overrides plain row[key]. Triggers a client-side download.
+function csvCell(v) {
+  if (v == null) return '';
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+export function downloadCsv(filenameBase, columns, rows) {
+  const header = columns.map(c => csvCell(c.label)).join(',');
+  const lines = [header];
+  (rows || []).forEach(row => {
+    lines.push(columns.map(c => csvCell(c.get ? c.get(row) : row[c.key])).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filenameBase}-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

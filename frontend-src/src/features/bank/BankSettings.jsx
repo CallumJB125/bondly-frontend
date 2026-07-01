@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { bankApi } from './bankApi.js';
+import { bankApi, ALERT_TYPES, getAlertPrefs, setAlertPrefs } from './bankApi.js';
 
 /**
  * Bank profile + rate sheet. The rate sheet is a tiered pricing matrix
@@ -47,6 +47,8 @@ export default function BankSettings() {
       <p className="lede">Customise your Bond Desk presence and pricing.</p>
 
       <BrandingCard />
+
+      <AlertPrefsCard />
 
 
       <div className="bank-section">
@@ -127,6 +129,42 @@ export default function BankSettings() {
 }
 
 const input = { padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: '0.875rem', background: '#fff' };
+
+// #36 Alert preferences — toggle which alert types surface in the bell. Stored
+// per-browser (localStorage); takes effect on the next page load.
+function AlertPrefsCard() {
+  const [prefs, setPrefs] = useState(() => getAlertPrefs());
+  const [info, setInfo]   = useState(false);
+
+  function toggle(key) {
+    const next = { ...prefs, [key]: prefs[key] === false ? true : false };
+    setPrefs(next);
+    setAlertPrefs(next);
+    setInfo(true);
+    setTimeout(() => setInfo(false), 2500);
+  }
+
+  return (
+    <div className="bank-section">
+      <h3>Alert preferences</h3>
+      <p style={{ color: '#6b7280', fontSize: '0.83rem', marginTop: 0 }}>
+        Choose which alerts appear in your notification bell. Applies to this browser; takes effect on your next page load.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 480 }}>
+        {ALERT_TYPES.map(t => {
+          const on = prefs[t.key] !== false;
+          return (
+            <label key={t.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: 8, cursor: 'pointer' }}>
+              <span style={{ fontSize: '0.86rem', color: '#0b1e2d' }}>{t.label}</span>
+              <input type="checkbox" checked={on} onChange={() => toggle(t.key)} style={{ width: 18, height: 18, cursor: 'pointer' }} />
+            </label>
+          );
+        })}
+      </div>
+      {info && <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#166534' }}>Saved — refresh to apply.</div>}
+    </div>
+  );
+}
 
 function BrandingCard() {
   const [color, setColor] = useState('#0b1e2d');

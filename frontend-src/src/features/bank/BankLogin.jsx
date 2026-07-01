@@ -28,6 +28,18 @@ export default function BankLogin() {
     } finally { setBusy(false); }
   }
 
+  async function ssoSubmit() {
+    if (!email) { setErr('Enter your work email to sign in with SSO'); return; }
+    setErr(''); setBusy(true);
+    try {
+      const data = await bankApi.ssoLogin(email);   // simulated IdP federation
+      setBankToken(data.token);
+      nav('/bank/applications', { replace: true });
+    } catch (e2) {
+      setErr(e2.message || 'SSO sign-in failed');
+    } finally { setBusy(false); }
+  }
+
   if (mode === 'request') return <RequestAccessCard onBack={() => setMode('signin')} />;
 
   return (
@@ -46,6 +58,17 @@ export default function BankLogin() {
         {err && <div className="err">{err}</div>}
 
         <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0', color: '#9ca3af', fontSize: '0.72rem' }}>
+          <span style={{ flex: 1, height: 1, background: '#e5e7eb' }} /> OR <span style={{ flex: 1, height: 1, background: '#e5e7eb' }} />
+        </div>
+        <button type="button" onClick={ssoSubmit} disabled={busy}
+          style={{ width: '100%', background: '#fff', color: '#0b1e2d', border: '1px solid #d1d5db', fontWeight: 700 }}>
+          🔐 Sign in with SSO
+        </button>
+        <div style={{ textAlign: 'center', marginTop: 6, fontSize: '0.68rem', color: '#9ca3af' }}>
+          Simulated SSO (demo) — real deployments federate to your identity provider. Access is still invite-gated.
+        </div>
 
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: '0.82rem', color: '#6b7280' }}>
           Don't have access yet?{' '}

@@ -624,7 +624,9 @@ function AlertsTab() {
                 {alert.trigger_reasons && alert.trigger_reasons.length > 0 && (
                   <div className="intel__alert-reasons">
                     {alert.trigger_reasons.slice(0, 4).map((r, j) => (
-                      <span key={j} className="intel__reason-pill">{shapLabel(r)}</span>
+                      <span key={j} className="intel__reason-pill">
+                        {shapLabel(typeof r === 'string' ? r : (r.feature || r.key || `Factor ${j + 1}`))}
+                      </span>
                     ))}
                   </div>
                 )}

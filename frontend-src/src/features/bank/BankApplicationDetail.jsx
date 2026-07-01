@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { bankApi, bankFmtR, bankFmtPct, monthlyFromRate, getBankToken } from './bankApi.js';
 
@@ -38,8 +38,213 @@ const REC_STYLES = {
   decline: { bg: '#fee2e2', color: '#991b1b', label: 'Decline' },
 };
 
+// ── Consolidated Decision Intelligence panel ────────────────────────────────
+// The 10 signals banks said they need to decide, each with a value + status + the
+// one-line WHY ("show the math"), grouped, ending in a clear recommendation with
+// a confidence the banker can trust. Data is assembled server-side (d.decisionIntelligence).
+const DI_REC = {
+  lend:       { bg: '#dcfce7', bd: '#86efac', color: '#166534', icon: '✓', label: 'LEND' },
+  'price-up': { bg: '#dbeafe', bd: '#93c5fd', color: '#1e40af', icon: '↗', label: 'LEND · PRICE UP' },
+  refer:      { bg: '#fef3c7', bd: '#fcd34d', color: '#92400e', icon: '⏸', label: 'REFER TO CREDIT' },
+  decline:    { bg: '#fee2e2', bd: '#fca5a5', color: '#991b1b', icon: '✕', label: 'DECLINE' },
+};
+const DI_STATUS = {
+  good:    { dot: '#16a34a', text: '#166534' },
+  caution: { dot: '#d97706', text: '#92400e' },
+  risk:    { dot: '#dc2626', text: '#991b1b' },
+  na:      { dot: '#cbd5e1', text: '#94a3b8' },
+};
+const DI_GROUPS = [
+  ['affordability', 'Can they afford it?'],
+  ['risk', 'Should we worry?'],
+  ['moat', 'Competitive context'],
+];
+function DiDetail({ d }) {
+  if (!d) return null;
+  if (d.kind === 'series' && d.points?.length) {
+    const max = Math.max(...d.points, 1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 34 }}>
+          {d.points.map((p, i) => (
+            <div key={i} title={'R ' + p.toLocaleString('en-ZA')} style={{ flex: 1, height: `${Math.max(8, Math.round(p / max * 100))}%`, background: 'linear-gradient(180deg,#6366f1,#818cf8)', borderRadius: '2px 2px 0 0' }} />
+          ))}
+        </div>
+        <div style={{ fontSize: '0.58rem', color: '#94a3b8', marginTop: 3 }}>{d.note}</div>
+      </div>
+    );
+  }
+  if (d.kind === 'categories' && d.items?.length) {
+    const max = Math.max(...d.items.map(i => i.pct), 1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        {d.items.map((it, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{ fontSize: '0.62rem', color: '#475569', width: 78, textTransform: 'capitalize', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.label}</span>
+            <div style={{ flex: 1, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round(it.pct / max * 100)}%`, height: '100%', background: '#0d9488' }} />
+            </div>
+            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#475569', width: 56, textAlign: 'right' }}>{it.pct}% · R{(it.amount || 0).toLocaleString('en-ZA')}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (d.kind === 'scenarios' && d.rows?.length) {
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label}</div>
+        {d.rows.map((r, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, fontSize: '0.62rem' }}>
+            <span style={{ width: 16, color: r.ok ? '#16a34a' : '#dc2626', fontWeight: 800 }}>{r.ok ? '✓' : '✗'}</span>
+            <span style={{ flex: 1, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.label}</span>
+            <span style={{ color: r.surplus >= 0 ? '#475569' : '#dc2626', width: 96, textAlign: 'right' }}>R{(r.surplus || 0).toLocaleString('en-ZA')}/mo</span>
+            <span style={{ color: '#94a3b8', width: 54, textAlign: 'right' }}>DSCR {r.dscr ?? '—'}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (d.kind === 'factors' && d.factors?.length) {
+    const max = Math.max(...d.factors.map(f => Math.abs(f.impact)), 0.1);
+    return (
+      <div style={{ marginTop: 7 }}>
+        <div style={{ fontSize: '0.6rem', color: '#94a3b8', marginBottom: 4 }}>{d.label} · {d.base}</div>
+        {d.factors.map((f, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <span style={{ fontSize: '0.62rem', color: '#475569', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.label}</span>
+            <div style={{ width: 70, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ width: `${Math.round(Math.abs(f.impact) / max * 100)}%`, height: '100%', background: '#f59e0b' }} />
+            </div>
+            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: '#b45309', width: 30, textAlign: 'right' }}>+{f.impact}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+function DiSignal({ s }) {
+  const st = DI_STATUS[s.status] || DI_STATUS.na;
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: 'flex', gap: 10, padding: '9px 12px', borderRadius: 8, background: s.live ? '#fff' : '#f8fafc', border: '1px solid #eef2f7', alignItems: 'flex-start' }}>
+      <span style={{ width: 9, height: 9, borderRadius: 99, background: st.dot, marginTop: 5, flexShrink: 0 }} />
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0f1a24' }}>
+            {s.label}
+            {s.detail && <button onClick={() => setOpen(o => !o)} style={{ marginLeft: 6, fontSize: '0.58rem', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{open ? '▾ hide' : '▸ detail'}</button>}
+          </span>
+          <span style={{ fontSize: '0.82rem', fontWeight: 800, color: st.text, whiteSpace: 'nowrap' }}>{s.value}</span>
+        </div>
+        <div style={{ fontSize: '0.68rem', color: '#64748b', lineHeight: 1.35, marginTop: 2 }}>{s.why}</div>
+        {open && <DiDetail d={s.detail} />}
+        {!s.live && <span style={{ fontSize: '0.58rem', fontWeight: 700, color: '#6d28d9', background: '#ede9fe', borderRadius: 99, padding: '1px 6px', marginTop: 3, display: 'inline-block' }}>simulated · wiring pending</span>}
+      </div>
+    </div>
+  );
+}
+function DecisionIntelligence({ di, type }) {
+  if (!di || !di.signals) return null;
+  const rec = di.recommendation || {};
+  const r = DI_REC[rec.call] || DI_REC.refer;
+  const conf = rec.confidence ?? 0;
+  return (
+    <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      {/* Recommendation banner */}
+      <div style={{ background: r.bg, borderBottom: `1px solid ${r.bd}`, padding: '14px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: '1.5rem' }}>{r.icon}</span>
+            <div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: r.color, letterSpacing: '0.02em' }}>{r.label}</div>
+              <div style={{ fontSize: '0.74rem', color: r.color, opacity: 0.85 }}>{rec.headline}</div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: r.color, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 90, height: 7, background: 'rgba(0,0,0,0.08)', borderRadius: 6, overflow: 'hidden' }}>
+                <div style={{ width: `${conf}%`, height: '100%', background: r.color, opacity: 0.8 }} />
+              </div>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: r.color }}>{conf}%</span>
+            </div>
+          </div>
+        </div>
+        {rec.reasons?.length > 0 && (
+          <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {rec.reasons.map((reason, i) => (
+              <li key={i} style={{ fontSize: '0.74rem', color: r.color, display: 'flex', gap: 6 }}><span style={{ opacity: 0.6 }}>›</span>{reason}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {/* The 10 signals, grouped */}
+      <div style={{ padding: 14, background: '#fafbfc' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.06em' }}>The evidence — show the math</span>
+          {di.coverage && <span style={{ fontSize: '0.64rem', color: '#94a3b8' }}>{di.coverage.live}/{di.coverage.total} signals live</span>}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14, alignItems: 'start' }}>
+          {DI_GROUPS.map(([key, title]) => {
+            const items = di.signals.filter(s => s.group === key);
+            if (!items.length) return null;
+            return (
+              <div key={key}>
+                <div style={{ fontSize: '0.66rem', fontWeight: 700, color: '#64748b', marginBottom: 6 }}>{title}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {items.map(s => <DiSignal key={s.key} s={s} />)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {di.provenance?.length > 0 && (
+          <div style={{ marginTop: 14, borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
+            <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#334155', marginBottom: 6 }}>🔬 Model provenance — how each score is built &amp; back-tested</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 8 }}>
+              {di.provenance.map((m, i) => (
+                <div key={i} style={{ fontSize: '0.64rem', color: '#475569', lineHeight: 1.4, background: '#f8fafc', border: '1px solid #eef2f7', borderRadius: 8, padding: '7px 10px' }}>
+                  <b style={{ color: '#0f1a24' }}>{m.model}</b><br />{m.method}<br />
+                  <span style={{ color: '#15803d', fontWeight: 700 }}>{m.backtest}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DecisionHeader({ a, d, ins }) {
   const [whyOpen, setWhyOpen] = useState(false);
+  const [decision, setDecision] = useState(a?.myDecision || null); // 'referred' | 'declined' (seeded from backend)
+  const [toast, setToast] = useState(null);
+
+  function showToast(text, kind) {
+    setToast({ text, kind });
+    setTimeout(() => setToast(t => (t && t.text === text ? null : t)), 5000);
+  }
+
+  async function handleRefer() {
+    if (!a?.ref) return;
+    if (!window.confirm('Refer this application to the credit committee for review?')) return;
+    const prev = decision; setDecision('referred'); // optimistic
+    try { await bankApi.refer(a.ref); showToast('Referred to the credit desk — the committee will review this file.', 'refer'); }
+    catch (e) { setDecision(prev); showToast('Could not refer: ' + (e.message || 'error'), 'decline'); }
+  }
+
+  async function handleDecline() {
+    if (!a?.ref) return;
+    if (!window.confirm('Decline this application? You can change this later.')) return;
+    const prev = decision; setDecision('declined'); // optimistic
+    try { await bankApi.decline(a.ref); showToast('Application declined.', 'decline'); }
+    catch (e) { setDecision(prev); showToast('Could not decline: ' + (e.message || 'error'), 'decline'); }
+  }
 
   const rec = getRecommendation(a);
   const grade = getGrade(a.qualityScore ?? 0);
@@ -91,26 +296,41 @@ function DecisionHeader({ a, d, ins }) {
           Set rate &amp; bid
         </button>
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent('bank:refer', { detail: { ref: a.ref } }))}
+          onClick={handleRefer}
+          disabled={decision != null}
           style={{
             background: '#0b1e2d', color: '#fff', border: 'none',
             borderRadius: 7, padding: '8px 18px', fontWeight: 700,
-            fontSize: '0.85rem', cursor: 'pointer',
+            fontSize: '0.85rem', cursor: decision != null ? 'default' : 'pointer',
+            opacity: decision != null ? 0.5 : 1,
           }}
         >
-          Refer to credit
+          {decision === 'referred' ? 'Referred to credit ✓' : 'Refer to credit'}
         </button>
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent('bank:decline', { detail: { ref: a.ref } }))}
+          onClick={handleDecline}
+          disabled={decision != null}
           style={{
             background: '#dc2626', color: '#fff', border: 'none',
             borderRadius: 7, padding: '8px 18px', fontWeight: 700,
-            fontSize: '0.85rem', cursor: 'pointer',
+            fontSize: '0.85rem', cursor: decision != null ? 'default' : 'pointer',
+            opacity: decision != null ? 0.5 : 1,
           }}
         >
-          Decline
+          {decision === 'declined' ? 'Declined ✓' : 'Decline'}
         </button>
       </div>
+
+      {toast && (
+        <div role="status" style={{
+          marginBottom: 14, padding: '9px 14px', borderRadius: 7, fontSize: '0.82rem', fontWeight: 600,
+          background: toast.kind === 'decline' ? '#fee2e2' : '#ede9fe',
+          color: toast.kind === 'decline' ? '#991b1b' : '#5b21b6',
+          border: `1px solid ${toast.kind === 'decline' ? '#fecaca' : '#ddd6fe'}`,
+        }}>
+          {toast.text}
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 20, borderTop: '1px solid #f3f4f6', paddingTop: 10 }}>
         <button
@@ -249,6 +469,38 @@ export default function BankApplicationDetail() {
   const rateToBeat = Math.min(lowestCompetingRate, lowestExternalRate);
 
   return (
+    <DetailBody
+      a={a} d={d} ins={ins} mine={mine} ref_={ref}
+      data={data} externalOffers={externalOffers}
+      lowestCompetingRate={rateToBeat === Infinity ? null : rateToBeat}
+      onChange={() => setRel(x => x + 1)}
+    />
+  );
+}
+
+// Split out so the lifted bid state (shared by the inline BidBox and the sticky
+// bar) lives in one place above both consumers.
+function DetailBody({ a, d, ins, mine, ref_, data, externalOffers, lowestCompetingRate, onChange }) {
+  const ref = ref_;
+  const bid = useBidState({ application: a, insights: ins, mine, lowestCompetingRate, onChange });
+
+  // The DecisionHeader's "Set rate & bid" button dispatches a `bank:bid` event;
+  // jump to the inline form and focus the rate input.
+  useEffect(() => {
+    function onBidEvent() {
+      const box = document.getElementById('bid-box');
+      box?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (box) { // brief highlight so the action is obviously responsive (#3)
+        box.style.transition = 'box-shadow .2s'; box.style.boxShadow = '0 0 0 3px #c8a84b';
+        setTimeout(() => { box.style.boxShadow = ''; }, 1100);
+      }
+      setTimeout(() => document.getElementById('sticky-rate-input')?.focus(), 200);
+    }
+    window.addEventListener('bank:bid', onBidEvent);
+    return () => window.removeEventListener('bank:bid', onBidEvent);
+  }, []);
+
+  return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
         <Link to="/bank/applications" style={{ color: '#6b7280', fontSize: '0.78rem', textDecoration: 'none' }}>← Back to open mortgages</Link>
@@ -269,7 +521,7 @@ export default function BankApplicationDetail() {
         )}
       </h2>
       <p className="lede">
-        {bankFmtR(a.requestedAmount)} · {a.region}{a.ageBand ? ' · ' + a.ageBand : ''} · Submitted {new Date(a.submittedAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
+        {bankFmtR(a.requestedAmount)} · {a.region}{a.ageBand ? ' · ' + a.ageBand : ''} · Submitted {new Date(a.submittedAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
       </p>
 
       {ins?.verdict?.length > 0 && (
@@ -292,6 +544,8 @@ export default function BankApplicationDetail() {
       </div>
 
       <DecisionHeader a={a} d={d} ins={ins} />
+
+      <DecisionIntelligence di={d?.decisionIntelligence} type={a.type} />
 
       <div className="bank-detail-grid">
         <div className="col-main">
@@ -318,7 +572,7 @@ export default function BankApplicationDetail() {
               <span className="k">Debt-to-income<Explain text="Percentage of monthly income already committed to debt repayments. NCA guidelines flag anything above 40% as over-indebted. Below 30% is comfortable." /></span>
               <span className="v">{d?.dtiExact != null ? d.dtiExact + ' %' : '—'} <span style={{ color: '#6b7280', fontWeight: 500 }}>({a.dtiBand})</span></span>
             </div>
-            <div className="bank-row"><span className="k">Employment</span><span className="v">{a.employmentType || '—'}{a.employmentTenureYears ? ' · ' + a.employmentTenureYears + ' yrs tenure' : ''}</span></div>
+            <div className="bank-row"><span className="k">Employment</span><span className="v">{a.employmentType ? a.employmentType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'}{a.employmentTenureYears ? ' · ' + a.employmentTenureYears + ' yrs tenure' : ''}</span></div>
             <div className="bank-row"><span className="k">Bank statement coverage<Explain text="Number of months of bank statements on file. 3 months is the minimum; 6+ months gives a much more reliable picture of income patterns and spending habits." /></span><span className="v">{a.monthsOfStatements} month{a.monthsOfStatements === 1 ? '' : 's'}</span></div>
           </div>
 
@@ -326,7 +580,7 @@ export default function BankApplicationDetail() {
             <div className="bank-section" style={{ border: '1px solid #c4b5fd', background: 'linear-gradient(180deg,#faf5ff,#fff)', borderRadius: 10 }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 Cross-bank intelligence
-                <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6d28d9', background: '#ede9fe', border: '1px solid #ddd6fe', borderRadius: 999, padding: '2px 8px' }}>Roadmap · simulated</span>
+                <span title="Roadmap preview — every figure in this card is simulated on a synthetic cohort to show what cross-bank intelligence will surface once live. Not real customer data and not a booked figure." style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6d28d9', background: '#ede9fe', border: '1px solid #ddd6fe', borderRadius: 999, padding: '2px 8px', cursor: 'help' }}>Roadmap · simulated</span>
               </h3>
               <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: '#6b7280' }}>
                 Only Bondly sees this applicant's flows across <em>all</em> their banks (by consent). Preview of roadmap signals — not live.
@@ -359,7 +613,7 @@ export default function BankApplicationDetail() {
               </div>
               {d.roadmap.primacy.relationshipUpliftLifetime > 0 && (
                 <div className="bank-row">
-                  <span className="k">Win-the-salary uplift</span>
+                  <span className="k">Win-the-salary uplift<Explain text="Estimated extra lifetime value if winning this bond also moves the salary + primary banking to you: transactional fees, deposit float and cross-sell over the bond term, net of acquisition cost. Simulated estimate, not a booked figure." /></span>
                   <span className="v" style={{ color: '#15803d' }}>+{bankFmtR(d.roadmap.primacy.relationshipUpliftLifetime)} lifetime relationship value</span>
                 </div>
               )}
@@ -454,7 +708,7 @@ export default function BankApplicationDetail() {
             <div className="bank-section">
               <h3>Co-applicant</h3>
               <div className="bank-row"><span className="k">Relationship</span><span className="v">{a.coApplicant.relationship || '—'}</span></div>
-              <div className="bank-row"><span className="k">Employment</span><span className="v">{a.coApplicant.employmentType || '—'}</span></div>
+              <div className="bank-row"><span className="k">Employment</span><span className="v">{a.coApplicant.employmentType ? a.coApplicant.employmentType.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'}</span></div>
               <div className="bank-row"><span className="k">Income band</span><span className="v">{a.coApplicant.incomeBand || '—'}</span></div>
               <div className="bank-row"><span className="k">DTI band</span><span className="v">{a.coApplicant.dtiBand || '—'}</span></div>
               <div style={{ marginTop: 10, padding: 10, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6 }}>
@@ -562,17 +816,25 @@ export default function BankApplicationDetail() {
           {d?.incomeSeries?.length > 0 && (
             <div className="bank-section">
               <h3>Income stability — {d.stability}</h3>
-              <div className="income-chart">
-                {(() => {
-                  const max = Math.max(...d.incomeSeries.map(p => p.amount), 1);
-                  return d.incomeSeries.map((p, i) => (
-                    <div key={i} className="bar" style={{ height: Math.max(4, (p.amount / max) * 60) + 'px' }} title={bankFmtR(p.amount)} />
-                  ));
-                })()}
-              </div>
-              <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
-                {d.incomeSeries.length} month{d.incomeSeries.length === 1 ? '' : 's'} of verified bank-statement income.
-              </div>
+              {d.incomeSeries.length < 2 ? (
+                <div style={{ fontSize: '0.82rem', color: '#b45309', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 12px' }}>
+                  Only {d.incomeSeries.length} month of bank-statement income on file — insufficient history to chart a trend.{d.incomeSeries[0] ? ` Latest verified income: ${bankFmtR(d.incomeSeries[0].amount)}.` : ''}
+                </div>
+              ) : (
+                <>
+                  <div className="income-chart">
+                    {(() => {
+                      const max = Math.max(...d.incomeSeries.map(p => p.amount), 1);
+                      return d.incomeSeries.map((p, i) => (
+                        <div key={i} className="bar" style={{ height: Math.max(4, (p.amount / max) * 60) + 'px' }} title={bankFmtR(p.amount)} />
+                      ));
+                    })()}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
+                    {d.incomeSeries.length} months of verified bank-statement income.
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -582,13 +844,22 @@ export default function BankApplicationDetail() {
               <div className="spending-bars">
                 {(() => {
                   const max = Math.max(...d.topCategories.map(c => c.amount), 1);
-                  return d.topCategories.map(c => (
-                    <div key={c.category} className="row">
-                      <div className="name">{c.category}</div>
-                      <div className="bar" style={{ width: Math.round((c.amount / max) * 100) + '%' }} />
-                      <div className="v">{bankFmtR(c.amount)}</div>
-                    </div>
-                  ));
+                  const income = Number(d.incomeAvg) || 0;
+                  return d.topCategories.map(c => {
+                    const pct = income > 0 ? Math.round((c.amount / income) * 100) : null;
+                    // light verdict: flag a single category eating an outsized share
+                    const heavy = pct != null && pct >= 30;
+                    return (
+                      <div key={c.category} className="row">
+                        <div className="name">{c.category}</div>
+                        <div className="bar" style={{ width: Math.round((c.amount / max) * 100) + '%' }} />
+                        <div className="v">
+                          {bankFmtR(c.amount)}
+                          {pct != null && <span style={{ color: heavy ? '#b45309' : '#6b7280', fontWeight: heavy ? 700 : 500, marginLeft: 6, fontSize: '0.75rem' }}>{pct}% of income{heavy ? ' ⚠' : ''}</span>}
+                        </div>
+                      </div>
+                    );
+                  });
                 })()}
               </div>
             </div>
@@ -642,8 +913,8 @@ export default function BankApplicationDetail() {
             application={a}
             insights={ins}
             mine={mine}
-            lowestCompetingRate={rateToBeat === Infinity ? null : rateToBeat}
-            onChange={() => setRel(x => x + 1)}
+            lowestCompetingRate={lowestCompetingRate}
+            bid={bid}
           />
           <ComparablesCard appRef={ref} />
 
@@ -734,8 +1005,102 @@ export default function BankApplicationDetail() {
           )}
         </div>
       </div>
+      <StickyBidBar application={a} mine={mine} bid={bid} />
     </>
   );
+}
+
+// Sticky bottom bar (#11) — keeps the core "Set rate & bid" action reachable
+// without scrolling. It drives the SAME shared bid state as the inline BidBox
+// (rate input, monthly preview, submit, save draft), so there is a single
+// submission path and no double-submit.
+function StickyBidBar({ application, mine, bid }) {
+  const { rate, setRate, monthly, busy, submit, saveDraft, draft } = bid;
+  return (
+    <div style={{
+      position: 'sticky', bottom: 0, left: 0, right: 0, zIndex: 40,
+      marginTop: 20, marginLeft: -20, marginRight: -20,
+      background: '#fff', borderTop: '1px solid #e5e7eb',
+      boxShadow: '0 -4px 16px rgba(11,30,45,0.08)',
+      padding: '12px 20px',
+      display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+    }}>
+      <span style={{ fontWeight: 800, color: '#0b1e2d', fontSize: '0.85rem' }}>
+        {mine ? 'Update your bid' : 'Set rate & bid'}
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <label style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 700 }}>Rate %</label>
+        <input
+          id="sticky-rate-input"
+          type="text" inputMode="decimal"
+          value={rate} onChange={e => setRate(e.target.value.replace(',', '.'))} placeholder="11.10"
+          style={{ width: 90, padding: '7px 9px', border: '1px solid #e5e7eb', borderRadius: 6, fontSize: '0.86rem' }}
+        />
+      </div>
+      <span style={{ fontSize: '0.8rem', color: '#374151' }}>
+        Customer pays <strong>{bankFmtR(monthly)}/mo</strong>
+      </span>
+      {draft && (
+        <span style={{ fontSize: '0.72rem', color: '#78350f', fontWeight: 700 }}>📝 Draft · {draft.rate}%</span>
+      )}
+      <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+        <button type="button" onClick={saveDraft} disabled={busy || !rate}
+          style={{ background: 'transparent', color: '#78350f', border: '1px solid #fde68a', borderRadius: 7, padding: '8px 14px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+          Save draft
+        </button>
+        <button type="button" onClick={() => submit()} disabled={busy || !rate}
+          style={{ background: '#c8a84b', color: '#fff', border: 'none', borderRadius: 7, padding: '8px 18px', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}>
+          {busy ? 'Working…' : (mine ? 'Update bid' : 'Submit bid')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Small, safe markdown → HTML renderer for copilot replies.
+// Supports: headings (#/##/###), bold (**), italic (*), inline code (`),
+// unordered (-/*) and ordered (1.) lists, and line breaks. Escapes HTML first.
+function renderMarkdown(src) {
+  const esc = (s) => s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = (s) => esc(s)
+    .replace(/`([^`]+)`/g, '<code style="background:#ede9fe;padding:1px 4px;border-radius:4px;font-size:0.92em">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+
+  const lines = String(src || '').split(/\r?\n/);
+  const html = [];
+  let listType = null; // 'ul' | 'ol'
+  const closeList = () => { if (listType) { html.push(`</${listType}>`); listType = null; } };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { closeList(); continue; }
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    if (h) {
+      closeList();
+      const lvl = h[1].length;
+      const size = lvl === 1 ? '1.05rem' : lvl === 2 ? '0.95rem' : '0.88rem';
+      html.push(`<div style="font-weight:800;font-size:${size};margin:8px 0 4px">${inline(h[2])}</div>`);
+      continue;
+    }
+    const ol = line.match(/^\d+\.\s+(.*)$/);
+    const ul = line.match(/^[-*]\s+(.*)$/);
+    if (ol) {
+      if (listType !== 'ol') { closeList(); html.push('<ol style="margin:4px 0;padding-left:20px">'); listType = 'ol'; }
+      html.push(`<li>${inline(ol[1])}</li>`);
+      continue;
+    }
+    if (ul) {
+      if (listType !== 'ul') { closeList(); html.push('<ul style="margin:4px 0;padding-left:20px">'); listType = 'ul'; }
+      html.push(`<li>${inline(ul[1])}</li>`);
+      continue;
+    }
+    closeList();
+    html.push(`<div>${inline(line)}</div>`);
+  }
+  closeList();
+  return html.join('');
 }
 
 function CopilotPanel({ appRef }) {
@@ -784,12 +1149,22 @@ function CopilotPanel({ appRef }) {
         <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 10, padding: 10, background: '#fff', borderRadius: 7, border: '1px solid #ddd6fe' }}>
           {msgs.map((m, i) => (
             <div key={i} style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
-              <div style={{
-                maxWidth: '90%', padding: '8px 11px', borderRadius: 8,
-                background: m.role === 'user' ? '#0b1e2d' : '#f5f3ff',
-                color: m.role === 'user' ? '#fff' : '#0f1a24',
-                fontSize: '0.84rem', whiteSpace: 'pre-wrap',
-              }}>{m.text}</div>
+              {m.role === 'user' ? (
+                <div style={{
+                  maxWidth: '90%', padding: '8px 11px', borderRadius: 8,
+                  background: '#0b1e2d', color: '#fff',
+                  fontSize: '0.84rem', whiteSpace: 'pre-wrap',
+                }}>{m.text}</div>
+              ) : (
+                <div
+                  style={{
+                    maxWidth: '90%', padding: '8px 11px', borderRadius: 8,
+                    background: '#f5f3ff', color: '#0f1a24',
+                    fontSize: '0.84rem', lineHeight: 1.5,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.text) }}
+                />
+              )}
             </div>
           ))}
           {busy && <div style={{ fontSize: '0.78rem', color: '#7c3aed', fontStyle: 'italic' }}>Thinking…</div>}
@@ -991,22 +1366,40 @@ function docLabel(t) {
   }[t] || t;
 }
 
-function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) {
-  // For a switch, default the term to what's left on the existing bond.
-  // Resetting to 240 months would lower the monthly but extend interest cost —
-  // not a fair like-for-like offer. Bank can still override.
+// localStorage helpers for provisional bid drafts (#12). Keyed by deal ref so a
+// draft survives a revisit. No backend — purely local to this banker's browser.
+const DRAFT_KEY = (ref) => `bondly_bank_bid_draft_${ref}`;
+function readDraft(ref) {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY(ref)) || 'null'); }
+  catch { return null; }
+}
+
+// Shared bid state + submission logic, lifted so the inline BidBox and the
+// sticky bar drive the SAME state and the SAME submit() — only one submission
+// path exists, so there is no way to double-submit or diverge.
+function useBidState({ application, insights, mine, lowestCompetingRate, onChange }) {
+  const ref = application.ref;
+  const savedDraft = useMemo(() => readDraft(ref), [ref]);
+
   const defaultTerm = mine?.term
     ? String(mine.term)
     : (application?.swapContext?.monthsRemaining ? String(application.swapContext.monthsRemaining) : '240');
-  const [rate, setRate]         = useState(mine?.rate ? String(mine.rate) : (insights?.suggestedBid?.rate ? String(insights.suggestedBid.rate) : ''));
+  // Prefill priority: existing live bid → saved draft → Bondly suggestion.
+  const initialRate = mine?.rate ? String(mine.rate)
+    : (savedDraft?.rate != null ? String(savedDraft.rate)
+    : (insights?.suggestedBid?.rate ? String(insights.suggestedBid.rate) : ''));
+
+  const [rate, setRate]         = useState(initialRate);
   const [term, setTerm]         = useState(defaultTerm);
   const [conditions, setCond]   = useState('');
-  const [notes, setNotes]       = useState('');
+  const [notes, setNotes]       = useState(savedDraft?.notes || '');
   const [valid, setValid]       = useState('14');
   const [addons, setAddons]     = useState([]);
   const [busy, setBusy]         = useState(false);
   const [err, setErr]           = useState(null);
   const [okMsg, setOkMsg]       = useState(null);
+  const [draft, setDraft]       = useState(savedDraft);
+  const submittingRef           = useRef(false); // synchronous double-submit guard (sticky bar + inline form share submit)
 
   const balance = application.requestedAmount;
   const rateNum = Number(rate);
@@ -1016,7 +1409,6 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
     return monthlyFromRate(balance, rateNum, termNum);
   }, [rate, term, balance]);
 
-  // Live sensitivity — DTI at this rate
   const dtiAtRate = useMemo(() => {
     const income   = application.detail?.incomeAvg || 0;
     const fixedDebt= application.detail?.fixedDebt || 0;
@@ -1037,8 +1429,38 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
     if (template === 'aggressive' && insights?.suggestedBid?.rate)       setRate(String((insights.suggestedBid.rate - 0.25).toFixed(2)));
   }
 
+  function saveDraft() {
+    if (!rate) { setErr('Enter a rate before saving a draft.'); return; }
+    const d = { rate: rateNum, notes, savedAt: new Date().toISOString() };
+    try { localStorage.setItem(DRAFT_KEY(ref), JSON.stringify(d)); } catch {}
+    setDraft(d); setErr(null);
+    setOkMsg(`Draft saved · ${rateNum}%`);
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY(ref)); } catch {}
+    setDraft(null);
+  }
+
   async function submit(e) {
     e?.preventDefault();
+    // Synchronous ref guard — React `busy` state updates async, so two triggers
+    // in the same tick (Enter on the form + click on the sticky bar) could both
+    // read busy=false and double-POST. The ref flips immediately.
+    if (submittingRef.current || busy) return;
+    // #15 — in-app validation with a realistic floor (no 0% bids; prime ≈ 10.75%).
+    if (!isFinite(rateNum) || rateNum < 6) {
+      setErr('Enter a realistic rate — at least 6%. Prime is ~10.75%.');
+      return;
+    }
+    if (rateNum > 30) { setErr('Rate looks too high — must be 30% or below.'); return; }
+    // #9 — warn (don't hard-block) when the bid exceeds the applicant's 30% NCA affordability cap.
+    const cap = insights?.disposableCap;
+    if (cap != null && cap >= 0 && monthly > cap) {
+      const over = Math.round(monthly - cap);
+      if (!window.confirm(`This bid's repayment (R${monthly.toLocaleString('en-ZA')}/mo) is about R${over.toLocaleString('en-ZA')} over the applicant's 30% NCA affordability cap — they may not qualify without a longer term or smaller bond. Submit anyway?`)) return;
+    }
+    submittingRef.current = true;
     setBusy(true); setErr(null); setOkMsg(null);
     try {
       const body = { rate: rateNum, monthly, term: termNum, conditions, notes, validityDays: Number(valid), addons: addons.filter(a => a.name) };
@@ -1049,10 +1471,11 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
         await bankApi.submitBid(application.ref, body);
         setOkMsg('Bid submitted. The customer can see it on their dashboard.');
       }
+      clearDraft();              // a submitted bid supersedes any provisional draft
       onChange?.();
     } catch (e2) {
       setErr(e2.message);
-    } finally { setBusy(false); }
+    } finally { setBusy(false); submittingRef.current = false; }
   }
 
   async function withdraw() {
@@ -1067,9 +1490,75 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
     finally { setBusy(false); }
   }
 
+  return {
+    rate, setRate, term, setTerm, conditions, setCond, notes, setNotes,
+    valid, setValid, addons, setAddons, busy, err, okMsg, draft,
+    monthly, dtiAtRate, headroom, apply, submit, withdraw, saveDraft,
+  };
+}
+
+// Phase 2 — win-probability pricing curve. Fetches the calibrated curve for
+// this deal once, then shows win% + lifetime margin at the officer's current
+// rate, with a slider to explore the win-vs-margin trade-off live.
+function WinProbabilityCurve({ appRef, rate, setRate }) {
+  const [curve, setCurve] = useState(null);
+  const [model, setModel] = useState(null);
+  const [cof, setCof] = useState(10.75);
+  useEffect(() => {
+    if (!appRef) return;
+    const t = getBankToken();
+    fetch(`/api/bank/win-probability?ref=${encodeURIComponent(appRef)}`, { headers: { Authorization: `Bearer ${t}` } })
+      .then(r => (r.ok && (r.headers.get('content-type') || '').includes('json')) ? r.json() : null)
+      .then(j => { if (j?.success) { setCurve(j.data.curve); setModel(j.data.model); setCof(j.data.costOfFunds ?? 10.75); } })
+      .catch(() => {});
+  }, [appRef]);
+  if (!curve || !curve.length) return null;
+  const r = parseFloat(rate);
+  const nearest = Number.isFinite(r) ? curve.reduce((a, b) => Math.abs(b.rate - r) < Math.abs(a.rate - r) ? b : a) : null;
+  const winPct = nearest ? Math.round(nearest.winProb * 100) : null;
+  const margin = nearest ? nearest.lifetimeMargin : null;
+  const lo = curve[0].rate, hi = curve[curve.length - 1].rate;
+  const W = 260, H = 60, maxP = Math.max(...curve.map(c => c.winProb), 0.01);
+  const pts = curve.map((c, i) => `${(i / (curve.length - 1)) * W},${H - (c.winProb / maxP) * H}`).join(' ');
+  const markX = Number.isFinite(r) ? Math.max(0, Math.min(W, ((r - lo) / (hi - lo)) * W)) : null;
   return (
-    <div className="bank-section bid-box">
+    <div style={{ background: '#0d1b2a', borderRadius: 8, padding: '12px 14px', marginBottom: 12, color: '#e2e8f0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700 }}>Win probability at your rate</span>
+        {model?.thinSample && <span title={model?.note} style={{ fontSize: '0.58rem', color: '#d29922', border: '1px solid #d29922', borderRadius: 5, padding: '1px 6px' }}>thin sample · n={model?.n ?? 0}</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'baseline', marginBottom: 8 }}>
+        <div><span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#3fb950' }}>{winPct != null ? winPct + '%' : '—'}</span> <span style={{ fontSize: '0.7rem', color: '#8b9bb4' }}>win @ {Number.isFinite(r) ? r.toFixed(2) : '—'}%</span></div>
+        {margin != null && <div style={{ fontSize: '0.78rem', color: '#8b9bb4' }}>lifetime margin <b style={{ color: '#e2e8f0' }}>{bankFmtR(margin)}</b></div>}
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block' }} preserveAspectRatio="none">
+        <polyline points={pts} fill="none" stroke="#3fb950" strokeWidth="2" />
+        {markX != null && <line x1={markX} y1="0" x2={markX} y2={H} stroke="#c8a84b" strokeWidth="1.5" strokeDasharray="3 3" />}
+      </svg>
+      <input type="range" min={lo} max={hi} step="0.01" value={Number.isFinite(r) ? r : lo}
+        onChange={e => setRate(e.target.value)} style={{ width: '100%', marginTop: 6 }} />
+      <div style={{ fontSize: '0.64rem', color: '#6b7280', marginTop: 4 }}>
+        Drag to explore the win-vs-margin trade-off. Win% calibrated on {model?.n ?? 0} decided bids; margin vs {cof}% cost of funds (directional).
+      </div>
+    </div>
+  );
+}
+
+function BidBox({ application, insights, mine, lowestCompetingRate, bid }) {
+  const {
+    rate, setRate, term, setTerm, conditions, setCond, notes, setNotes,
+    valid, setValid, addons, setAddons, busy, err, okMsg, draft,
+    monthly, dtiAtRate, headroom, apply, submit, withdraw, saveDraft,
+  } = bid;
+
+  return (
+    <div className="bank-section bid-box" id="bid-box">
       <h3>{mine ? 'Update your bid' : 'Submit a bid'}</h3>
+      {draft && (
+        <div style={{ fontSize: '0.74rem', color: '#78350f', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '6px 10px', marginBottom: 10, fontWeight: 700 }}>
+          📝 Draft saved · {draft.rate}%
+        </div>
+      )}
 
       {/* One-click templates */}
       <div className="bid-templates">
@@ -1099,7 +1588,7 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
       <form onSubmit={submit}>
         <div className="input-row">
           <label>Rate (%)</label>
-          <input type="number" step="0.05" min="1" max="30" value={rate} onChange={e => setRate(e.target.value)} placeholder="11.10" required />
+          <input type="text" inputMode="decimal" value={rate} onChange={e => setRate(e.target.value.replace(',', '.'))} placeholder="11.10" required />
         </div>
         <div className="input-row">
           <label>Term (months)</label>
@@ -1123,6 +1612,8 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
             </div>
           )}
         </div>
+
+        <WinProbabilityCurve appRef={application.ref} rate={rate} setRate={setRate} />
 
         <div style={{ marginBottom: 10 }}>
           <label style={{ display:'block', fontSize: '0.75rem', color: '#6b7280', fontWeight: 700, marginBottom: 4 }}>Add-ons (optional)</label>
@@ -1150,6 +1641,10 @@ function BidBox({ application, insights, mine, lowestCompetingRate, onChange }) 
 
         <button type="submit" className="submit-btn" disabled={busy || !rate}>
           {busy ? 'Working…' : (mine ? 'Update bid' : 'Submit bid')}
+        </button>
+        <button type="button" onClick={saveDraft} disabled={busy || !rate}
+          style={{ marginTop: 6, width: '100%', background: 'transparent', color: '#78350f', border: '1px solid #fde68a', borderRadius: 8, padding: '8px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+          Save draft
         </button>
         {mine && (
           <button type="button" onClick={withdraw} disabled={busy}

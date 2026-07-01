@@ -187,6 +187,8 @@ export default function Preapproval() {
   const [statementSource, setStatementSource] = useState(null); // 'statement' | 'profile' | null
   const [incomeVerified, setIncomeVerified] = useState(false);
   const [incomeEditVal, setIncomeEditVal] = useState('');
+  const [incomeError, setIncomeError] = useState(false);
+  const [parseProgress, setParseProgress] = useState(null);
   const [exitIntent, setExitIntent] = useState(false);
   const [exitEmail, setExitEmail]   = useState('');
   const [exitSaved, setExitSaved]   = useState(false);
@@ -230,7 +232,7 @@ export default function Preapproval() {
   const showToast = useToast();
   const navigate  = useNavigate();
 
-  // Track funnel entry once on mount
+  // Track funnel entry once on mount; A-C2: expose experiment variant at entry point
   useEffect(() => {
     track('preapproval_started', 'preapproval');
     getVariant('preapproval_flow').catch(() => {});
@@ -240,9 +242,15 @@ export default function Preapproval() {
   useEffect(() => {
     const prev = stepEnteredAt.current;
     stepEnteredAt.current = Date.now();
-    if (typeof step === 'number' && step > 0) {
-      aTrack('preapproval_step_enter', { step, prevDurationMs: Date.now() - prev });
-    }
+    // entry_source: hero_statement = came via homepage statement upload fast-path;
+    //               url_income     = came via ?income= URL param (e.g. from landing calc);
+    //               cold_start     = direct navigation with no pre-fill.
+    const entry_source = statementSource === 'statement'
+      ? 'hero_statement'
+      : (skippedSteps.has(1) && new URLSearchParams(window.location.search).get('income'))
+        ? 'url_income'
+        : 'cold_start';
+    aTrack('preapproval_step_enter', { step, prevDurationMs: Date.now() - prev, entry_source });
     // When step 3 (financial profile) renders, start a result-abandon timer
     if (step === 3) {
       const zone = analysis?.affordabilityZone?.zone;
@@ -357,7 +365,10 @@ export default function Preapproval() {
   const DRAFT_KEY = 'bondly_preapproval_draft';
   useEffect(() => {
     if (step >= 3) { localStorage.removeItem(DRAFT_KEY); return; } // clear on success
-    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, form, empType, propType })); } catch {}
+    try {
+      const sanitized = { ...form, income: Math.max(0, parseFloat(form.income) || 0) || form.income };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ step, form: sanitized, empType, propType }));
+    } catch {}
   }, [step, form, empType, propType]);
 
   function set(k) { return e => setForm(f => ({ ...f, [k]: e.target.value })); }
@@ -411,6 +422,8 @@ export default function Preapproval() {
     setUploading(true);
     setIsOcrScan(false);
     setParseError(null);
+    setReviewPending(false);
+    setParseProgress(null);
     setAnalysis(null);
     setIncomeVerified(false);
     setStatementSource(null);
@@ -423,6 +436,7 @@ export default function Preapproval() {
     try {
       const res = await parseStatementForPreapproval(file, {
         onWillOcr: () => setIsOcrScan(true),
+        onProgress: (p) => setParseProgress(p),
       });
       if (!res.success) throw new Error(res.error || 'Could not analyse statement');
       const d = res.data;
@@ -483,6 +497,7 @@ export default function Preapproval() {
       }
     } finally {
       setUploading(false);
+      setParseProgress(null);
       if (e.target) e.target.value = '';
     }
   }
@@ -509,10 +524,16 @@ export default function Preapproval() {
                 type="number"
                 placeholder="e.g. 45 000"
                 value={form.income}
-                onChange={e => setForm(f => ({ ...f, income: e.target.value }))}
+                onChange={e => { setForm(f => ({ ...f, income: e.target.value })); setIncomeError(false); }}
                 autoFocus
-                style={{ width: '100%', padding: '11px 14px', border: '1.5px solid var(--border-color)', borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-input)', color: 'var(--text-primary)', fontSize: '1rem', boxSizing: 'border-box' }}
+                aria-describedby={incomeError ? 'pa-income-error' : undefined}
+                style={{ width: '100%', padding: '11px 14px', border: `1.5px solid ${incomeError ? '#dc2626' : 'var(--border-color)'}`, borderRadius: 'var(--border-radius-sm)', background: 'var(--bg-input)', color: 'var(--text-primary)', fontSize: '1rem', boxSizing: 'border-box' }}
               />
+              {incomeError && (
+                <p id="pa-income-error" style={{ fontSize: '0.8125rem', color: '#dc2626', margin: '4px 0 0', fontWeight: 500 }}>
+                  Please enter your monthly income
+                </p>
+              )}
             </div>
             <div>
               <label style={{ display: 'block', fontWeight: 600, fontSize: '0.875rem', marginBottom: 6 }}>
@@ -527,6 +548,11 @@ export default function Preapproval() {
               />
             </div>
           </div>
+          {inc > 0 && dbt >= inc && (
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-danger, #dc2626)', margin: '0' }}>
+              Monthly debt payments can't exceed your income — please check these figures.
+            </p>
+          )}
         </div>
 
         {estimate > 0 && (
@@ -572,7 +598,11 @@ export default function Preapproval() {
           <Button
             variant="lime"
             full
-            onClick={() => { setForm(f => ({ ...f })); setStep(1); }}
+            onClick={() => {
+              const incomeVal = parseFloat(form.income) || 0;
+              if (incomeVal <= 0) { setIncomeError(true); showToast('Please enter your gross monthly income', 'error'); return; }
+              setIncomeError(false); setForm(f => ({ ...f })); setStep(1);
+            }}
           >
             {estimate > 0 ? 'Confirm with bank statement — 90 sec →' : 'Continue →'}
           </Button>
@@ -697,8 +727,11 @@ export default function Preapproval() {
           {uploading ? (
             <>
               <div className="pa-upload-zone__spinner" />
-              <strong>{UPLOAD_STAGES[uploadStage]}</strong>
-              <span>No credit check · usually 1–2 minutes</span>
+              <strong>{parseProgress?.message || (isOcrScan ? UPLOAD_STAGES_OCR[uploadStage] : UPLOAD_STAGES[uploadStage])}</strong>
+              {parseProgress?.percent != null
+                ? <span>No credit check · {parseProgress.percent}% complete — up to 8 minutes for scanned PDFs</span>
+                : <span>No credit check · {isOcrScan ? 'up to 8 minutes for scanned PDFs' : 'usually under a minute'}</span>
+              }
             </>
           ) : (
             <>
@@ -989,10 +1022,10 @@ export default function Preapproval() {
         )}
 
         <div style={{ display: 'flex', gap: 'var(--space-3)', marginTop: 'var(--space-5)' }}>
-          <Button variant="ghost" onClick={() => setStep(1)}>← Back</Button>
+          <Button variant="ghost" onClick={() => setStep(skippedSteps.has(1) ? 0 : 1)}>← Back</Button>
           <Button
             variant="lime" full
-            disabled={(!(parseNum(form.income) > 0) && !analysis) || qualifying}
+            disabled={(!(parseNum(form.income) > 0) && !analysis) || (inc > 0 && dbt >= inc) || qualifying}
             loading={qualifying}
             onClick={handleContinueToResults}
           >

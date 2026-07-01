@@ -514,6 +514,49 @@
   line-height: 1.5; text-align: center;
   max-width: 640px; margin: 0 auto 28px;
 }
+
+/* What happens next strip */
+.switch-verdict__what-next {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.switch-verdict__what-next-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.switch-verdict__what-next-steps { display: flex; flex-direction: column; gap: 8px; }
+.switch-verdict__what-next-step {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #1e293b;
+  line-height: 1.4;
+}
+.switch-verdict__what-next-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  background: #0b1e2d;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.switch-verdict__what-next-dim { color: var(--text-secondary); font-weight: 400; }
+
+/* CTA */
 .switch-verdict__cta-area { text-align: center; }
 .switch-verdict__cta { padding: 16px 44px; font-size: 16px; }
 .switch-verdict__cta-note { font-family: var(--ls-subtext); font-size: 12.5px; color: var(--ls-muted, #5a5a5a); margin-top: 12px; }

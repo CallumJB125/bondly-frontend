@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate, Navigate } from 'react-router-dom';
-import { bankApi, getBankToken, clearBankToken, getDecodedBankToken } from './bankApi.js';
+import { NavLink, Outlet, useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { bankApi, getBankToken, clearBankToken, getDecodedBankToken, alertTypeEnabled } from './bankApi.js';
 import './bank.css';
 
 function OnboardingTour() {
@@ -35,18 +35,25 @@ function OnboardingTour() {
   );
 }
 
-const sectionLabel = {
-  fontSize: '0.58rem',
-  textTransform: 'uppercase',
-  letterSpacing: '0.12em',
-  fontWeight: 700,
-  color: 'rgba(255,255,255,0.35)',
-  margin: '18px 0 2px 4px',
-  userSelect: 'none',
-  pointerEvents: 'none',
-  borderTop: '1px solid rgba(255,255,255,0.06)',
-  paddingTop: 12,
-};
+// Grouped-sidebar section header (#32). A clear, deliberate group label —
+// reads as a heading, not a disabled nav item. First group drops the divider.
+function SectionLabel({ children, first }) {
+  return (
+    <div style={{
+      fontSize: '0.58rem',
+      textTransform: 'uppercase',
+      letterSpacing: '0.14em',
+      fontWeight: 700,
+      color: 'rgba(255,255,255,0.42)',
+      margin: first ? '6px 0 6px 14px' : '16px 0 6px 14px',
+      userSelect: 'none',
+      pointerEvents: 'none',
+      ...(first ? {} : { borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 14 }),
+    }}>
+      {children}
+    </div>
+  );
+}
 
 export default function BankShell() {
   const nav = useNavigate();
@@ -54,16 +61,34 @@ export default function BankShell() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifs, setShowNotifs] = useState(false);
   const unread = notifications.filter(n => !n.read).length;
+  const loc = useLocation();
+  // Real-usage telemetry beacon — records genuine navigation so the improvement loop can
+  // weight real behaviour. navigator.webdriver flags Playwright (sim) vs human traffic.
+  useEffect(() => {
+    fetch('/api/bank/usage', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: loc.pathname, action: 'view', sim: !!navigator.webdriver }) }).catch(() => {});
+  }, [loc.pathname]);
 
   useEffect(() => {
     if (!getBankToken()) return;
     bankApi.me().then(d => setMe(d.user)).catch(() => {});
+    // #19 — seed the Alerts panel from standing items (conveyancing milestones,
+    // fraud flags, new apps) so it isn't empty when there's no live SSE event.
+    bankApi.standup().then(s => {
+      const now = new Date().toISOString();
+      const seed = [];
+      // #36 respect per-type alert preferences (muted types are not surfaced).
+      if (s.awaitingMyMilestone > 0 && alertTypeEnabled('milestone'))      seed.push({ id: 'cm',    type: 'milestone',       text: `${s.awaitingMyMilestone} conveyancing milestone${s.awaitingMyMilestone > 1 ? 's' : ''} awaiting your action`, at: now, read: false });
+      if (s.fraudFlaggedActive > 0 && alertTypeEnabled('risk_alert'))      seed.push({ id: 'fraud', type: 'risk_alert',      text: `${s.fraudFlaggedActive} live application${s.fraudFlaggedActive > 1 ? 's' : ''} linked to a flagged fraud network`, at: now, read: false });
+      if (s.newApplications > 0 && alertTypeEnabled('new_application'))     seed.push({ id: 'new',   type: 'new_application',  text: `${s.newApplications} new application${s.newApplications > 1 ? 's' : ''} in the last 24h`, at: now, read: false });
+      if (seed.length) setNotifications(prev => [...seed, ...prev.filter(p => !['cm','fraud','new'].includes(p.id))]);
+    }).catch(() => {});
     bankApi.openEventSource().then(src => {
       if (!src) return;
       src.onmessage = e => {
         try {
           const d = JSON.parse(e.data);
-          if (['new_application','outbid','risk_alert','tier_change'].includes(d.type)) {
+          if (['new_application','outbid','risk_alert','tier_change'].includes(d.type) && alertTypeEnabled(d.type)) {
             setNotifications(prev => [{
               id: Date.now(),
               type: d.type,
@@ -126,19 +151,23 @@ export default function BankShell() {
           )}
         </div>
         <nav>
-          <div style={sectionLabel}>Workspace</div>
-          <NavLink to="/bank/applications" className={({isActive}) => isActive ? 'active' : ''} style={({ isActive }) => isActive ? {} : { background: 'rgba(255,255,255,0.06)' }}>Deal review</NavLink>
+          <SectionLabel first>Workspace</SectionLabel>
+          <NavLink to="/bank/applications" className={({isActive}) => isActive ? 'active' : ''}>Deal review</NavLink>
           <NavLink to="/bank/dashboard"    className={({isActive}) => isActive ? 'active' : ''}>Dashboard</NavLink>
 
-          <div style={sectionLabel}>Activity</div>
+          <SectionLabel>Activity</SectionLabel>
           <NavLink to="/bank/bids"         className={({isActive}) => isActive ? 'active' : ''}>My bids</NavLink>
           <NavLink to="/bank/deals"        className={({isActive}) => isActive ? 'active' : ''}>Won deals</NavLink>
           <NavLink to="/bank/auto-bid"     className={({isActive}) => isActive ? 'active' : ''}>Auto-bid</NavLink>
 
-          <div style={sectionLabel}>Intelligence</div>
+          <SectionLabel>Intelligence</SectionLabel>
           <NavLink to="/bank/analytics"    className={({isActive}) => isActive ? 'active' : ''}>Portfolio &amp; risk</NavLink>
           <NavLink to="/bank/intelligence" className={({isActive}) => isActive ? 'active' : ''}>Market intelligence</NavLink>
           <NavLink to="/bank/triage"       className={({isActive}) => isActive ? 'active' : ''}>Triage</NavLink>
+          <NavLink to="/bank/simulation"   className={({isActive}) => isActive ? 'active' : ''}>
+            Simulation
+            <span style={{ marginLeft: 6, fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#86efac', border: '1px solid rgba(134,239,172,0.5)', borderRadius: 999, padding: '1px 5px' }}>Live</span>
+          </NavLink>
           <NavLink to="/bank/roadmap"      className={({isActive}) => isActive ? 'active' : ''}>
             Retention radar
             <span style={{ marginLeft: 6, fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#c4b5fd', border: '1px solid rgba(196,181,253,0.5)', borderRadius: 999, padding: '1px 5px' }}>Roadmap</span>
@@ -146,9 +175,10 @@ export default function BankShell() {
 
           {(me?.role === 'bank_admin') && (
             <>
-              <div style={sectionLabel}>Admin</div>
-              <NavLink to="/bank/team"     className={({isActive}) => isActive ? 'active' : ''}>Team</NavLink>
-              <NavLink to="/bank/settings" className={({isActive}) => isActive ? 'active' : ''}>Settings</NavLink>
+              <SectionLabel>Admin</SectionLabel>
+              <NavLink to="/bank/team"      className={({isActive}) => isActive ? 'active' : ''}>Team</NavLink>
+              <NavLink to="/bank/audit-log" className={({isActive}) => isActive ? 'active' : ''}>Access log</NavLink>
+              <NavLink to="/bank/settings"  className={({isActive}) => isActive ? 'active' : ''}>Settings</NavLink>
             </>
           )}
         </nav>

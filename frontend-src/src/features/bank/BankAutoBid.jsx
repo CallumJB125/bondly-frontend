@@ -305,7 +305,7 @@ function RuleEditor({ rule, onClose, onSaved }) {
             </select>
           </Field>
           {v.action.rateMode !== 'fixed' ? (
-            <Field label="Offset from prime (%)"><input type="number" step="0.05" value={v.action.rateOffset ?? ''} onChange={e => setA('rateOffset', Number(e.target.value))} style={input} placeholder="-0.25" /></Field>
+            <Field label="Offset from prime (%)"><input type="text" inputMode="decimal" value={v.action.rateOffset ?? ''} onChange={e => setA('rateOffset', Number(String(e.target.value).replace(',', '.')))} style={input} placeholder="-0.25" /></Field>
           ) : (
             <Field label="Fixed rate (%)"><input type="number" step="0.05" value={v.action.fixedRate ?? ''} onChange={e => setA('fixedRate', Number(e.target.value))} style={input} placeholder="11.10" /></Field>
           )}
@@ -379,22 +379,63 @@ function SuggestedRules({ onPickRule }) {
   );
 }
 
+// Client-side fallback: when the backend simulator is unavailable, match the
+// rule criteria against the currently-visible open applications. This is an
+// honest estimate over today's pipeline (not a 30-day counterfactual), and is
+// labelled as such so a banker never mistakes it for verified outcome data.
+function estimateOverOpenDeals(criteria, action, apps) {
+  const c = criteria || {};
+  const matched = (apps || []).filter(a => {
+    if (c.type && a.type !== c.type) return false;
+    if (c.minScore != null && (a.qualityScore ?? 0) < Number(c.minScore)) return false;
+    if (c.minAmount != null && (a.requestedAmount ?? 0) < Number(c.minAmount)) return false;
+    if (c.maxAmount != null && (a.requestedAmount ?? 0) > Number(c.maxAmount)) return false;
+    if (c.minStatementMonths != null && (a.monthsOfStatements ?? 0) < Number(c.minStatementMonths)) return false;
+    if (Array.isArray(c.regions) && c.regions.length && !c.regions.includes(a.region)) return false;
+    return true;
+  });
+  const totalValue = matched.reduce((s, a) => s + (a.requestedAmount || 0), 0);
+  // Spend ≈ rand value of offers this rule would place against open deals.
+  const monthlyCap = action?.maxMonthlyExposure != null ? Number(action.maxMonthlyExposure) : null;
+  return {
+    estimate: true,
+    matchedCount: matched.length,
+    totalValue,
+    monthlyCap,
+    sample: matched.slice(0, 4),
+  };
+}
+
 function Simulator({ criteria, action }) {
   const [sim, setSim] = useState(null);
+  const [est, setEst] = useState(null);   // labelled client-side fallback
   const [busy, setBusy] = useState(false);
   const [err, setErr]   = useState(null);
   async function run() {
-    setBusy(true); setErr(null);
-    try { const r = await bankApi.simulateRule({ criteria, action, lookbackDays: 30 }); setSim(r); }
-    catch (e) { setErr(e.message); } finally { setBusy(false); }
+    setBusy(true); setErr(null); setEst(null); setSim(null);
+    try {
+      const r = await bankApi.simulateRule({ criteria, action, lookbackDays: 30 });
+      // A real but empty/zero result still falls back to an honest estimate over
+      // today's open pipeline so "Run simulation" never shows nothing.
+      if (r && (r.matchedCount ?? 0) > 0) { setSim(r); return; }
+      const apps = await bankApi.applications().then(d => d.applications).catch(() => []);
+      setEst(estimateOverOpenDeals(criteria, action, apps));
+    } catch (e) {
+      // Backend simulator unavailable — fall back to a labelled estimate.
+      try {
+        const apps = await bankApi.applications().then(d => d.applications).catch(() => []);
+        setEst(estimateOverOpenDeals(criteria, action, apps));
+      } catch (e2) { setErr(e.message); }
+    } finally { setBusy(false); }
   }
+  const hasResult = sim || est;
   return (
     <div style={{ marginTop: 12, padding: 12, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 7 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <strong style={{ color: '#166534', fontSize: '0.85rem' }}>🔬 Simulate this rule (last 30 days)</strong>
         <button type="button" onClick={run} disabled={busy}
           style={{ padding: '6px 14px', background: '#16a34a', color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: '0.78rem', cursor: 'pointer' }}>
-          {busy ? 'Running…' : sim ? 'Re-run' : 'Run simulation'}
+          {busy ? 'Running…' : hasResult ? 'Re-run' : 'Run simulation'}
         </button>
       </div>
       {err && <div style={{ color: '#991b1b', fontSize: '0.78rem', marginTop: 8 }}>{err}</div>}
@@ -406,6 +447,37 @@ function Simulator({ criteria, action }) {
             <Stat label="Would have lost"  v={`${sim.wouldHaveLost}${sim.avgLossGapBp != null ? ` · avg ${sim.avgLossGapBp}bp behind` : ''}`} />
             <Stat label="Undecided still"  v={sim.undecided} />
             <Stat label="Est. 20-yr interest if all won" v={`R ${(sim.estimatedLifetimeInterest/1000000).toFixed(2)}M`} good />
+          </div>
+        </div>
+      )}
+      {est && (
+        <div style={{ marginTop: 10, fontSize: '0.82rem', color: '#0f1a24' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#b45309', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+            Estimate over today's open deals (no 30-day history available)
+          </div>
+          <div style={{ marginBottom: 6 }}>
+            Would bid on <strong>{est.matchedCount}</strong> of the current open deal{est.matchedCount === 1 ? '' : 's'} ·
+            offers worth <strong>{bankFmtR(est.totalValue)}</strong>.
+          </div>
+          {est.monthlyCap != null && (
+            <div style={{ marginBottom: 6, color: est.totalValue > est.monthlyCap ? '#b45309' : '#15803d' }}>
+              Projected spend {bankFmtR(est.totalValue)} vs monthly cap {bankFmtR(est.monthlyCap)}
+              {est.totalValue > est.monthlyCap ? ' — over cap, some deals would be skipped' : ' — within cap'}
+            </div>
+          )}
+          {est.sample.length > 0 && (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: '0.7rem', color: '#6b7280', fontWeight: 700, marginBottom: 4 }}>Sample matched deals</div>
+              {est.sample.map(a => (
+                <div key={a.ref} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', fontSize: '0.78rem' }}>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{a.ref}</span>
+                  <span style={{ color: '#6b7280' }}>{bankFmtR(a.requestedAmount)} · Q{a.qualityScore} · {a.type === 'swap' ? 'switch' : 'new bond'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginTop: 6, fontStyle: 'italic' }}>
+            Estimate only — matched on quality, amount, type and statement criteria against the live pipeline. Win/loss outcomes need backend history.
           </div>
         </div>
       )}

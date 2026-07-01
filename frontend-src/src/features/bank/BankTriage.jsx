@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { bankApi, bankFmtR, bankFmtPct } from './bankApi.js';
+import { bankApi, bankFmtR, bankFmtPct, downloadCsv } from './bankApi.js';
 
 const daysSince = (iso) => iso ? Math.floor((Date.now() - new Date(iso)) / 86400000) : null;
 
@@ -23,6 +23,31 @@ function triageReason(b) {
     return 'Unlikely to win at current rate — consider walking or repricing';
   }
   return 'Review deal profile';
+}
+
+// Phase 1b — rank by EXPECTED VALUE OF ACTING, not raw risk/size.
+// A deal you're already winning has ~zero action value (acting only cuts your
+// own margin); a deal you're losing by a small, closeable gap with high margin
+// is where attention pays off.
+function flipProb(b) {
+  if (b.isLowest) return 0.05;                               // already leading
+  if (b.trueLowest == null) {
+    return b.winnability === 'high' ? 0.6 : b.winnability === 'medium' ? 0.35 : 0.12;
+  }
+  const gap = b.yourRate - b.trueLowest;                     // % above the leader
+  if (gap <= 0) return 0.05;
+  const base = Math.max(0, 1 - gap / 0.5);                   // gap 0→1, 0.5%→0
+  const wWeight = b.winnability === 'high' ? 1 : b.winnability === 'medium' ? 0.8 : 0.5;
+  return Math.min(0.95, base * wWeight);
+}
+function actionValue(b) {
+  return flipProb(b) * (Number(b.estLifetimeMargin) || 0);
+}
+function matchToWin(b) {
+  if (b.isLowest || b.trueLowest == null) return null;
+  const gap = b.yourRate - b.trueLowest;
+  if (gap <= 0) return null;
+  return { dropTo: b.trueLowest, gapBps: Math.round(gap * 100) };
 }
 
 const TYPOLOGY_GUIDE = {
@@ -164,12 +189,34 @@ export default function BankTriage() {
   if (err)  return <div className="bank-section" style={{ color: '#991b1b' }}>{err}</div>;
   if (!data) return <div className="bank-section">Loading…</div>;
 
-  const sorted = [...(data.bids || [])].sort((a, b) => (b.riskScore ?? 0) - (a.riskScore ?? 0));
+  // Rank by expected value of acting (deals already winning fall to the bottom).
+  const sorted = [...(data.bids || [])].sort((a, b) => actionValue(b) - actionValue(a));
 
   return (
     <>
-      <h2>Pipeline triage</h2>
-      <p className="lede">Your active bids ranked by winnability and value. Pursue the green, sharpen the amber, consider walking from the red.</p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2>Pipeline triage</h2>
+          <p className="lede">Ranked by <strong>expected value of acting</strong> — closeable, high-margin deals first; deals you're already winning drop to the bottom. Sharpen the amber, consider walking from the red.</p>
+        </div>
+        {sorted.length > 0 && (
+          <button
+            onClick={() => downloadCsv('bondly-triage', [
+              { key: 'ref', label: 'ref' },
+              { label: 'type', get: b => b.type === 'swap' ? 'Switch' : 'New bond' },
+              { label: 'amount', get: b => b.requestedAmount },
+              { label: 'qualityScore', get: b => b.qualityScore },
+              { label: 'yourRate', get: b => b.yourRate },
+              { label: 'lowestRate', get: b => b.trueLowest },
+              { key: 'winnability', label: 'winnability' },
+              { label: 'estLifetimeMargin', get: b => b.estLifetimeMargin },
+              { label: 'daysInPipeline', get: b => daysSince(b.submittedAt) },
+            ], sorted)}
+            style={{ padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, background: '#fff', border: '1px solid #d1d5db', color: '#0b1e2d', borderRadius: 7, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            ↓ Export CSV
+          </button>
+        )}
+      </div>
 
       <TypologyGuidePanel />
 
@@ -238,11 +285,20 @@ export default function BankTriage() {
                 </div>
                 <div className="rate">{bankFmtPct(b.yourRate)}</div>
                 <div className="rate">{b.trueLowest != null ? bankFmtPct(b.trueLowest) : '—'}{b.isLowest && <span style={{ color: '#16a34a', fontSize: '0.65rem', marginLeft: 4 }}>✓</span>}</div>
-                <div style={{ color: colour, fontWeight: 700, textTransform: 'capitalize' }}>{b.winnability}</div>
-                <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: 3, fontStyle: 'italic' }}>{triageReason(b)}</div>
+                <div>
+                  <div style={{ color: colour, fontWeight: 700, textTransform: 'capitalize' }}>{b.winnability}</div>
+                  <div style={{ fontSize: '0.68rem', color: '#6b7280', marginTop: 3, fontStyle: 'italic' }}>{triageReason(b)}</div>
+                  {(() => { const m = matchToWin(b); return m ? (
+                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#5b21b6', marginTop: 4 }}>
+                      Match to win: drop to {bankFmtPct(m.dropTo)} <span style={{ color: '#6b7280', fontWeight: 600 }}>(−{m.gapBps}bp)</span>
+                    </div>
+                  ) : b.isLowest ? (
+                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#15803d', marginTop: 4 }}>✓ Leading — no action needed</div>
+                  ) : null; })()}
+                </div>
                 <div style={{ color: '#15803d', fontWeight: 700 }}>{bankFmtR(b.estLifetimeMargin)}</div>
                 <div>
-                  {b.submittedAt && (
+                  {b.submittedAt ? (
                     <span style={{
                       fontSize: '0.65rem', padding: '2px 6px', borderRadius: 99, fontWeight: 700,
                       background: days > 7 ? '#fee2e2' : days > 3 ? '#fef3c7' : '#f3f4f6',
@@ -250,6 +306,8 @@ export default function BankTriage() {
                     }}>
                       {days}d in pipeline
                     </span>
+                  ) : !b.expiresAt && (
+                    <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>—</span>
                   )}
                   {b.expiresAt && (() => {
                     const hoursLeft = (new Date(b.expiresAt) - Date.now()) / 3600000;
